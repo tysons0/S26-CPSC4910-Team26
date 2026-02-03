@@ -5,6 +5,11 @@
   text-align: center;
 }
 
+nav {
+  margin-bottom: 3rem;
+  padding-bottom: 2rem;
+}
+
 .logo {
   height: 6em;
   padding: 1.5em;
