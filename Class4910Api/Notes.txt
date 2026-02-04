@@ -1,0 +1,8 @@
+Need to add transactions to the services
+Determine whether or not I should have Sponsor, Admin, and Driver Service
+
+What Have I Used AI for:
+- Tried to get it to rewrite SQL Server table creation queries for MySql (I couldn't get it to do much but learned from it that MySql can't default fields to UtcNow)
+- Had it some of the database info in constant values based on my table structure. I did one or two and then had it do the rest from my example.
+- Had it scan through services to see if any of the log messages could be improved.
+- Coverage report for tests
