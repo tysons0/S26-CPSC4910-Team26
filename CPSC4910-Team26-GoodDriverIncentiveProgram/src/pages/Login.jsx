@@ -17,8 +17,9 @@ function Login() {
           <br />
           <input type="password" />
         </div>
-
-        <button type="submit">Login</button>
+        <Link to="/Dashboard">
+          <button className="lsubmit"> Login </button>
+        </Link>
       </form>
 
       <p>

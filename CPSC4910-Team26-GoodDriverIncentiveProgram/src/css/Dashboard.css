@@ -1,0 +1,75 @@
+/* Dashboard.css or App.css */
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.product-card {
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  text-align: center;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.product-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.product-image {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+}
+
+.product-name {
+  font-size: 1.1rem;
+  margin: 0.5rem 0;
+}
+
+.product-points {
+  color: #555;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.product-button {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 0.5rem;
+  margin: 0.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.product-button:hover {
+  background-color: #45a049;
+}
+
+/* Optional: style your logout button */
+.lsubmit {
+  margin-top: 2rem;
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 6px;
+  background-color: #f44336;
+  color: white;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.lsubmit:hover {
+  background-color: #d32f2f;
+}
