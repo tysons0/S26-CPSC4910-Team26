@@ -1,0 +1,11 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs
+/Class4910Api/.vs
+/Class4910Api/obj
+/Class4910Api/Properties/PublishProfiles
+/Class4910Api/Tests/obj
+/Class4910Api/appsettings.Development.json
+/Class4910Api/appsettings.json
