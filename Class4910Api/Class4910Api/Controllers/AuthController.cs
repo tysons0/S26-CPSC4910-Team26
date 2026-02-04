@@ -48,6 +48,7 @@ public class AuthController : ControllerBase
         return loginResult.Token;
     }
 
+    [Authorize(Roles = ADMIN)]
     [HttpPost("register/admin")]
     public async Task<ActionResult<Admin>> RegisterAdmin([FromBody] UserRequest request)
     {
@@ -70,5 +71,54 @@ public class AuthController : ControllerBase
         }
 
         return Created(string.Empty, admin);
+    }
+
+    [HttpPost("register/driver")]
+    public async Task<ActionResult<Driver>> RegisterDriver([FromBody] UserRequest request)
+    {
+        RequestData? requestData = _contextService.GetRequestData(HttpContext);
+        if (requestData is null)
+        {
+            string error = $"Could not retrieve Request Data for driver creation on {request.UserName}";
+            _logger.LogWarning("{Error}", error);
+            return BadRequest(error);
+        }
+
+        Driver? user = await _authService.CreateDriverUser(request, requestData);
+
+        if (user is null)
+        {
+            string error = $"Failed to create driver {request.UserName}";
+            _logger.LogError("{Error}", error);
+            return BadRequest(error);
+        }
+
+        return Created(string.Empty, user);
+    }
+
+    [Authorize(Roles = $"{ADMIN},{SPONSOR}")]
+    [HttpPost("register/sponsor")]
+    public async Task<ActionResult<Driver>> RegisterSponsor([FromBody] UserRequest request, [FromQuery] int orgId)
+    {
+        RequestData? requestData = _contextService.GetRequestData(HttpContext);
+        _contextService.GetUserId(HttpContext);
+
+        if (requestData is null)
+        {
+            string error = $"Could not retrieve Request Data for driver creation on {request.UserName}";
+            _logger.LogWarning("{Error}", error);
+            return BadRequest(error);
+        }
+
+        Driver? user = await _authService.CreateDriverUser(request, requestData);
+
+        if (user is null)
+        {
+            string error = $"Failed to create driver {request.UserName}";
+            _logger.LogError("{Error}", error);
+            return BadRequest(error);
+        }
+
+        return Created(string.Empty, user);
     }
 }

@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="global.json" />
+  </Folder>
+  <Project Path="Class4910Api/Class4910Api.csproj" />
+  <Project Path="Class4910Tests/Class4910Tests.csproj" />
+</Solution>

@@ -36,6 +36,18 @@ public class ApiInfoController(ILogger<ApiInfoController> logger, IOptions<Datab
         _logger.LogInformation("GetNotFound method called.");
         return NotFound("This is a not found response.");
     }
+    [HttpGet("ok-query")]
+    public async Task<ActionResult<string>> GetOkQuery([FromQuery] string input)
+    {
+        _logger.LogInformation("GetOkQuery method called.");
+        return Ok(input);
+    }
+    [HttpPost("ok-body")]
+    public async Task<ActionResult<string>> GetOkBody([FromBody] string input)
+    {
+        _logger.LogInformation("GetOkQuery method called.");
+        return Ok(input);
+    }
     #endregion
 
     [HttpGet("TeamInfo")]

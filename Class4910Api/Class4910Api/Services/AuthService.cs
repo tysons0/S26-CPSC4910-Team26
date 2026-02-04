@@ -153,7 +153,6 @@ public class AuthService : IAuthService
                 new(ClaimTypes.Email, user.Email ?? ""),
                 new(ClaimTypes.Role, user.Role.ToString())
             ];
-
             SymmetricSecurityKey key = new(Encoding.UTF8.GetBytes(jwtSettings.JwtKey));
 
             SigningCredentials creds = new(key, SecurityAlgorithms.HmacSha512);
