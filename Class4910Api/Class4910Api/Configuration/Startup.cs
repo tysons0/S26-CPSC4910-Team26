@@ -12,6 +12,8 @@ namespace Class4910Api.Configuration;
 
 public static class Startup
 {
+    public const string corsPolicyName = "AllowAll";
+
     public static WebApplicationBuilder CreateBuilder(WebApplicationBuilder builder)
     {
         builder = AddServices(builder);
@@ -47,6 +49,17 @@ public static class Startup
                 };
             });
 
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy(corsPolicyName, policy =>
+            {
+                policy
+                    .AllowAnyOrigin()
+                    .AllowAnyHeader()
+                    .AllowAnyMethod();
+            });
+        });
+
         builder = AddLifetimeServices(builder);
 
         return builder;
@@ -73,6 +86,8 @@ public static class Startup
 
         app.MapOpenApi();
         app.MapScalarApiReference();
+
+        app.UseCors(corsPolicyName);
 
         app.UseAuthorization();
 
