@@ -1,0 +1,55 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<IsPackable>false</IsPackable>
+		<EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
+		<TestingPlatformCommandLineArguments> --coverage --coverage-output-format cobertura --coverage-output coverage.cobertura.xml </TestingPlatformCommandLineArguments>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+
+		<PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.3.1" />
+		<PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="2.0.2" />
+
+		<!-- xUnit v3 + MTP bridge -->
+		<PackageReference Include="xunit.v3.mtp-v2" Version="3.2.2" />
+
+		<!-- Visual Studio Test Explorer adapter -->
+		<PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+
+		<!-- Integration testing -->
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.2" />
+		<PackageReference Include="Testcontainers.MySql" Version="4.10.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Using Include="Xunit" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="Unit\" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Class4910Api\Class4910Api.csproj" />
+	</ItemGroup>
+
+	<Target Name="GenerateHtmlCoverage"
+        AfterTargets="Build"
+        Condition="'$(IsTestProject)' == 'true'
+                   AND Exists('$(TargetDir)TestResults\coverage.cobertura.xml')">
+
+		<Exec Command="dotnet tool run reportgenerator -reports:&quot;$(TargetDir)TestResults\coverage.cobertura.xml&quot; -targetdir:&quot;$(TargetDir)TestResults\CoverageReport&quot; -reporttypes:Html" />
+
+		<Exec Condition="'$(Configuration)' == 'Debug'"
+			  Command="start &quot;&quot; &quot;$(TargetDir)TestResults\CoverageReport\index.html&quot;" />
+	</Target>
+	
+</Project>

@@ -3,6 +3,6 @@ Determine whether or not I should have Sponsor, Admin, and Driver Service
 
 What Have I Used AI for:
 - Tried to get it to rewrite SQL Server table creation queries for MySql (I couldn't get it to do much but learned from it that MySql can't default fields to UtcNow)
-- Had it some of the database info in constant values based on my table structure. I did one or two and then had it do the rest from my example.
+- Had it Generate the Database Region in constant values based on my table structure. I did one or two and then had it do the rest from my example.
 - Had it scan through services to see if any of the log messages could be improved.
-- Coverage report for tests
+- Had it adjust packages as my testing example that I am following was .net9 and xunit has been deprecated for xunit.v3
