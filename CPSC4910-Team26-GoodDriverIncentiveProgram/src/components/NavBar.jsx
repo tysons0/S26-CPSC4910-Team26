@@ -4,12 +4,6 @@ import { Link } from "react-router-dom";
 function NavBar() {
   return (
     <nav className="NavBar">
-      <div className="nav-left">
-        <Link to="/about" className="nav-link">
-          About
-        </Link>
-      </div>
-
       <h2 className="project-title">Good Driver Incentive Program</h2>
 
       <div className="nav-right">

@@ -22,7 +22,7 @@ function Login() {
       </form>
 
       <p>
-        <Link to="/">Back to Home</Link>
+        <Link to="/">Back to About Me Page</Link>
       </p>
     </div>
   );
