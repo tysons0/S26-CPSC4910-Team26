@@ -1,48 +1,78 @@
+Copy
+
+/* Reset body margins and padding for full-width navbar */
+body {
+  margin: 0;
+  padding: 0;
+}
+
 .NavBar {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-
-  padding: 1rem 2rem;
-  border-bottom: 1px solid #e5e7eb;
-
-  /* keeps content from stretching too wide */
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.nav-left,
-.nav-right {
-  width: 150px; /* forces symmetry */
-  display: flex;
   align-items: center;
-}
-
-.nav-left {
-  justify-content: flex-start;
-}
-
-.nav-right {
-  justify-content: flex-end;
+  padding: 1rem 2rem;
+  background-color: #f5f5f5;
+  border-bottom: 2px solid #e0e0e0;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
 }
 
 .project-title {
-  font-size: 1.2rem;
+  margin: 0;
+  font-size: 1.25rem;
   font-weight: 600;
-  text-align: center;
+  color: #2c3e50;
 }
 
-.nav-link {
+.NavBar a {
+  margin-left: 2rem;
   text-decoration: none;
-  color: #2563eb;
-  font-weight: 500;
+  color: #5a6c7d;
+  font-size: 0.95rem;
+  font-weight: 400;
+  transition: color 0.2s ease;
+  white-space: nowrap;
 }
 
-.nav-link:hover {
-  text-decoration: underline;
+.NavBar a:hover {
+  color: #2c3e50;
 }
 
-.login-btn {
-  padding: 0.4rem 0.8rem;
-  cursor: pointer;
+.NavBar a:last-child {
+  background-color: #4a5568;
+  color: white;
+  padding: 0.5rem 1.25rem;
+  border-radius: 4px;
+  margin-left: 2rem;
+  transition: background-color 0.2s ease;
+}
+
+.NavBar a:last-child:hover {
+  background-color: #2d3748;
+  color: white;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .NavBar {
+    flex-wrap: wrap;
+    padding: 1rem;
+  }
+
+  .project-title {
+    font-size: 1.1rem;
+  }
+
+  .NavBar a {
+    margin-left: 1rem;
+    font-size: 0.85rem;
+  }
+
+  .NavBar a:last-child {
+    margin-left: 1rem;
+    padding: 0.4rem 1rem;
+  }
 }
