@@ -1,3 +1,4 @@
+import "../css/Login.css";
 import { Link } from "react-router-dom";
 
 function Login() {
@@ -7,23 +8,26 @@ function Login() {
 
       <form>
         <div>
-          <label>Email</label>
+          <label>Enter your Username or Email</label>
           <br />
-          <input type="email" />
+          <input type="text" placeholder="username or email" />
         </div>
 
         <div>
           <label>Password</label>
           <br />
-          <input type="password" />
+          <input type="password" placeholder="••••••••" />
         </div>
         <Link to="/Dashboard">
           <button className="lsubmit"> Login </button>
         </Link>
       </form>
-
       <p>
-        <Link to="/">Back to About Me Page</Link>
+        <label>Don't have an account? </label>
+        <Link to="/SignUp">Sign Up Here to become a Driver</Link>
+      </p>
+      <p>
+        <Link to="/">Back to About Page</Link>
       </p>
     </div>
   );
