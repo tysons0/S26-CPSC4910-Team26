@@ -324,6 +324,20 @@ public static class ConstantValues
     };
     #endregion
 
+    #region TeamMembers
+    public static readonly DatabaseField TeamMemberNameField =
+        new() { Name = "MemberName", Type = MySqlDbType.String, Nullable = false };
+
+    public static readonly DatabaseTable TeamMembersTable = new()
+    {
+        Name = "TeamMembers",
+        Fields =
+        [
+            TeamMemberNameField
+        ]
+    };
+    #endregion
+
     public static readonly List<DatabaseTable> DatabaseTables =
     [
         OrgsTable,
@@ -340,6 +354,8 @@ public static class ConstantValues
     ];
 
     #endregion
+
+    public const string TeamName = "ByteMe";
 
     public const string ADMIN = nameof(UserRole.Admin);
     public const string DRIVER = nameof(UserRole.Driver);

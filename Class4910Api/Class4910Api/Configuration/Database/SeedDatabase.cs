@@ -56,7 +56,8 @@ public static class SeedDatabaseMethods
 	            {UserCreatedAtUtcField.SelectName} DATETIME(6) NOT NULL,
 
 	            CONSTRAINT Users_PK PRIMARY KEY({UserIdField.SelectName}),
-	            CONSTRAINT Users_UniqueUserName UNIQUE({UserUserNameField.SelectName})
+	            CONSTRAINT Users_UniqueUserName UNIQUE({UserUserNameField.SelectName}),
+                CONSTRAINT Users_UniqueEmail UNIQUE({UserEmailField.SelectName})
             )
             ";
             command.ExecuteNonQuery();
@@ -220,6 +221,14 @@ public static class SeedDatabaseMethods
 
 	            {TeamInfoProductNameField.SelectName} varchar(100) NOT NULL,
                 {TeamInfoProductDescriptionField.SelectName} varchar(500) NOT NULL
+            )
+            ";
+            command.ExecuteNonQuery();
+
+            // TeamMembers Create
+            command.CommandText = $@"
+            CREATE TABLE IF NOT EXISTS {TeamMembersTable.Name} (
+	            {TeamMemberNameField.SelectName} varchar(100) NOT NULL
             )
             ";
             command.ExecuteNonQuery();

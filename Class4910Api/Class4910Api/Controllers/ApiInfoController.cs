@@ -1,12 +1,13 @@
-﻿using System.Data.Common;
+﻿using System.Data;
+using System.Data.Common;
+using System.Globalization;
 using Class4910Api.Configuration;
 using Class4910Api.Models;
 using Class4910Api.Services.Interfaces;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using MySql.Data.MySqlClient;
-using System.Data;
-using Microsoft.AspNetCore.Identity;
 
 namespace Class4910Api.Controllers;
 
@@ -55,6 +56,13 @@ public class ApiInfoController(ILogger<ApiInfoController> logger, IOptions<Datab
     {
         _logger.LogInformation("GetTeamInformation method called.");
 
+        int TeamNumber;
+        string Version;
+        DateTime ReleaseDate;
+        string ProductName;
+        string ProductDescription;
+        List<string> TeamMembers = [];
+
         await using MySqlConnection conn = new(_dbConnection);
         await conn.OpenAsync();
         MySqlCommand command = conn.CreateCommand();
@@ -65,25 +73,50 @@ public class ApiInfoController(ILogger<ApiInfoController> logger, IOptions<Datab
                ORDER BY {ConstantValues.TeamInfoReleaseDateField.SelectName} DESC
                limit 1";
 
-        await using DbDataReader reader = await command.ExecuteReaderAsync();
+        await using (DbDataReader reader = await command.ExecuteReaderAsync())
+        {
 
-        if (await reader.ReadAsync())
-        {
-            TeamInformation teamInfo = new()
+            // Get just the team information
+            if (await reader.ReadAsync())
             {
-                TeamNumber = reader.GetInt32(ConstantValues.TeamInfoNumberField.Name),
-                Version = reader.GetString(ConstantValues.TeamInfoVersionField.Name),
-                ReleaseDate = reader.GetDateTime(ConstantValues.TeamInfoReleaseDateField.Name),
-                ProductName = reader.GetString(ConstantValues.TeamInfoProductNameField.Name),
-                ProductDescription = reader.GetString(ConstantValues.TeamInfoProductDescriptionField.Name)
-            };
-            _logger.LogInformation("Team information retrieved: {TeamInfo}", teamInfo);
-            return Ok(teamInfo);
+                TeamNumber = reader.GetInt32(ConstantValues.TeamInfoNumberField.Name);
+                Version = reader.GetString(ConstantValues.TeamInfoVersionField.Name);
+                ReleaseDate = reader.GetDateTime(ConstantValues.TeamInfoReleaseDateField.Name);
+                ProductName = reader.GetString(ConstantValues.TeamInfoProductNameField.Name);
+                ProductDescription = reader.GetString(ConstantValues.TeamInfoProductDescriptionField.Name);
+            }
+            else
+            {
+                _logger.LogWarning("No team information found in the database.");
+                return NotFound("Team information not found.");
+            }
         }
-        else
+
+
+        command.CommandText =
+            @$"SELECT *
+               FROM {ConstantValues.TeamMembersTable.Name}";
+
+        await using (DbDataReader reader = await command.ExecuteReaderAsync())
         {
-            _logger.LogWarning("No team information found in the database.");
-            return NotFound("Team information not found.");
+            while (await reader.ReadAsync())
+            {
+                TeamMembers.Add(reader.GetString(ConstantValues.TeamMemberNameField.Name));
+            }
         }
+
+        TeamInformation teamInfo = new()
+        {
+            TeamName = ConstantValues.TeamName,
+            TeamNumber = TeamNumber,
+            Version = Version,
+            ReleaseDate = ReleaseDate,
+            ProductName = ProductName,
+            ProductDescription = ProductDescription,
+            TeamMembers = TeamMembers
+        };
+
+        _logger.LogInformation("Team information retrieved: {TeamInfo}", teamInfo);
+        return Ok(teamInfo);
     }
 }
