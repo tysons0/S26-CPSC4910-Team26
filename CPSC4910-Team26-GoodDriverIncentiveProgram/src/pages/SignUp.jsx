@@ -1,9 +1,12 @@
 import { Link } from "react-router-dom";
-import "../css/SignUp.css"; // We'll create this CSS file
+import PageTitle from "../components/PageTitle";
+import "../css/SignUp.css"; 
 
 function SignUp() {
   return (
     <div className="signup-container">
+      <PageTitle title="Driver Signup" />
+
       <div className="signup-card">
         <h1 className="signup-title">Become a Driver!</h1>
         <p className="signup-subtitle">

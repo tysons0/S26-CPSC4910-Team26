@@ -7,5 +7,22 @@ class Api {
   }
 }
 
+async function getTeamInfo() {
+  const url = BASE_URL + "/ApiInfo/TeamInfo";
+
+  try 
+  {
+    const response = await fetch(url);
+    const teamInfo = await response.json(); 
+
+    return teamInfo;
+  } 
+  catch (ex) 
+  {
+    console.log("Error Getting TeamInfo From Api: " + ex.message);
+  }
+}
+
+
 const api = new Api();
 export default api;

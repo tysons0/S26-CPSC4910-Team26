@@ -1,20 +1,23 @@
 import { Link } from "react-router-dom";
+import PageTitle from "../components/PageTitle";
 import "../css/About.css";
 
 function About() {
   return (
     <div className="about-container">
+      <PageTitle title="About Page | Team 26" />
+
       <div className="about-content">
         <div className="about-header">
           <h1>ByteMe Team26</h1>
-          <p className="tagline">Welmcome to our About Page!</p>
+          <p className="tagline">Welcome to our About Page!</p>
           <p className="tagline">
             Learn more about our Good Driver Incentive Program
           </p>
         </div>
         <div className="about-section">
           <h2> Sprint #1</h2>
-          <h2> Realease Date : TBD</h2>
+          <h2> Release Date : TBD</h2>
           <div className="about-header">
             <h1> Good Driver Incentive Program</h1>
           </div>

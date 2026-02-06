@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import PageTitle from "../components/PageTitle";
 import ProductCard from "../components/product";
 import "../css/Dashboard.css";
 
@@ -22,6 +23,7 @@ function Dashboard() {
   ];
   return (
     <div style={{ padding: "2rem" }}>
+      <PageTitle title="Product Dashboard"/>
       <h1>Dashboard</h1>
       <Link to="/Login">
         <button className="lsubmit"> Logout </button>

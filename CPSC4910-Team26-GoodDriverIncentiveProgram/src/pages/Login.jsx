@@ -1,9 +1,12 @@
 import "../css/Login.css";
+import PageTitle from "../components/PageTitle";
 import { Link } from "react-router-dom";
 
 function Login() {
   return (
     <div style={{ padding: "2rem" }}>
+      <PageTitle title="Login"/>
+
       <h1>Login</h1>
 
       <form>
