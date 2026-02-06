@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import PageTitle from "../components/PageTitle";
-import ProductCard from "../components/product";
+import ProductCard from "../components/Product";
 import "../css/Dashboard.css";
 
 function Dashboard() {
@@ -26,7 +26,7 @@ function Dashboard() {
       <PageTitle title="Product Dashboard"/>
       <h1>Dashboard</h1>
       <Link to="/Login">
-        <button className="lsubmit"> Logout </button>
+        <button className="submit"> Logout </button>
       </Link>
       <p>
         Welcome to the Dashboard! This is where you can view your driving stats
