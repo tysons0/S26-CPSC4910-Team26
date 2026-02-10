@@ -102,7 +102,12 @@ public static class Startup
 
         builder.Services.AddScoped<IAuthService, AuthService>();
         builder.Services.AddScoped<IContextService, ContextService>();
+
         builder.Services.AddScoped<IUserService, UserService>();
+        builder.Services.AddScoped<IAdminService, AdminService>();
+        builder.Services.AddScoped<IDriverService, DriverService>();
+        builder.Services.AddScoped<ISponsorService, SponsorService>();
+        builder.Services.AddScoped<IOrganizationService, OrganizationService>();
 
         return builder;
     }
@@ -124,6 +129,41 @@ public static class Startup
         app.UseAuthorization();
 
         app.MapControllers();
+
+        using (IServiceScope scope = app.Services.CreateScope())
+        {
+            var tokenSettings = scope.ServiceProvider.GetRequiredService<IOptions<JwtSettings>>();
+            JwtSettings jwtSettings = tokenSettings.Value;
+
+            IAuthService authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
+            IOrganizationService orgService = scope.ServiceProvider.GetRequiredService<IOrganizationService>();
+            IAdminService adminService = scope.ServiceProvider.GetRequiredService<IAdminService>();
+
+            RequestData requestData = new()
+            {
+                ClientIP = System.Net.IPAddress.Loopback,
+                UserAgent = "SEED SCOPE"
+            };
+
+            Admin? seedAdmin = await adminService.GetAdminByName(ConstantValues.seedAdminRequest.UserName);
+            seedAdmin ??= await authService.RegisterAdminUser(ConstantValues.seedAdminRequest, requestData);
+
+            if (seedAdmin is null)
+            {
+                throw new("Failed to create Seed Admin");
+            }
+
+            Organization? seedOrg = await orgService.GetOrganizationByName(ConstantValues.seedOrgName);
+            seedOrg ??= await orgService.CreateOrganization(ConstantValues.seedOrgName, seedAdmin.UserData.Id);
+
+            if (seedOrg is null)
+            {
+                throw new("Failed to create Seed Org");
+            }
+
+            await authService.RegisterDriverUser(ConstantValues.seedDriverRequest, requestData);
+            await authService.RegisterSponsorUser(ConstantValues.seedSponsorRequest, seedOrg.OrgId, seedAdmin.UserData.Id, requestData);
+        }
 
         return app;
     }

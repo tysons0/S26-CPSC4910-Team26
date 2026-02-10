@@ -6,7 +6,6 @@ builder.Services.AddHttpClient<EbayService>();
 
 builder = Startup.CreateBuilder(builder);
 
-WebApplication app = Startup.ConfigureApp(builder);
-
+WebApplication app = await Startup.ConfigureApp(builder);
 
 app.Run();

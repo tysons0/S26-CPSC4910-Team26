@@ -404,4 +404,36 @@ public static class ConstantValues
     public const string DRIVER = nameof(UserRole.Driver);
     public const string SPONSOR = nameof(UserRole.Sponsor);
     public const string USER = nameof(UserRole.User);
+
+    #region Seed Info
+
+    public const string seedAdminUserName = "seedadmin";
+    public const string seedAdminPassword = "seed-admin-pw123";
+
+    public static readonly UserRequest seedAdminRequest = new()
+    {
+        UserName = seedAdminUserName,
+        Password = seedAdminPassword
+    };
+
+    public const string seedDriverUserName = "seeddriver";
+    public const string seedDriverPassword = "seed-driver-pw123";
+
+    public static readonly UserRequest seedDriverRequest = new()
+    {
+        UserName = seedDriverUserName,
+        Password = seedDriverPassword
+    };
+
+    public const string seedSponsorUserName = "seedsponsor";
+    public const string seedSponsorPassword = "seed-sponsor-pw123";
+
+    public static readonly UserRequest seedSponsorRequest = new()
+    {
+        UserName = seedSponsorUserName,
+        Password = seedSponsorPassword
+    };
+
+    public const string seedOrgName = "Seed Org";
+    #endregion
 }
