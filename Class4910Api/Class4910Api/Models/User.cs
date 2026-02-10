@@ -24,7 +24,7 @@ public class User
             Username = Username,
             Email = Email,
             CreatedAtUtc = CreatedAtUtc,
-            Role = Role
+            Role = Role.ToString()
         };
     }
 }

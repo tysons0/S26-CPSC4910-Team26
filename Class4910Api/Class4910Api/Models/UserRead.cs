@@ -7,5 +7,5 @@ public class UserRead
     public required string? Email { get; init; }
     public required DateTime CreatedAtUtc { get; init; }
 
-    public required UserRole Role { get; set; }
+    public required string Role { get; set; }
 }
