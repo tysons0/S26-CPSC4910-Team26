@@ -298,6 +298,48 @@ public static class ConstantValues
 
     #endregion
 
+    #region ApiLogging
+    public static readonly DatabaseField ApiLog_Id =
+        new() { Name = "id", Type = MySqlDbType.Int32, Nullable = false };
+
+    public static readonly DatabaseField ApiLog_Ts =
+        new() { Name = "_ts", Type = MySqlDbType.Timestamp, Nullable = true };
+
+    public static readonly DatabaseField ApiLog_Exception =
+        new() { Name = "Exception", Type = MySqlDbType.Text, Nullable = true };
+
+    public static readonly DatabaseField ApiLog_Level =
+        new() { Name = "Level", Type = MySqlDbType.VarChar, Nullable = true };
+
+    public static readonly DatabaseField ApiLog_Message =
+        new() { Name = "Message", Type = MySqlDbType.Text, Nullable = true };
+
+    public static readonly DatabaseField ApiLog_Properties =
+        new() { Name = "Properties", Type = MySqlDbType.Text, Nullable = true };
+
+    public static readonly DatabaseField ApiLog_Template =
+        new() { Name = "Template", Type = MySqlDbType.Text, Nullable = true };
+
+    public static readonly DatabaseField ApiLog_Timestamp =
+        new() { Name = "Timestamp", Type = MySqlDbType.VarChar, Nullable = true };
+
+    public static readonly DatabaseTable ApiLoggingTable = new()
+    {
+        Name = "ApiLogging",
+        Fields =
+        [
+            ApiLog_Id,
+            ApiLog_Ts,
+            ApiLog_Exception,
+            ApiLog_Level,
+            ApiLog_Message,
+            ApiLog_Properties,
+            ApiLog_Template,
+            ApiLog_Timestamp
+        ]
+    };
+    #endregion
+
     #region TeamInformation
     public static readonly DatabaseField TeamInfoNumberField =
         new() { Name = "TeamNumber", Type = MySqlDbType.Int32, Nullable = false };
@@ -350,7 +392,8 @@ public static class ConstantValues
         DriverApplicationsTable,
         PasswordChangesTable,
         LoginAttemptsTable,
-        SqlLoggingTable
+        SqlLoggingTable,
+        ApiLoggingTable
     ];
 
     #endregion

@@ -4,8 +4,11 @@ using Class4910Api.Models;
 using Class4910Api.Services;
 using Class4910Api.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using MySql.Data.MySqlClient;
 using Scalar.AspNetCore;
 
 namespace Class4910Api.Configuration;
