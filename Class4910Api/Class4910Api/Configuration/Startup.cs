@@ -56,7 +56,7 @@ public static class Startup
         JwtSettings jwt = builder.Configuration.GetRequiredSection("JwtSettings").Get<JwtSettings>()!;
 
         builder.Services.AddControllers();
-        builder.Services.AddOpenApi();
+        builder.Services.AddOpenApi("v1", options => { options.AddDocumentTransformer<BearerSecuritySchemeTransformer>(); });
 
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
@@ -107,12 +107,17 @@ public static class Startup
         return builder;
     }
 
-    public static WebApplication ConfigureApp(WebApplicationBuilder builder)
+    public static async Task<WebApplication> ConfigureApp(WebApplicationBuilder builder)
     {
         WebApplication app = builder.Build();
 
         app.MapOpenApi();
-        app.MapScalarApiReference();
+        app.MapScalarApiReference(options =>
+        {
+            options.WithTitle("Class4910 API")
+                   .WithTheme(ScalarTheme.Kepler)
+                   .AddPreferredSecuritySchemes(JwtBearerDefaults.AuthenticationScheme);
+        });
 
         app.UseCors(corsPolicyName);
 
