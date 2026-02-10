@@ -10,4 +10,14 @@ public class TeamInformation
     public required string ProductDescription { get; set; }
     public required List<string> TeamMembers { get; set; }
 
+    override public string ToString()
+    {
+        return $"Team Name: {TeamName}\n" +
+               $"Team Number: {TeamNumber}\n" +
+               $"Version: {Version}\n" +
+               $"Release Date: {ReleaseDate.ToShortDateString()}\n" +
+               $"Product Name: {ProductName}\n" +
+               $"Product Description: {ProductDescription}\n" +
+               $"Team Members: {string.Join(", ", TeamMembers)}";
+    }
 }
