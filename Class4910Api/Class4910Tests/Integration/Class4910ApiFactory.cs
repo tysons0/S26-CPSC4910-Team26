@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestPlatform.TestHost;
 using Testcontainers.MySql;
+using static Org.BouncyCastle.Math.EC.ECCurve;
 
 namespace Class4910Tests.Integration;
 
@@ -36,6 +37,13 @@ public class Class4910ApiFactory : WebApplicationFactory<Program>, IAsyncDisposa
         {
             config.AddJsonFile(Path.Combine(FindApiProjectFolder(), "appsettings.Development.json"),
                                optional: false, reloadOnChange: true);
+
+            Dictionary<string, string?> overrideConfigDictionary = new()
+            {
+                ["DatabaseConnection:Connection"] = ConnectionString
+            };
+
+            config.AddInMemoryCollection(overrideConfigDictionary);
         });
     }
 
