@@ -10,6 +10,8 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using MySql.Data.MySqlClient;
 using Scalar.AspNetCore;
+using Serilog;
+using Serilog.Sinks.MySQL;
 
 namespace Class4910Api.Configuration;
 
@@ -22,8 +24,30 @@ public static class Startup
         builder = AddServices(builder);
 
         DatabaseConnection dbConn = builder.Configuration.GetRequiredSection("DatabaseConnection").Get<DatabaseConnection>()!;
+
+        AddLogging(builder, dbConn);
+
         SeedDatabaseMethods.SeedDatabase(dbConn.Connection);
 
+        return builder;
+    }
+
+    public static WebApplicationBuilder AddLogging(WebApplicationBuilder builder, DatabaseConnection dbConn)
+    {
+
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Information()
+            .Enrich.FromLogContext()
+            .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Error)
+            .MinimumLevel.Override("System", Serilog.Events.LogEventLevel.Error)
+            .WriteTo.Console()
+            .WriteTo.MySQL(
+                connectionString: dbConn.Connection,
+                tableName: ConstantValues.ApiLoggingTable.Name
+            )
+            .CreateLogger();
+
+        builder.Host.UseSerilog();
         return builder;
     }
 
