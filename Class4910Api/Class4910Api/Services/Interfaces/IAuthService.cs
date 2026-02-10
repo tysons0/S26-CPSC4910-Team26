@@ -6,9 +6,11 @@ public interface IAuthService
 {
     Task<LoginResult> LoginAsync(UserRequest request, RequestData loginData);
 
-    Task<Admin?> CreateAdminUser(UserRequest request, RequestData registerData, int? creatorUserId = null);
+    Task<Admin?> RegisterAdminUser(UserRequest request, RequestData registerData, int? creatorUserId = null);
 
-    Task<Driver?> CreateDriverUser(UserRequest request, RequestData registerData, int? creatorUserId = null);
+    Task<Driver?> RegisterDriverUser(UserRequest request, RequestData registerData, int? creatorUserId = null);
 
-    Task<Sponsor?> CreateSponsorUser(UserRequest request, int orgId, int creatorUserId, RequestData registerData);
+    Task<Sponsor?> RegisterSponsorUser(UserRequest request, int orgId, int creatorUserId, RequestData registerData);
+
+    Task<UserRead?> GetUserFromRequest(HttpContext requestContext);
 }

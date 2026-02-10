@@ -25,6 +25,22 @@ public class AuthController : ControllerBase
         _contextService = contextService;
     }
 
+    [Authorize]
+    [HttpGet("me")]
+    public async Task<ActionResult<UserRead>> GetCurrentUser()
+    {
+        UserRead? userData = await _authService.GetUserFromRequest(HttpContext);
+
+        if (userData is null)
+        {
+            string error = $"Failed to retrieve user information from request";
+            _logger.LogError("{Error}", error);
+            return BadRequest(error);
+        }
+
+        return userData;
+    }
+
     [HttpPost("login")]
     public async Task<ActionResult<string>> Login([FromBody] UserRequest loginRequest)
     {
@@ -61,7 +77,7 @@ public class AuthController : ControllerBase
             return BadRequest(error);
         }
 
-        Admin? admin = await _authService.CreateAdminUser(request, requestData);
+        Admin? admin = await _authService.RegisterAdminUser(request, requestData);
 
         if (admin is null)
         {
@@ -84,7 +100,7 @@ public class AuthController : ControllerBase
             return BadRequest(error);
         }
 
-        Driver? user = await _authService.CreateDriverUser(request, requestData);
+        Driver? user = await _authService.RegisterDriverUser(request, requestData);
 
         if (user is null)
         {
@@ -110,7 +126,7 @@ public class AuthController : ControllerBase
             return BadRequest(error);
         }
 
-        Driver? user = await _authService.CreateDriverUser(request, requestData);
+        Driver? user = await _authService.RegisterDriverUser(request, requestData);
 
         if (user is null)
         {

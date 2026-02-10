@@ -89,6 +89,24 @@ public class AuthService : IAuthService
         }
     }
 
+    public async Task<UserRead?> GetUserFromRequest(HttpContext requestContext)
+    {
+        int userId = _contextService.GetUserId(requestContext);
+
+        User? user = await _userService.FindUserById(userId);
+
+        if (user is null)
+        {
+            _logger.LogError("Failed to retrieve user information for user id {UserId}", userId);
+            return null;
+        }
+        UserRead userRead = user.ToReadFormat();
+
+        _logger.LogInformation("Retrieved user information from request: {UserData}", userRead);
+        return userRead;
+    }
+
+    #region Registration Methods
     public async Task<UserRead?> RegisterUserAsync(UserRequest request, RequestData registerData)
     {
         try
@@ -143,6 +161,127 @@ public class AuthService : IAuthService
         }
     }
 
+    public async Task<Admin?> RegisterAdminUser(UserRequest request, RequestData registerData, int? creatorUserId = null)
+    {
+        try
+        {
+            _logger.LogInformation("Creating admin user {UserName} from {RequestData}.",
+                request.UserName, registerData);
+            UserRead newUser = await RegisterUserAsync(request, registerData)
+                           ?? throw new("Failed to register new user");
+
+            await using MySqlConnection conn = new(_dbConnection);
+            conn.Open();
+
+            MySqlCommand command = conn.CreateCommand();
+
+            command.CommandText = $@"
+                INSERT INTO {AdminsTable.Name}
+                ({UserIdField.SelectName})
+                VALUES
+                (@UserId);
+            ";
+
+            command.Parameters.Add(UserIdField.GenerateParameter("@UserId", newUser.Id));
+
+            await command.ExecuteNonQueryAsync();
+
+            newUser.Role = UserRole.Admin.ToString();
+            return new Admin
+            {
+                AdminId = (int)command.LastInsertedId,
+                UserData = newUser
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating admin user {UserName}: {ErrorMessage}", request.UserName, ex.Message);
+            return null;
+        }
+    }
+
+    public async Task<Driver?> RegisterDriverUser(UserRequest request, RequestData registerData, int? creatorUserId = null)
+    {
+        try
+        {
+            _logger.LogInformation("Creating driver user {UserName} from {RequestData}.",
+                request.UserName, registerData);
+            UserRead newUser = await RegisterUserAsync(request, registerData)
+                           ?? throw new("Failed to register new user");
+
+            await using MySqlConnection conn = new(_dbConnection);
+            conn.Open();
+            MySqlCommand command = conn.CreateCommand();
+
+            command.CommandText = $@"
+                INSERT INTO {DriversTable.Name}
+                ({UserIdField.SelectName})
+                VALUES
+                (@UserId);
+            ";
+
+            command.Parameters.Add(UserIdField.GenerateParameter("@UserId", newUser.Id));
+
+            await command.ExecuteNonQueryAsync();
+
+            newUser.Role = UserRole.Driver.ToString();
+            return new Driver
+            {
+                DriverId = (int)command.LastInsertedId,
+                UserData = newUser
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating driver user {UserName}: {ErrorMessage}", request.UserName, ex.Message);
+            return null;
+        }
+    }
+
+    public async Task<Sponsor?> RegisterSponsorUser(UserRequest request, int orgId, int creatorUserId, RequestData registerData)
+    {
+        try
+        {
+            _logger.LogInformation("Creating sponsor user {UserName} to Org[{Org}] by UserId[{Id}] from {RequestData}.",
+                request.UserName, orgId, creatorUserId, registerData);
+
+            UserRead newUser = await RegisterUserAsync(request, registerData)
+                           ?? throw new("Failed to register new user");
+
+            await using MySqlConnection conn = new(_dbConnection);
+            conn.Open();
+            MySqlCommand command = conn.CreateCommand();
+
+            command.CommandText = $@"
+                INSERT INTO {SponsorsTable.Name}
+                ({UserIdField.SelectName}, {OrgIdField.SelectName})
+                VALUES
+                (@UserId, @OrgId);
+            ";
+
+            command.Parameters.Add(UserIdField.GenerateParameter("@UserId", newUser.Id));
+            command.Parameters.Add(OrgIdField.GenerateParameter("@OrgId", orgId));
+
+            await command.ExecuteNonQueryAsync();
+
+            newUser.Role = UserRole.Sponsor.ToString();
+            return new Sponsor
+            {
+                SponsorId = (int)command.LastInsertedId,
+                OrganizationId = orgId,
+                UserData = newUser
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating sponsor user {UserName}: {ErrorMessage}", request.UserName, ex.Message);
+            return null;
+        }
+    }
+
+    #endregion
+
+    #region Token and Password Helpers
     private static string GenerateToken(User user, JwtSettings jwtSettings)
     {
         {
@@ -180,7 +319,9 @@ public class AuthService : IAuthService
             _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, password);
         return verificationResult != PasswordVerificationResult.Failed;
     }
+    #endregion
 
+    #region Login Attempt Tracking
     private async Task<int?> GetRecentLoginAttempts(RequestData requestData)
     {
         try
@@ -250,120 +391,5 @@ public class AuthService : IAuthService
                 username, requestData.ClientIP, requestData);
         }
     }
-
-    public async Task<Admin?> CreateAdminUser(UserRequest request, RequestData registerData, int? creatorUserId = null)
-    {
-        try
-        {
-            _logger.LogInformation("Creating admin user {UserName} from {RequestData}.", 
-                request.UserName, registerData);
-            UserRead newUser = await RegisterUserAsync(request, registerData)
-                           ?? throw new("Failed to register new user");
-
-            await using MySqlConnection conn = new(_dbConnection);
-            conn.Open();
-
-            MySqlCommand command = conn.CreateCommand();
-
-            command.CommandText = $@"
-                INSERT INTO {AdminsTable.Name}
-                ({UserIdField.SelectName})
-                VALUES
-                (@UserId);
-            ";
-
-            command.Parameters.Add(UserIdField.GenerateParameter("@UserId", newUser.Id));
-
-            await command.ExecuteNonQueryAsync();
-
-            newUser.Role = UserRole.Admin;
-            return new Admin
-            {
-                AdminId = (int)command.LastInsertedId,
-                UserData = newUser
-            };
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error creating admin user {UserName}: {ErrorMessage}", request.UserName, ex.Message);
-            return null;
-        }
-    }
-
-    public async Task<Driver?> CreateDriverUser(UserRequest request, RequestData registerData, int? creatorUserId = null)
-    {
-        try
-        {
-            _logger.LogInformation("Creating driver user {UserName} from {RequestData}.", 
-                request.UserName, registerData);
-            UserRead newUser = await RegisterUserAsync(request, registerData)
-                           ?? throw new("Failed to register new user");
-
-            await using MySqlConnection conn = new(_dbConnection);
-            conn.Open();
-            MySqlCommand command = conn.CreateCommand();
-
-            command.CommandText = $@"
-                INSERT INTO {DriversTable.Name}
-                ({UserIdField.SelectName})
-                VALUES
-                (@UserId);
-            ";
-
-            command.Parameters.Add(UserIdField.GenerateParameter("@UserId", newUser.Id));
-
-            await command.ExecuteNonQueryAsync();
-
-            return new Driver
-            {
-                DriverId = (int)command.LastInsertedId,
-                UserData = newUser
-            };
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error creating driver user {UserName}: {ErrorMessage}", request.UserName, ex.Message);
-            return null;
-        }
-    }
-
-    public async Task<Sponsor?> CreateSponsorUser(UserRequest request, int orgId, int creatorUserId, RequestData registerData)
-    {
-        try
-        {
-            _logger.LogInformation("Creating sponsor user {UserName} to Org[{Org}] by UserId[{Id}] from {RequestData}.", 
-                request.UserName, orgId, creatorUserId, registerData);
-
-            UserRead newUser = await RegisterUserAsync(request, registerData)
-                           ?? throw new("Failed to register new user");
-
-            await using MySqlConnection conn = new(_dbConnection);
-            conn.Open();
-            MySqlCommand command = conn.CreateCommand();
-
-            command.CommandText = $@"
-                INSERT INTO {SponsorsTable.Name}
-                ({UserIdField.SelectName}, {OrgIdField.SelectName})
-                VALUES
-                (@UserId, @OrgId);
-            ";
-
-            command.Parameters.Add(UserIdField.GenerateParameter("@UserId", newUser.Id));
-            command.Parameters.Add(OrgIdField.GenerateParameter("@OrgId", orgId));
-
-            await command.ExecuteNonQueryAsync();
-
-            return new Sponsor
-            {
-                SponsorId = (int)command.LastInsertedId,
-                OrganizationId = orgId,
-                UserData = newUser
-            };
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error creating sponsor user {UserName}: {ErrorMessage}", request.UserName, ex.Message);
-            return null;
-        }
-    }
+    #endregion
 }
