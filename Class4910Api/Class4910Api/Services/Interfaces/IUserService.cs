@@ -1,4 +1,5 @@
-﻿using Class4910Api.Models;
+﻿using System.Data.Common;
+using Class4910Api.Models;
 
 namespace Class4910Api.Services.Interfaces;
 
@@ -6,4 +7,8 @@ public interface IUserService
 {
     Task<User?> FindUserByName(string username);
     Task<User?> FindUserByEmail(string email);
+
+    Task<User?> FindUserById(int id);
+
+    Task<User> GetUserFromReader(DbDataReader reader, string? readPrefix = null);
 }

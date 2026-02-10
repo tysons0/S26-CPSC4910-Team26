@@ -56,6 +56,40 @@ public class UserService : IUserService
         }
     }
 
+    public async Task<User?> FindUserById(int id)
+    {
+        try
+        {
+            _logger.LogInformation("Retrieve user using id[{Id}]", id);
+
+            await using MySqlConnection conn = new(_dbConnection);
+            conn.Open();
+            MySqlCommand command = conn.CreateCommand();
+
+            command.CommandText =
+                @$"SELECT * 
+                   FROM {UsersTable.Name}
+                   WHERE {UserIdField.SelectName} = @Id";
+            command.Parameters.Add(UserEmailField.GenerateParameter("@Id", id));
+
+            await using DbDataReader reader = await command.ExecuteReaderAsync();
+
+            if (await reader.ReadAsync())
+            {
+                User userFromId = await GetUserFromReader(reader);
+                _logger.LogInformation("Retrieved User[{User}] using id[{Id}]", userFromId, id);
+                return userFromId;
+            }
+
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error finding user for id[{Id}]. Error[{Err}]", id, ex.Message);
+            return null;
+        }
+    }
+
     public async Task<User?> FindUserByName(string username)
     {
         await using MySqlConnection conn = new(_dbConnection);
@@ -80,20 +114,22 @@ public class UserService : IUserService
         return null;
     }
 
-    private async Task<User> GetUserFromReader(DbDataReader reader)
+    public async Task<User> GetUserFromReader(DbDataReader reader, string? readPrefix = null)
     {
-        int id = reader.GetInt32(UserIdField.Name);
-        string username = reader.GetString(UserUserNameField.Name);
+        string pfx = readPrefix ?? "";
 
-        int emailOrdinal = reader.GetOrdinal(UserEmailField.Name);
+        int id = reader.GetInt32($"{pfx}{UserIdField.Name}");
+        string username = reader.GetString($"{pfx}{UserUserNameField.Name}");
+
+        int emailOrdinal = reader.GetOrdinal($"{pfx}{UserEmailField.Name}");
         string? email = null;
         if (!reader.IsDBNull(emailOrdinal))
         {
-            reader.GetString(UserEmailField.Name);
+            reader.GetString($"{pfx}{UserEmailField.Name}");
         }
 
-        string passwordHash = reader.GetString(UserHashedPasswordField.Name);
-        DateTime createdAtUtc = reader.GetDateTime(UserCreatedAtUtcField.Name);
+        string passwordHash = reader.GetString($"{pfx}{UserHashedPasswordField.Name}");
+        DateTime createdAtUtc = reader.GetDateTime($"{pfx}{UserCreatedAtUtcField.Name}");
 
         return new User
         {
@@ -102,11 +138,11 @@ public class UserService : IUserService
             Email = email,
             PasswordHash = passwordHash,
             CreatedAtUtc = createdAtUtc,
-            Role = await GetUserRoleFrom(id)
+            Role = await GetUserRoleFromId(id)
         };
     }
 
-    private async Task<UserRole> GetUserRoleFrom(int id)
+    private async Task<UserRole> GetUserRoleFromId(int id)
     {
         await using MySqlConnection conn = new(_dbConnection);
         conn.Open();
