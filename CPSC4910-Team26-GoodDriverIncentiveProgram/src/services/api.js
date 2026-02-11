@@ -21,14 +21,30 @@ const apiService = {
     }
   },
 
-  postData: async (endpoint, data) => {
+  getDataWithAuth: async (endpoint, token) => {
+    try {
+      const response = await fetch(`${BASE_URL}/${endpoint}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      return await handleResponse(response);
+    } catch (error) {
+      console.error("API GET With Auth Error:", error);
+      throw error;
+    }
+  },
+
+  postData: async (endpoint, jsonData) => {
     try {
       const response = await fetch(`${BASE_URL}/${endpoint}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(data),
+        body: jsonData,
       });
       return await handleResponse(response);
     } catch (error) {
@@ -39,10 +55,7 @@ const apiService = {
 
   getTeamInfo: async () => {
     try {
-      const response = await fetch(
-        "http://team26api.us-east-1.elasticbeanstalk.com/ApiInfo/TeamInfo",
-      );
-      return await handleResponse(response);
+      return await apiService.getData("ApiInfo/TeamInfo");
     } catch (error) {
       console.error("API GET Team Info Error:", error);
       throw error;
@@ -51,17 +64,12 @@ const apiService = {
 
   registerDriver: async (userData) => {
     try {
-      const response = await fetch(`${BASE_URL}/Auth/register/driver`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      const registerData = JSON.stringify({
           userName: userData.userName,
           password: userData.password,
-        }),
       });
-      return await handleResponse(response);
+
+      return await apiService.postData("Auth/register/driver", registerData);
     } catch (error) {
       console.error("API POST Register Driver Error:", error);
       throw error;
@@ -70,38 +78,27 @@ const apiService = {
 
   login: async (credentials) => {
     try {
-      const response = await fetch(`${BASE_URL}/Auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      const loginData = JSON.stringify({
           userName: credentials.userName,
           password: credentials.password,
-        }),
-      });
+        });
+      
+      const response = await apiService.postData("Auth/login", loginData);
 
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error || "Login failed");
-      }
-
-      const token = await response.text(); // IMPORTANT: not json()
+      const token = await response.token;
+      
+      console.log("Login successful, received token:", token);
+      console.log("User info from login response:", response.user);
 
       // Store token
       localStorage.setItem("token", token);
 
-      const userInfo = await apiService.getUserInfo();
-
-      if (!userInfo) {
-        throw new Error("Failed to retrieve user information");
-      }
-
-      localStorage.setItem("user", JSON.stringify(userInfo));
+      // Store user info
+      localStorage.setItem("user", JSON.stringify(response.user));
 
       return {
         token,
-        user: userInfo,
+        user: response.user,
       };
     } catch (error) {
       console.error("Login Error:", error);
@@ -116,17 +113,8 @@ const apiService = {
       if (!token) {
         throw new Error("No authentication token found");
       }
-      const response = await fetch(`${BASE_URL}/Auth/me`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
 
-      if (!response.ok) {
-        throw new Error(error || "Failed to fetch user info");
-      }
+      const response = await apiService.getDataWithAuth("Auth/me", token);
 
       const userData = await response.json();
       return userData;
@@ -162,10 +150,10 @@ const apiService = {
 
   getCurrentUser: () => {
     const user = localStorage.getItem("user");
-    if (!userStr) return null;
+    if (!user) return null;
 
     try {
-      return JSON.parse(userStr);
+      return JSON.parse(user);
     } catch (error) {
       console.error("Error parsing user data from localStorage:", error);
       return null;

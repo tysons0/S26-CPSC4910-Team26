@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import apiService from "../services/api";
+import PageTitle from "../components/PageTitle";
 import "../css/Login.css";
 
 function Login() {
@@ -32,6 +33,8 @@ function Login() {
 
   return (
     <div className="login-container">
+      <PageTitle title="Login | Team 26" />
+
       <div className="login-card">
         <h1>Login</h1>
         <p className="login-subtitle">Welcome back</p>
