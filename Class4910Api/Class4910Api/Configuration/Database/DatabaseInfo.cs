@@ -14,6 +14,10 @@ public class DatabaseTable
     {
         return $"SELECT {string.Join(", ", Fields.Select(f => f.SelectName))} FROM `{Name}`";
     }
+    public string GetFields(string alias)
+    {
+        return $"{string.Join(", ", Fields.Select(f => $"{alias}.{f.SelectName} as {alias}_{f.Name}"))}";
+    }
 }
 
 public class DatabaseField
