@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import PageTitle from "../components/PageTitle";
 import { useEffect, useState } from "react";
-import { apiService } from "../services/api";
+import apiService from "../services/api";
 import "../css/About.css";
 
 function About() {
@@ -12,7 +12,7 @@ function About() {
   useEffect(() => {
     const fetchTeamInfo = async () => {
       try {
-        const data = await ApiService.getTeamInfo();
+        const data = await apiService.getTeamInfo();
         setTeamData(data);
       } catch (err) {
         setError(err.message);
