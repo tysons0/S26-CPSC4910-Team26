@@ -96,6 +96,14 @@
   transform: translateY(0);
 }
 
+.login-error {
+  color: #e74c3c;
+  margin-top: 1rem;
+  text-align: center;
+  font-weight: 500;
+}
+
+
 .back-link {
   color: #5a6c7d;
   text-align: center;

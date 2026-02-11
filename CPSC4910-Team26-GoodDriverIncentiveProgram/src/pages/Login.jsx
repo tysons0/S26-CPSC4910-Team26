@@ -1,33 +1,63 @@
-import "../css/Login.css";
-import PageTitle from "../components/PageTitle";
-import { Link } from "react-router-dom";
+
 import { useState } from "react";
-
-
+import { useNavigate, Link } from "react-router-dom";
+import apiService from "../services/api";
+import "../css/Login.css";
 
 function Login() {
+  const [userName, setUserName] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const navigate = useNavigate();
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      await apiService.login({ userName, password });
+
+      // Redirect after successful login
+      navigate("/Dashboard");
+    } catch (err) {
+      setError(err.message || "Login failed");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="login-container">
       <div className="login-card">
-        <PageTitle title="Login" />
-
         <h1>Login</h1>
         <p className="login-subtitle">Welcome back</p>
 
-        <form className="login-form">
+        <form className="login-form" onSubmit={handleLogin}>
           <div className="form-group">
-            <label>Enter your Username or Email</label>
-            <input type="text" placeholder="username or email" />
+            <label>Username</label>
+            <input
+              type="text"
+              placeholder="Enter username"
+              value={userName}
+              onChange={(e) => setUserName(e.target.value)}
+              required
+            />
           </div>
 
           <div className="form-group">
             <label>Password</label>
+
             <div className="password-wrapper">
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
               />
               <button
                 type="button"
@@ -39,15 +69,22 @@ function Login() {
             </div>
           </div>
 
-          <Link to="/Dashboard" className="login-submit">
-            Login
-          </Link>
+          <button
+            type="submit"
+            className="login-submit"
+            disabled={loading}
+          >
+            {loading ? "Logging in..." : "Login"}
+          </button>
+
+          {error && <p className="login-error">{error}</p>}
+
         </form>
 
         <div className="back-link">
           <p>
             Don't have an account?{" "}
-            <Link to="/SignUp">Sign Up Here to become a Driver</Link>
+            <Link to="/SignUp">Sign Up Here</Link>
           </p>
           <p>
             <Link to="/">Back to About Page</Link>
@@ -58,5 +95,5 @@ function Login() {
   );
 }
 
-
 export default Login;
+

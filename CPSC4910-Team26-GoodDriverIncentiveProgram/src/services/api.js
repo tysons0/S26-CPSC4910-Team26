@@ -67,6 +67,37 @@ const apiService = {
       throw error;
     }
   },
+
+  login: async (credentials) => {
+  try {
+    const response = await fetch(`${BASE_URL}/Auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        userName: credentials.userName,
+        password: credentials.password,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(error);
+    }
+
+    const token = await response.text(); // IMPORTANT: not json()
+
+    // Store token
+    localStorage.setItem("token", token);
+
+    return token;
+  } catch (error) {
+    console.error("Login Error:", error);
+    throw error;
+  }
+},
+
 };
 
 export default apiService;
