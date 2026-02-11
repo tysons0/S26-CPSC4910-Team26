@@ -42,7 +42,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
-    public async Task<ActionResult<string>> Login([FromBody] UserRequest loginRequest)
+    public async Task<ActionResult<LoginResult>> Login([FromBody] UserRequest loginRequest)
     {
         RequestData? requestData = _contextService.GetRequestData(HttpContext);
 
@@ -61,7 +61,7 @@ public class AuthController : ControllerBase
             return BadRequest(loginResult.Error);
         }
 
-        return loginResult.Token;
+        return loginResult;
     }
 
     [Authorize(Roles = ADMIN)]

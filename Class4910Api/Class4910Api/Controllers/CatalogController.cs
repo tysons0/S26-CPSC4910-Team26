@@ -1,3 +1,4 @@
+using Class4910Api.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
@@ -5,8 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 
 public class TestEbayController : ControllerBase
 {
-    private readonly EbayService _ebay;
-    public TestEbayController(EbayService ebay)
+    private readonly IEbayService _ebay;
+    public TestEbayController(IEbayService ebay)
     {
         _ebay = ebay;
     }

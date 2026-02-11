@@ -372,7 +372,7 @@ public class AuthService : IAuthService
             // Find all login attempts in the past x minutes
             command.CommandText =
             @$"INSERT INTO {LoginAttemptsTable.Name}
-               ({LoginAttemptUserNameField.Name}, {LoginAttemptDateField.Name}, {LoginAttemptStatusField.Name}, {LoginAttemptIpField})
+               ({LoginAttemptUserNameField.SelectName}, {LoginAttemptDateField.SelectName}, {LoginAttemptStatusField.SelectName}, {LoginAttemptIpField.SelectName})
                VALUES
                (@User, @Date, @Status, @Ip)";
             command.Parameters.Add(LoginAttemptUserNameField.GenerateParameter("@User", username));
