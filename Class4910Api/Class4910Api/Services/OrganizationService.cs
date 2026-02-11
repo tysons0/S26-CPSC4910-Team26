@@ -7,7 +7,7 @@ using System.Data;
 using MySql.Data.MySqlClient;
 
 
-using static Class4910Api.Configuration.ConstantValues;
+using static Class4910Api.ConstantValues;
 
 namespace Class4910Api.Services;
 

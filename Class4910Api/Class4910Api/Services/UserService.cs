@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using MySql.Data.MySqlClient;
 
-using static Class4910Api.Configuration.ConstantValues;
+using static Class4910Api.ConstantValues;
 
 namespace Class4910Api.Services;
 
@@ -117,6 +117,8 @@ public class UserService : IUserService
     public async Task<User> GetUserFromReader(DbDataReader reader, string? readPrefix = null)
     {
         string pfx = readPrefix ?? "";
+        if (!string.IsNullOrWhiteSpace(pfx))
+            pfx += "_";
 
         int id = reader.GetInt32($"{pfx}{UserIdField.Name}");
         string username = reader.GetString($"{pfx}{UserUserNameField.Name}");

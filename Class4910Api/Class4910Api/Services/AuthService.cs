@@ -1,7 +1,7 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using static Class4910Api.Configuration.ConstantValues;
+using static Class4910Api.ConstantValues;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -66,7 +66,7 @@ public class AuthService : IAuthService
             {
                 string token = GenerateToken(requestedUser, _jwtSettings);
                 loginSuccess = true;
-                return new() { Token = token };
+                return new() { Token = token, User = requestedUser.ToReadFormat() };
             }
             else
             {
