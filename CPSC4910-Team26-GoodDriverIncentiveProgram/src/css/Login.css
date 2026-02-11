@@ -72,14 +72,14 @@
 .login-submit {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  padding: 0.875rem 1.5rem;
+  padding: 0.875rem 0rem;
   font-size: 1rem;
   font-weight: 600;
   border: none;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.3s ease;
-  margin-top: 0.5rem;
+  margin-top: 1.5rem;
   width: 100%;
   text-decoration: none;
   display: block;
@@ -88,7 +88,8 @@
 
 .login-submit:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 6px 20px rgba(244, 170, 242, 0.4);
+  color: #d7defc
 }
 
 .login-submit:active {
@@ -96,8 +97,9 @@
 }
 
 .back-link {
+  color: #5a6c7d;
   text-align: center;
-  margin-top: 1.5rem;
+  margin-top: 0.5rem;
   padding-top: 1.5rem;
   border-top: 1px solid #e0e0e0;
 }
@@ -128,4 +130,24 @@
   .form-group input {
     padding: 0.65rem 0.875rem;
   }
+}
+
+.password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-wrapper input {
+  width: 100%;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  color: #667eea;
+  font-weight: 600;
+  cursor: pointer;
 }
