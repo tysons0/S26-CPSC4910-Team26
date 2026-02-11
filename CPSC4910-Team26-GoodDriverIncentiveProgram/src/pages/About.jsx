@@ -30,14 +30,16 @@ function About() {
 
       <div className="about-content">
         <div className="about-header">
-          <h1>ByteMe Team26</h1>
+          <h1>
+            {teamData.teamName} Team {teamData.teamNumber}{" "}
+          </h1>
           <p className="tagline">Welcome to our About Page!</p>
           <p className="tagline">
             Learn more about our Good Driver Incentive Program
           </p>
         </div>
         <div className="about-section">
-          <h2> Sprint {teamData?.teamNumber || "1"}</h2>
+          <h2> Sprint {teamData?.version || "?"}</h2>
           <h2>
             {" "}
             Release Date :{" "}
@@ -52,17 +54,14 @@ function About() {
         <div className="about-section">
           <h2>Product Description</h2>
           <p>
-            This application is designed to help incentivize safe driving
-            practices and reward good drivers through our program.
+            {teamData?.productDescription ||
+              "Our Good Driver Incentive Program is designed to reward safe and responsible driving habits. By participating in our program, drivers can earn points for good driving behavior, which can be redeemed for discounts on insurance premiums, gift cards, and other rewards. Our goal is to promote safer roads and encourage drivers to adopt better driving habits."}
           </p>
         </div>
 
         <div className="about-section">
           <h2>Built by CPSC4910 Team 26:</h2>
-          <h2>
-            Armando Sallas, David Misyuk, Derek Smith, Ross Nebitt, and Tyson
-            Small
-          </h2>
+          <h2>{teamData?.teamMembers}</h2>
         </div>
         <div className="about-actions">
           <Link to="/Login" className="login-link-button">
