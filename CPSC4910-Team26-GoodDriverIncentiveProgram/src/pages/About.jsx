@@ -1,8 +1,29 @@
 import { Link } from "react-router-dom";
 import PageTitle from "../components/PageTitle";
+import { useEffect, useState } from "react";
+import { apiService } from "../services/api";
 import "../css/About.css";
 
 function About() {
+  const [teamData, setTeamData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchTeamInfo = async () => {
+      try {
+        const data = await ApiService.getTeamInfo();
+        setTeamData(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTeamInfo();
+  }, []);
+
   return (
     <div className="about-container">
       <PageTitle title="About Page | Team 26" />
@@ -16,10 +37,16 @@ function About() {
           </p>
         </div>
         <div className="about-section">
-          <h2> Sprint #1</h2>
-          <h2> Release Date : TBD</h2>
+          <h2> Sprint {teamData?.teamNumber || "1"}</h2>
+          <h2>
+            {" "}
+            Release Date :{" "}
+            {teamData?.releaseDate
+              ? new Date(teamData?.releaseDate).toLocaleDateString()
+              : "TBD"}
+          </h2>
           <div className="about-header">
-            <h1> Good Driver Incentive Program</h1>
+            <h1> {teamData?.productName || "Good Driver Incentive Program"}</h1>
           </div>
         </div>
         <div className="about-section">
