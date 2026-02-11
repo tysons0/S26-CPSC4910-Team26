@@ -14,8 +14,9 @@ public class User
 
     public override string ToString()
     {
-        return $"User: [Id: {Id}, Role: {Role}, Username: {Username}, Email: {Email ?? ""}, CreatedAtUtc: {CreatedAtUtc}]";
+        return this.ToReadFormat().ToString() ?? "";
     }
+
     public UserRead ToReadFormat() 
     { 
         return new UserRead

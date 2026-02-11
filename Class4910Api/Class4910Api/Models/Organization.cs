@@ -6,4 +6,9 @@ public class Organization
     public required string Name { get; init; }
     public required DateTime CreatedAtUtc { get; init; }
     public required double PointWorth { get; init; }
+
+    public override string ToString()
+    {
+        return $"Organization[OrgId: {OrgId}, Name: {Name}, CreatedAtUtc: {CreatedAtUtc.ToShortDateString()}, PointWorth: {PointWorth}]";
+    }
 }

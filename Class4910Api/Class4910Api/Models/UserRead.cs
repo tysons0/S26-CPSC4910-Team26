@@ -8,4 +8,9 @@ public class UserRead
     public required DateTime CreatedAtUtc { get; init; }
 
     public required string Role { get; set; }
+
+    public override string ToString()
+    {
+        return $"User[Id: {Id}, Role: {Role}, Username: {Username}, Email: {Email ?? "null"}, CreatedAtUtc: {CreatedAtUtc.ToShortDateString()}]";
+    }
 }

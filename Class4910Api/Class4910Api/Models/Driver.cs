@@ -5,4 +5,9 @@ public class Driver
     public required int DriverId { get; init; }
     public int? OrganizationId { get; init; } = null;
     public required UserRead UserData { get; init; }
+
+    override public string ToString()
+    {
+        return $"Driver[DriverId: {DriverId}, OrganizationId: {OrganizationId?.ToString() ?? "null"}, {UserData}]";
+    }
 }
