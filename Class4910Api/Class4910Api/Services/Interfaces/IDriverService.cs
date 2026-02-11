@@ -6,4 +6,6 @@ public interface IDriverService
 {
     Task<Driver?> GetDriverByDriverId(int driverId);
     Task<Driver?> GetDriverByUserId(int userId);
+
+    Task<Driver?> GetDriverByName(string userName);
 }
