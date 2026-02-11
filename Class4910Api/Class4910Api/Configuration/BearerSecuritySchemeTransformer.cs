@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
 
-namespace Class4910Api;
+namespace Class4910Api.Configuration;
 
 // Retrieved from here https://github.com/scalar/scalar/issues/4055
 // Use for attaching JWT to OpenAPI docs, so that Swagger UI can use it for authenticated endpoints

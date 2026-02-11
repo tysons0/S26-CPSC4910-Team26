@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using Class4910Api.Configuration;
 using Class4910Api.Configuration.Database;
 using Class4910Api.Models;
 using Class4910Api.Services;
@@ -13,7 +14,7 @@ using Scalar.AspNetCore;
 using Serilog;
 using Serilog.Sinks.MySQL;
 
-namespace Class4910Api.Configuration;
+namespace Class4910Api;
 
 public static class Startup
 {
@@ -97,6 +98,7 @@ public static class Startup
         builder.Services.Configure<JwtSettings>(builder.Configuration.GetRequiredSection("JwtSettings"));
         builder.Services.Configure<AppSettings>(builder.Configuration.GetRequiredSection("AppSettings"));
         builder.Services.Configure<DatabaseConnection>(builder.Configuration.GetRequiredSection("DatabaseConnection"));
+        builder.Services.Configure<EbayConfig>(builder.Configuration.GetRequiredSection("EbayConfig"));
 
         builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
@@ -108,6 +110,8 @@ public static class Startup
         builder.Services.AddScoped<IDriverService, DriverService>();
         builder.Services.AddScoped<ISponsorService, SponsorService>();
         builder.Services.AddScoped<IOrganizationService, OrganizationService>();
+
+        builder.Services.AddScoped<IEbayService, EbayService>();
 
         return builder;
     }
@@ -129,40 +133,53 @@ public static class Startup
         app.UseAuthorization();
 
         app.MapControllers();
-
-        using (IServiceScope scope = app.Services.CreateScope())
+        try
         {
-            var tokenSettings = scope.ServiceProvider.GetRequiredService<IOptions<JwtSettings>>();
-            JwtSettings jwtSettings = tokenSettings.Value;
-
-            IAuthService authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
-            IOrganizationService orgService = scope.ServiceProvider.GetRequiredService<IOrganizationService>();
-            IAdminService adminService = scope.ServiceProvider.GetRequiredService<IAdminService>();
-
-            RequestData requestData = new()
+            using (IServiceScope scope = app.Services.CreateScope())
             {
-                ClientIP = System.Net.IPAddress.Loopback,
-                UserAgent = "SEED SCOPE"
-            };
+                var tokenSettings = scope.ServiceProvider.GetRequiredService<IOptions<JwtSettings>>();
+                JwtSettings jwtSettings = tokenSettings.Value;
 
-            Admin? seedAdmin = await adminService.GetAdminByName(ConstantValues.seedAdminRequest.UserName);
-            seedAdmin ??= await authService.RegisterAdminUser(ConstantValues.seedAdminRequest, requestData);
+                // Add all services to make sure all can be initialized
+                IEbayService ebayService = scope.ServiceProvider.GetRequiredService<IEbayService>();
+                IContextService contextService = scope.ServiceProvider.GetRequiredService<IContextService>();
 
-            if (seedAdmin is null)
-            {
-                throw new("Failed to create Seed Admin");
+                // Services needed for seeding
+                IAuthService authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
+                IOrganizationService orgService = scope.ServiceProvider.GetRequiredService<IOrganizationService>();
+                IAdminService adminService = scope.ServiceProvider.GetRequiredService<IAdminService>();
+                IDriverService driverService = scope.ServiceProvider.GetRequiredService<IDriverService>();
+                ISponsorService sponsorService = scope.ServiceProvider.GetRequiredService<ISponsorService>();
+
+                RequestData requestData = new()
+                {
+                    ClientIP = System.Net.IPAddress.Loopback,
+                    UserAgent = "SEED SCOPE"
+                };
+
+                Admin? seedAdmin = await adminService.GetAdminByName(ConstantValues.seedAdminRequest.UserName);
+                seedAdmin ??= await authService.RegisterAdminUser(ConstantValues.seedAdminRequest, requestData);
+
+                if (seedAdmin is null)
+                    throw new("Failed to create Seed Admin");
+
+                Organization? seedOrg = await orgService.GetOrganizationByName(ConstantValues.seedOrgName);
+                seedOrg ??= await orgService.CreateOrganization(ConstantValues.seedOrgName, seedAdmin.UserData.Id);
+
+                if (seedOrg is null)
+                    throw new("Failed to create Seed Org");
+
+                Driver? seedDriver = await driverService.GetDriverByName(ConstantValues.seedDriverRequest.UserName);
+                Sponsor? seedSponsor = await sponsorService.GetSponsorByName(ConstantValues.seedSponsorRequest.UserName);
+
+                seedDriver ??= await authService.RegisterDriverUser(ConstantValues.seedDriverRequest, requestData);
+                seedSponsor ??= await authService.RegisterSponsorUser(ConstantValues.seedSponsorRequest, seedOrg.OrgId, seedAdmin.UserData.Id, requestData);
             }
-
-            Organization? seedOrg = await orgService.GetOrganizationByName(ConstantValues.seedOrgName);
-            seedOrg ??= await orgService.CreateOrganization(ConstantValues.seedOrgName, seedAdmin.UserData.Id);
-
-            if (seedOrg is null)
-            {
-                throw new("Failed to create Seed Org");
-            }
-
-            await authService.RegisterDriverUser(ConstantValues.seedDriverRequest, requestData);
-            await authService.RegisterSponsorUser(ConstantValues.seedSponsorRequest, seedOrg.OrgId, seedAdmin.UserData.Id, requestData);
+        }
+        catch (Exception ex)
+        {
+            Log.Fatal(ex, "An error occurred while seeding the database");
+            throw;
         }
 
         return app;

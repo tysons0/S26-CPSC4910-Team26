@@ -1,4 +1,4 @@
-﻿namespace Class4910Api.Configuration;
+﻿namespace Class4910Api;
 
 using System.Data;
 using Class4910Api.Configuration.Database;
@@ -404,6 +404,12 @@ public static class ConstantValues
     public const string DRIVER = nameof(UserRole.Driver);
     public const string SPONSOR = nameof(UserRole.Sponsor);
     public const string USER = nameof(UserRole.User);
+
+    public const string userAlias = "user";
+    public const string driverAlias = "driver";
+    public const string orgAlias = "org";
+    public const string sponsorAlias = "sponsor";
+    public const string adminAlias = "admin";
 
     #region Seed Info
 

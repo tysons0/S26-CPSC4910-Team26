@@ -1,4 +1,4 @@
-using Class4910Api.Configuration;
+using Class4910Api;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
