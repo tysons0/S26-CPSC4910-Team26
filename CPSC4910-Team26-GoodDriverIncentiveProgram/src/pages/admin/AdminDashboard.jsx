@@ -19,10 +19,13 @@ function AdminDashboard() {
 
       <div className="back-link">
         <p>
-          Register a Driver <Link to="/DriverSignUp">Sign Up Here</Link>
+          Register a Driver <Link to="/DriverSignUp">Create one Here</Link>
         </p>
         <p>
-          Register a Sponsor <Link to="/SponsorSignUp">Sign Up Here</Link>
+          Register a Sponsor <Link to="/SponsorSignUp">Create one Here</Link>
+        </p>
+        <p>
+          Register an Admin <Link to="/AdminSignUp">Create one Here</Link>
         </p>
         <p>
           <Link to="/">Back to About Page</Link>

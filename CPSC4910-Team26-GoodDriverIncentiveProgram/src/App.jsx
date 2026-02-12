@@ -12,6 +12,7 @@ import DriverDashboard from "./pages/driver/DriverDashboard";
 import SponsorDashboard from "./pages/sponsor/SponsorDashboard";
 import DriverSignUp from "./pages/auth/DriverSignUp";
 import SponsorSignUp from "./pages/auth/SponsorSignUp";
+import AdminSignUp from "./pages/auth/AdminSignUp";
 
 function App() {
   return (
@@ -23,12 +24,14 @@ function App() {
         <Route path="/Login" element={<Login />} />
         <Route path="/DriverSignUp" element={<DriverSignUp />} />
         <Route path="/Sponsors" element={<Sponsors />} />
+        <Route path="/Dashboard" element={<Dashboard />} />
 
         {/* Protected Routes */}
         <Route path="/AdminDashboard" element={<AdminDashboard />} />
         <Route path="/DriverDashboard" element={<DriverDashboard />} />
         <Route path="/SponsorDashboard" element={<SponsorDashboard />} />
         <Route path="/SponsorSignUp" element={<SponsorSignUp />} />
+        <Route path="/AdminSignUp" element={<AdminSignUp />} />
 
         <Route path="/Profile" element={<Profile />} />
         <Route path="/SignUp" element={<SignUp />} />
