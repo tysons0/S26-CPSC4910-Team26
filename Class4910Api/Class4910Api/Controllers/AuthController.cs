@@ -26,7 +26,7 @@ public class AuthController : ControllerBase
     }
 
     [Authorize]
-    [HttpGet("me")]
+    [HttpGet(GetUserFromTokenRoute)]
     public async Task<ActionResult<UserRead>> GetCurrentUser()
     {
         UserRead? userData = await _authService.GetUserFromRequest(HttpContext);

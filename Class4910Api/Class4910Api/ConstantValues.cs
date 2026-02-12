@@ -442,4 +442,10 @@ public static class ConstantValues
 
     public const string seedOrgName = "Seed Org";
     #endregion
+
+    #region Routes 
+    public const string AuthBaseRoute = "Auth";
+    public const string GetUserFromTokenRoute = "me";
+    public const string LoginRoute = "login";
+    #endregion
 }
