@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import PageTitle from "../../components/PageTitle";
-import ProductCard from "../../components/Product";
+import ProductCard from "../../components/Product.jsx";
 import "../../css/Dashboard.css";
 
 function SponsorDashboard() {
