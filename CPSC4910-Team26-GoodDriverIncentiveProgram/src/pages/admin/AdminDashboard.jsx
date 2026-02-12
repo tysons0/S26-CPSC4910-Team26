@@ -8,13 +8,13 @@ function AdminDashboard() {
     <div style={{ padding: "2rem" }}>
       <PageTitle title="Product Dashboard" />
       <h1>Admin Dashboard</h1>
-      <Link to="/">
+      <p>
+        Welcome to your Dashboard! This is where you can view all the Drivers
+        and Sponsors.
+      </p>
+      <Link to="/Login">
         <button className="submit"> Logout </button>
       </Link>
-      <p>
-        Welcome to the Dashboard! This is where you can view all the Drivers and
-        Sponsors.
-      </p>
       <h2>Manage Users</h2>
 
       <div className="back-link">

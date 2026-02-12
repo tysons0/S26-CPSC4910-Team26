@@ -198,6 +198,12 @@ const apiService = {
     if (!userRole) return false;
     return userRole.toLowerCase() === role.toLowerCase();
   },
+
+  isAuthenticated: () => {
+    const token = apiService.getToken();
+    const user = apiService.getCurrentUser();
+    return !!(token && user);
+  },
 };
 
 export default apiService;

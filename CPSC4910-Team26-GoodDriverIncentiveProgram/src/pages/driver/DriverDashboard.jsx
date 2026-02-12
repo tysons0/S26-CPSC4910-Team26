@@ -25,7 +25,7 @@ function DriverDashboard() {
     <div style={{ padding: "2rem" }}>
       <PageTitle title="Product Dashboard" />
       <h1>Dashboard</h1>
-      <Link to="/">
+      <Link to="/Login">
         <button className="submit"> Logout </button>
       </Link>
       <p>

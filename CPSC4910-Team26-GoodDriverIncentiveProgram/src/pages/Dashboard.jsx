@@ -23,11 +23,8 @@ function Dashboard() {
   ];
   return (
     <div style={{ padding: "2rem" }}>
-      <PageTitle title="Product Dashboard"/>
+      <PageTitle title="Product Dashboard" />
       <h1>Dashboard</h1>
-      <Link to="/Login">
-        <button className="submit"> Logout </button>
-      </Link>
       <p>
         Welcome to the Dashboard! This is where you can view your driving stats
         and rewards.

@@ -23,6 +23,8 @@ function Login() {
 
       const role = user.role?.toLowerCase();
 
+      window.dispatchEvent(new Event("authChange"));
+
       if (role === "admin") {
         navigate("/AdminDashboard");
       } else if (role === "driver") {
