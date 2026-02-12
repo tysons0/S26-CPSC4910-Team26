@@ -1,10 +1,10 @@
 import { Link, useNavigate } from "react-router-dom";
 import PageTitle from "../../components/PageTitle";
 import { useState } from "react";
-import { apiService } from "../../services/api";
-import "../css/SignUp.css";
+import apiService from "../../services/api";
+import "../../css/SignUp.css";
 
-function SignUp() {
+function DriverSignUp() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     firstName: "",
@@ -197,4 +197,4 @@ function SignUp() {
   );
 }
 
-export default SignUp;
+export default DriverSignUp;

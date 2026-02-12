@@ -65,8 +65,8 @@ const apiService = {
   registerDriver: async (userData) => {
     try {
       const registerData = JSON.stringify({
-          userName: userData.userName,
-          password: userData.password,
+        userName: userData.userName,
+        password: userData.password,
       });
 
       return await apiService.postData("Auth/register/driver", registerData);
@@ -79,14 +79,14 @@ const apiService = {
   login: async (credentials) => {
     try {
       const loginData = JSON.stringify({
-          userName: credentials.userName,
-          password: credentials.password,
-        });
-      
+        userName: credentials.userName,
+        password: credentials.password,
+      });
+
       const response = await apiService.postData("Auth/login", loginData);
 
       const token = await response.token;
-      
+
       console.log("Login successful, received token:", token);
       console.log("User info from login response:", response.user);
 

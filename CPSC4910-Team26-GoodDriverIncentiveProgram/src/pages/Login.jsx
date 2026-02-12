@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import apiService from "../services/api";
@@ -20,10 +19,19 @@ function Login() {
     setLoading(true);
 
     try {
-      await apiService.login({ userName, password });
+      const { user } = await apiService.login({ userName, password });
 
-      // Redirect after successful login
-      navigate("/Dashboard");
+      const role = user.role?.toLowerCase();
+
+      if (role === "admin") {
+        navigate("/AdminDashboard");
+      } else if (role === "driver") {
+        navigate("/DriverDashboard");
+      } else if (role === "sponsor") {
+        navigate("/SponsorDashboard");
+      } else {
+        navigate("/About");
+      }
     } catch (err) {
       setError(err.message || "Login failed");
     } finally {
@@ -72,22 +80,16 @@ function Login() {
             </div>
           </div>
 
-          <button
-            type="submit"
-            className="login-submit"
-            disabled={loading}
-          >
+          <button type="submit" className="login-submit" disabled={loading}>
             {loading ? "Logging in..." : "Login"}
           </button>
 
           {error && <p className="login-error">{error}</p>}
-
         </form>
 
         <div className="back-link">
           <p>
-            Don't have an account?{" "}
-            <Link to="/SignUp">Sign Up Here</Link>
+            Don't have an account? <Link to="/DriverSignUp">Sign Up Here</Link>
           </p>
           <p>
             <Link to="/">Back to About Page</Link>
@@ -99,4 +101,3 @@ function Login() {
 }
 
 export default Login;
-
