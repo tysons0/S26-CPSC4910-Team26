@@ -11,6 +11,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import DriverDashboard from "./pages/driver/DriverDashboard";
 import SponsorDashboard from "./pages/sponsor/SponsorDashboard";
 import DriverSignUp from "./pages/auth/DriverSignUp";
+import SponsorSignUp from "./pages/auth/SponsorSignUp";
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
         <Route path="/AdminDashboard" element={<AdminDashboard />} />
         <Route path="/DriverDashboard" element={<DriverDashboard />} />
         <Route path="/SponsorDashboard" element={<SponsorDashboard />} />
+        <Route path="/SponsorSignUp" element={<SponsorSignUp />} />
 
         <Route path="/Profile" element={<Profile />} />
         <Route path="/SignUp" element={<SignUp />} />

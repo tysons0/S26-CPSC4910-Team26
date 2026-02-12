@@ -16,6 +16,18 @@ function AdminDashboard() {
         Sponsors.
       </p>
       <h2>Manage Users</h2>
+
+      <div className="back-link">
+        <p>
+          Register a Driver <Link to="/DriverSignUp">Sign Up Here</Link>
+        </p>
+        <p>
+          Register a Sponsor <Link to="/SponsorSignUp">Sign Up Here</Link>
+        </p>
+        <p>
+          <Link to="/">Back to About Page</Link>
+        </p>
+      </div>
     </div>
   );
 }

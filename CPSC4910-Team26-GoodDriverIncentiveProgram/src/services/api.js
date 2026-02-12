@@ -76,6 +76,34 @@ const apiService = {
     }
   },
 
+  registerSponsor: async (userData) => {
+    try {
+      const registerData = JSON.stringify({
+        userName: userData.userName,
+        password: userData.password,
+      });
+
+      return await apiService.postData("Auth/register/sponsor", registerData);
+    } catch (error) {
+      console.error("API POST Register Sponsor Error:", error);
+      throw error;
+    }
+  },
+
+  registerAdmin: async (userData) => {
+    try {
+      const registerData = JSON.stringify({
+        userName: userData.userName,
+        password: userData.password,
+      });
+
+      return await apiService.postData("Auth/register/admin", registerData);
+    } catch (error) {
+      console.error("API POST Register Admin Error:", error);
+      throw error;
+    }
+  },
+
   login: async (credentials) => {
     try {
       const loginData = JSON.stringify({
