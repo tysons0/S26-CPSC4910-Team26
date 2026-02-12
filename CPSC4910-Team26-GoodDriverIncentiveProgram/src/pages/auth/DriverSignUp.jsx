@@ -3,6 +3,7 @@ import PageTitle from "../../components/PageTitle";
 import { useState } from "react";
 import apiService from "../../services/api";
 import "../../css/SignUp.css";
+import { USERNAME_REGEX, USERNAME_REGEX_ERROR } from '../../services/regex';
 
 function DriverSignUp() {
   const navigate = useNavigate();
@@ -36,6 +37,10 @@ function DriverSignUp() {
     if (!formData.userName.trim()) {
       newErrors.userName = "Username is required";
     }
+    else if (!USERNAME_REGEX.test(formData.userName)) {
+      newErrors.userName = USERNAME_REGEX_ERROR;
+    } 
+
     if (!formData.password) {
       newErrors.password = "Password is required";
     } else if (formData.password.length < 6) {
