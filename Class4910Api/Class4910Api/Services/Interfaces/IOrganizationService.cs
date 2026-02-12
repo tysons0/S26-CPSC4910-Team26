@@ -11,4 +11,6 @@ public interface IOrganizationService
     Task<Organization?> GetOrganizationByName(string orgName);
 
     Task<Organization?> UpdateOrganizationPointValue(int organizationId, float newPointValue, int updaterUserId);
+
+    Task<List<Organization>?> GetOrganizations();
 }

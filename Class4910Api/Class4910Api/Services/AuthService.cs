@@ -21,9 +21,10 @@ public class AuthService : IAuthService
     private readonly IUserService _userService;
     private readonly string _dbConnection;
     private readonly AppSettings _appSettings;
+    private readonly ISponsorService _sponserService;
 
-    public AuthService(IContextService contextService, IUserService userService, IOptions<JwtSettings> jwtOptions,
-        ILogger<AuthService> logger, IPasswordHasher<User> passwordHasher,
+    public AuthService(IContextService contextService, IUserService userService, ISponsorService sponsorService,
+        IOptions<JwtSettings> jwtOptions, ILogger<AuthService> logger, IPasswordHasher<User> passwordHasher,
         IOptions<DatabaseConnection> databaseConnection, IOptions<AppSettings> appSettings)
     {
         _contextService = contextService;
@@ -33,6 +34,7 @@ public class AuthService : IAuthService
         _userService = userService;
         _appSettings = appSettings.Value;
         _dbConnection = databaseConnection.Value.Connection;
+        _sponserService = sponsorService;
     }
 
 
@@ -104,6 +106,46 @@ public class AuthService : IAuthService
 
         _logger.LogInformation("Retrieved user information from request: {UserData}", userRead);
         return userRead;
+    }
+
+    public async Task<bool> UserHasAccessToEditOrg(int userId, UserRole role, int orgId)
+    {
+        User? user = await _userService.FindUserById(userId);
+
+        if (user is null || user.Role != role)
+        {
+            _logger.LogWarning("UserId {UserId} with role {UserRole} was denied access to edit Organization[{OrgId}].",
+                userId, role, orgId);
+            return false;
+        }
+
+        if (role == UserRole.Admin)
+        {
+            _logger.LogInformation("Admin UserId {UserId} was granted access to edit Organization[{OrgId}].",
+                userId, orgId);
+            return true;
+        }
+        else if (role == UserRole.Sponsor)
+        {
+            Sponsor? sponsor = await _sponserService.GetSponsorByUserId(userId);
+            bool hasAccess = (sponsor is not null && orgId == sponsor.SponsorId);
+            if (hasAccess)
+            {
+                _logger.LogInformation("Sponsor UserId {UserId} was granted access to edit Organization[{OrgId}].",
+                    userId, orgId);
+            }
+            else
+            {
+                _logger.LogWarning("Sponsor UserId {UserId} was denied access to edit Organization[{OrgId}] because they are not a sponsor of the organization.",
+                    userId, orgId);
+            }
+            return hasAccess;
+        }
+        else
+        {
+            _logger.LogWarning("User: {UserData} was denied access to edit Organization[{OrgId}]", user, orgId);
+            return false;
+        }
     }
 
     #region Registration Methods

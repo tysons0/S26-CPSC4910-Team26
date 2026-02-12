@@ -1,12 +1,11 @@
-﻿using System.Data.Common;
+﻿using System.Data;
+using System.Data.Common;
+using System.Reflection.PortableExecutable;
 using Class4910Api.Configuration;
 using Class4910Api.Models;
 using Class4910Api.Services.Interfaces;
 using Microsoft.Extensions.Options;
-using System.Data;
 using MySql.Data.MySqlClient;
-
-
 using static Class4910Api.ConstantValues;
 
 namespace Class4910Api.Services;
@@ -75,7 +74,10 @@ public class OrganizationService : IOrganizationService
                 return orgFromid;
             }
             else
-                throw new($"No data found.");
+            {
+                _logger.LogInformation("No Organization found using orgId[{Id}]", organizationId);
+                return null;
+            }
         }
         catch (Exception ex)
         {
@@ -107,11 +109,45 @@ public class OrganizationService : IOrganizationService
                 return orgFromid;
             }
             else
-                throw new($"No data found.");
+            {
+                _logger.LogInformation("No Organization found using orgName[{Name}]", orgName);
+                return null;
+            }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving Organization using orgName[{Name}]", orgName);
+            return null;
+        }
+    }
+
+    public async Task<List<Organization>?> GetOrganizations()
+    {
+        try
+        {
+            List<Organization> orgs = [];
+            await using MySqlConnection conn = new(_dbConnection);
+            conn.Open();
+            MySqlCommand command = conn.CreateCommand();
+
+            command.CommandText =
+                @$"SELECT * 
+                   FROM {OrgsTable.Name}";
+
+            await using DbDataReader reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                Organization org = await GetOrganizationFromReader(reader);
+                orgs.Add(org);
+            }
+
+            _logger.LogInformation("Retrieved all Organizations, count[{Count}]", orgs.Count);
+            return orgs;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error finding organizations");
             return null;
         }
     }

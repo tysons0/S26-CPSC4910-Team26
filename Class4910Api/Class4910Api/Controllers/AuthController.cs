@@ -17,12 +17,17 @@ public class AuthController : ControllerBase
     private readonly ILogger<AuthController> _logger;
     private readonly IAuthService _authService;
     private readonly IContextService _contextService;
+    private readonly IUserService _userService;
+    private readonly IOrganizationService _organizationService;
 
-    public AuthController(ILogger<AuthController> logger, IAuthService authService, IContextService contextService)
+    public AuthController(ILogger<AuthController> logger, IUserService userService, IOrganizationService organizationService,
+                          IAuthService authService, IContextService contextService)
     {
         _logger = logger;
         _authService = authService;
         _contextService = contextService;
+        _userService = userService;
+        _organizationService = organizationService;
     }
 
     [Authorize]
@@ -77,6 +82,15 @@ public class AuthController : ControllerBase
             return BadRequest(error);
         }
 
+        User? existingUser = await _userService.FindUserByName(request.UserName);
+
+        if (existingUser is not null)
+        {
+            string error = $"A user with the username {request.UserName} already exists";
+            _logger.LogWarning("{Error}", error);
+            return BadRequest(error);
+        }
+
         Admin? admin = await _authService.RegisterAdminUser(request, requestData);
 
         if (admin is null)
@@ -100,6 +114,15 @@ public class AuthController : ControllerBase
             return BadRequest(error);
         }
 
+        User? existingUser = await _userService.FindUserByName(request.UserName);
+
+        if (existingUser is not null)
+        {
+            string error = $"A user with the username {request.UserName} already exists";
+            _logger.LogWarning("{Error}", error);
+            return BadRequest(error);
+        }
+
         Driver? user = await _authService.RegisterDriverUser(request, requestData);
 
         if (user is null)
@@ -114,23 +137,51 @@ public class AuthController : ControllerBase
 
     [Authorize(Roles = $"{ADMIN},{SPONSOR}")]
     [HttpPost("register/sponsor")]
-    public async Task<ActionResult<Driver>> RegisterSponsor([FromBody] UserRequest request, [FromQuery] int orgId)
+    public async Task<ActionResult<Sponsor>> RegisterSponsor([FromBody] UserRequest request, [FromQuery] int orgId)
     {
         RequestData? requestData = _contextService.GetRequestData(HttpContext);
-        _contextService.GetUserId(HttpContext);
+        int creatorId = _contextService.GetUserId(HttpContext);
+        UserRole role = Enum.Parse<UserRole>(_contextService.GetUserRole(HttpContext));
 
-        if (requestData is null)
+        bool orgEditAccess = await _authService.UserHasAccessToEditOrg(creatorId, role, orgId);
+
+        if (orgEditAccess == false)
         {
-            string error = $"Could not retrieve Request Data for driver creation on {request.UserName}";
+            string error = $"User {creatorId} does not have permission to create sponsors for org {orgId}";
+            _logger.LogWarning("{Error}", error);
+            return Forbid();
+        }
+
+        Organization? org = await _organizationService.GetOrganizationById(orgId);
+
+        if (org is null)
+        {
+            string error = $"Organization[{orgId}] does not exist.";
+            _logger.LogInformation("{Error}", error);
+            return BadRequest(error);
+        }
+
+        User? existingUser = await _userService.FindUserByName(request.UserName);
+
+        if (existingUser is not null)
+        {
+            string error = $"A user with the username {request.UserName} already exists";
             _logger.LogWarning("{Error}", error);
             return BadRequest(error);
         }
 
-        Driver? user = await _authService.RegisterDriverUser(request, requestData);
+        if (requestData is null)
+        {
+            string error = $"Could not retrieve Request Data for sponsor creation on {request.UserName}";
+            _logger.LogWarning("{Error}", error);
+            return BadRequest(error);
+        }
+
+        Sponsor? user = await _authService.RegisterSponsorUser(request, orgId, creatorId, requestData);
 
         if (user is null)
         {
-            string error = $"Failed to create driver {request.UserName}";
+            string error = $"Failed to create sponsor {request.UserName}";
             _logger.LogError("{Error}", error);
             return BadRequest(error);
         }
