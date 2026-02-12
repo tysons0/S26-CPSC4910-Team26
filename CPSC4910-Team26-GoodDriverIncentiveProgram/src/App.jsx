@@ -3,7 +3,6 @@ import "./css/App.css";
 import About from "./pages/About";
 import Login from "./pages/Login";
 import NavBar from "./components/NavBar";
-import Dashboard from "./pages/Dashboard";
 import Sponsors from "./pages/Sponsors";
 import Profile from "./pages/Profile";
 import SignUp from "./pages/auth/DriverSignUp";
@@ -24,7 +23,6 @@ function App() {
         <Route path="/Login" element={<Login />} />
         <Route path="/DriverSignUp" element={<DriverSignUp />} />
         <Route path="/Sponsors" element={<Sponsors />} />
-        <Route path="/Dashboard" element={<Dashboard />} />
 
         {/* Protected Routes */}
         <Route path="/AdminDashboard" element={<AdminDashboard />} />
