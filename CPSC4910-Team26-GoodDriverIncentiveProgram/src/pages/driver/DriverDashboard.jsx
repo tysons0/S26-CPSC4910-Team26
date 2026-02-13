@@ -1,9 +1,37 @@
 import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import PageTitle from "../../components/PageTitle";
+<<<<<<< HEAD
 import ProductCard from "../../components/Product.jsx";
+=======
+import ProductCard from "../../components/Product";
+import apiService from "../../services/api";
+>>>>>>> 21f68af (Added username to dashboard when user logs in. Registering a Sponsor and Admin now works.)
 import "../../css/Dashboard.css";
 
 function DriverDashboard() {
+  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const userData = await apiService.getUserInfo();
+        if (userData) {
+          setUser(userData);
+          localStorage.setItem("user", JSON.stringify(userData));
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUserData();
+  }, []);
+
   const tempProducts = [
     {
       name: "T-Shirt",
@@ -29,8 +57,7 @@ function DriverDashboard() {
         <button className="submit"> Logout </button>
       </Link>
       <p>
-        Welcome to the Dashboard! This is where you can view your driving stats
-        and rewards.
+        Welcome back, <strong> {user?.username || "Driver"}! </strong>
       </p>
       <h2>Available Products</h2>
       <div className="product-grid">

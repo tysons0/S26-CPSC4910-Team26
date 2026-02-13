@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import PageTitle from "../../components/PageTitle";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import apiService from "../../services/api";
 import "../../css/SignUp.css";
 import { USERNAME_REGEX, USERNAME_REGEX_ERROR } from "../../services/regex";
@@ -17,6 +17,22 @@ function AdminSignUp() {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    if (!apiService.isAuthenticated()) {
+      alert("You must be logged in as an admin to register admins");
+      navigate("/Login");
+      return;
+    }
+
+    const userRole = apiService.getUserRole();
+    const allowedRoles = ["admin"];
+
+    if (!allowedRoles.includes(userRole?.toLowerCase())) {
+      alert("Only admins can register new admins");
+      navigate("/Dashboard");
+    }
+  }, [navigate]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -24,6 +40,7 @@ function AdminSignUp() {
       setErrors((prev) => ({ ...prev, [name]: null }));
     }
   };
+
   const validateForm = () => {
     const newErrors = {};
     if (!formData.firstName.trim()) {
@@ -64,8 +81,8 @@ function AdminSignUp() {
         password: formData.password,
       });
       console.log("Registration successful:", response);
-      alert("Successfully registered! You can now log in.");
-      navigate("/Login");
+      alert("Admin successfully registered! ");
+      navigate("/AdminDashboard");
     } catch (error) {
       console.error("Registration error:", error);
       setErrors({
@@ -78,7 +95,7 @@ function AdminSignUp() {
 
   return (
     <div className="signup-container">
-      <PageTitle title="Driver Signup" />
+      <PageTitle title="Admin Signup" />
 
       <div className="signup-card">
         <h1 className="signup-title">Register an Admin!</h1>
@@ -169,6 +186,10 @@ function AdminSignUp() {
           <button type="submit" className="submit-button" disabled={loading}>
             {loading ? "Signing up..." : "Sign Up"}
           </button>
+
+          <p className="login-link">
+            <Link to="/AdminDashboard">Back to Admin Dashboard</Link>
+          </p>
         </form>
       </div>
     </div>

@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import PageTitle from "../../components/PageTitle";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import apiService from "../../services/api";
 import "../../css/SignUp.css";
 import { USERNAME_REGEX, USERNAME_REGEX_ERROR } from "../../services/regex";
@@ -14,10 +14,28 @@ function SponsorSignUp() {
     email: "",
     password: "",
     confirmPassword: "",
-    orginization: "",
+    orgId: "",
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!apiService.isAuthenticated()) {
+      alert(
+        "You must be logged in as an admin or sponsor to register sponsors",
+      );
+      navigate("/Login");
+      return;
+    }
+
+    const userRole = apiService.getUserRole();
+    const allowedRoles = ["admin", "sponsor"];
+
+    if (!allowedRoles.includes(userRole?.toLowerCase())) {
+      alert("Only admins and sponsors can register new sponsors");
+      navigate("/Dashboard");
+    }
+  }, [navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -52,8 +70,8 @@ function SponsorSignUp() {
     if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = "Invalid email address";
     }
-    if (!formData.orginization) {
-      newErrors.orginization = "Orginization is required";
+    if (!formData.orgId) {
+      newErrors.orgId = "Orginization is required";
     }
 
     setErrors(newErrors);
@@ -67,13 +85,25 @@ function SponsorSignUp() {
     }
     setLoading(true);
     try {
-      const response = await apiService.registerSponsor({
-        userName: formData.userName,
-        password: formData.password,
-      });
+      const orgId = parseInt(formData.orgId);
+
+      const response = await apiService.registerSponsor(
+        {
+          userName: formData.userName,
+          password: formData.password,
+        },
+        orgId,
+      );
+
       console.log("Registration successful:", response);
-      alert("Successfully registered! You can now log in.");
-      navigate("/Login");
+      alert("Sponsor successfully registered!");
+
+      const userRole = apiService.getUserRole();
+      if (userRole?.toLowerCase() === "admin") {
+        navigate("/AdminDashboard");
+      } else if (userRole?.toLowerCase() === "sponsor") {
+        navigate("/SponsorDashboard");
+      }
     } catch (error) {
       console.error("Registration error:", error);
       setErrors({
@@ -82,6 +112,16 @@ function SponsorSignUp() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const getBackLink = () => {
+    const userRole = apiService.getUserRole();
+    if (userRole?.toLowerCase() === "admin") {
+      return "/AdminDashboard";
+    } else if (userRole?.toLowerCase() === "sponsor") {
+      return "/SponsorDashboard";
+    }
+    return "/";
   };
 
   return (
@@ -185,17 +225,17 @@ function SponsorSignUp() {
           </div>
 
           <div className="form-group">
-            <label>Orginization</label>
+            <label>Organization ID</label>
             <input
-              type="text"
-              name="orginization"
-              placeholder="Sponsor Orginization"
-              value={formData.orginization}
+              type="number"
+              name="orgId"
+              placeholder="Enter Organization ID"
+              value={formData.orgId}
               onChange={handleChange}
-              className={errors.orginization ? "error" : ""}
+              className={errors.orgId ? "error" : ""}
             />
-            {errors.orginization && (
-              <span className="error-message">{errors.orginization}</span>
+            {errors.orgId && (
+              <span className="error-message">{errors.orgId}</span>
             )}
           </div>
 
@@ -204,11 +244,11 @@ function SponsorSignUp() {
           )}
 
           <button type="submit" className="submit-button" disabled={loading}>
-            {loading ? "Signing up..." : "Sign Up"}
+            {loading ? "Registering..." : "Register Sponsor"}
           </button>
 
           <p className="login-link">
-            Already have an account? <Link to="/login">Log in</Link>
+            <Link to={getBackLink()}>Back to Dashboard</Link>
           </p>
         </form>
       </div>

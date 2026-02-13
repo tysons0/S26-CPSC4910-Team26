@@ -1,16 +1,40 @@
 import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import PageTitle from "../../components/PageTitle";
-import ProductCard from "../../components/Product.jsx";
+import ProductCard from "../../components/Product";
+import apiService from "../../services/api";
 import "../../css/Dashboard.css";
 
 function AdminDashboard() {
+  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const userData = await apiService.getUserInfo();
+        if (userData) {
+          setUser(userData);
+          localStorage.setItem("user", JSON.stringify(userData));
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUserData();
+  }, []);
+
   return (
     <div style={{ padding: "2rem" }}>
       <PageTitle title="Product Dashboard" />
       <h1>Admin Dashboard</h1>
       <p>
-        Welcome to your Dashboard! This is where you can view all the Drivers
-        and Sponsors.
+        Welcome back, <strong> {user?.username || "Admin"}! </strong>! This is
+        where you can view all the Drivers and Sponsors.
       </p>
       <Link to="/Login">
         <button className="submit"> Logout </button>

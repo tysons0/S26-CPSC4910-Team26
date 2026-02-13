@@ -76,14 +76,31 @@ const apiService = {
     }
   },
 
-  registerSponsor: async (userData) => {
+  registerSponsor: async (userData, orgId) => {
     try {
-      const registerData = JSON.stringify({
-        userName: userData.userName,
-        password: userData.password,
-      });
+      const token = apiService.getToken();
+      if (!token) {
+        throw new error(
+          "You must be loggen in as a admin or sponsor to register a sponsor",
+        );
+      }
 
-      return await apiService.postData("Auth/register/sponsor", registerData);
+      const response = await fetch(
+        `${BASE_URL}/Auth/register/sponsor?orgId=${orgId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            userName: userData.userName,
+            password: userData.password,
+          }),
+        },
+      );
+
+      return await handleResponse(response);
     } catch (error) {
       console.error("API POST Register Sponsor Error:", error);
       throw error;
@@ -92,12 +109,24 @@ const apiService = {
 
   registerAdmin: async (userData) => {
     try {
-      const registerData = JSON.stringify({
-        userName: userData.userName,
-        password: userData.password,
+      const token = apiService.getToken();
+      if (!token) {
+        throw new error("You must be logged in as a admin to register a admin");
+      }
+
+      const response = await fetch(`${BASE_URL}/Auth/register/admin`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          userName: userData.userName,
+          password: userData.password,
+        }),
       });
 
-      return await apiService.postData("Auth/register/admin", registerData);
+      return await handleResponse(response);
     } catch (error) {
       console.error("API POST Register Admin Error:", error);
       throw error;
@@ -142,9 +171,7 @@ const apiService = {
         throw new Error("No authentication token found");
       }
 
-      const response = await apiService.getDataWithAuth("Auth/me", token);
-
-      const userData = await response.json();
+      const userData = await apiService.getDataWithAuth("Auth/me", token);
       return userData;
     } catch (error) {
       console.error("Get User Info Error:", error);
