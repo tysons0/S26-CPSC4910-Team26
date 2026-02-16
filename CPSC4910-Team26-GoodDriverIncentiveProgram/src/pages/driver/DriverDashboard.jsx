@@ -2,12 +2,8 @@ import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import PageTitle from "../../components/PageTitle";
-<<<<<<< HEAD
-import ProductCard from "../../components/Product.jsx";
-=======
 import ProductCard from "../../components/Product";
 import apiService from "../../services/api";
->>>>>>> 21f68af (Added username to dashboard when user logs in. Registering a Sponsor and Admin now works.)
 import "../../css/Dashboard.css";
 
 function DriverDashboard() {
