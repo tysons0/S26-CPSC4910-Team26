@@ -49,4 +49,63 @@ public class EbayService : IEbayService
 
         return _accessToken!;
     }
+
+     public async Task<EbaySearchResponse> SearchProductsAsync(string keyword, int limit = 12)
+        {
+            try
+            {
+                var token = await GetAccessToken();
+
+                var searchUrl = $"{_config.BaseUrl}/buy/browse/v1/item_summary/search?q={Uri.EscapeDataString(keyword)}&limit={limit}";
+
+                var request = new HttpRequestMessage(HttpMethod.Get, searchUrl);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                request.Headers.Add("X-EBAY-C-MARKETPLACE-ID", _config.MarketplaceId);
+
+                var response = await _httpClient.SendAsync(request);
+                response.EnsureSuccessStatusCode();
+
+                var content = await response.Content.ReadAsStringAsync();
+
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+
+                var searchResponse = JsonSerializer.Deserialize<EbayApiResponse>(content, options);
+
+                var products = new List<EbayProduct>();
+                if (searchResponse?.ItemSummaries != null)
+                {
+                    foreach (var item in searchResponse.ItemSummaries)
+                    {
+                        products.Add(new EbayProduct
+                        {
+                            Name = item.Title ?? "Unknown Product",
+                            Points = (int)Math.Round((item.Price?.Value ?? 0) * 10), // $1 = 10 points
+                            Image = item.Image?.ImageUrl ?? item.ThumbnailImages?[0]?.ImageUrl ?? "",
+                            Description = item.ShortDescription ?? "",
+                            Price = item.Price?.Value ?? 0,
+                            Currency = item.Price?.Currency ?? "USD",
+                            ItemId = item.ItemId ?? "",
+                            ItemWebUrl = item.ItemWebUrl ?? "",
+                            Condition = item.Condition ?? ""
+                        });
+                    }
+                }
+
+                _logger.LogInformation("eBay search for '{Keyword}' returned {Count} products", keyword, products.Count);
+
+                return new EbaySearchResponse
+                {
+                    Products = products,
+                    Total = searchResponse?.Total ?? 0
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "eBay product search failed for keyword: {Keyword}", keyword);
+                throw new Exception($"eBay product search failed: {ex.Message}");
+            }
+        }
 }

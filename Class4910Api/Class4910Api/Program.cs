@@ -2,7 +2,7 @@ using Class4910Api;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddHttpClient<EbayService>();
+// builder.Services.AddHttpClient<EbayService>();
 
 builder = Startup.CreateBuilder(builder);
 
