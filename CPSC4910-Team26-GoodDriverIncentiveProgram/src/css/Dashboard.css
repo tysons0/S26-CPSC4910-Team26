@@ -1,75 +1,171 @@
-/* Dashboard.css or App.css */
+/* ===== Wireframe-style Product Catalog Layout ===== */
 
-.product-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 1.5rem;
-  margin-top: 1rem;
+.catalog-page {
+  padding: 2rem;
 }
 
-.product-card {
-  background-color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  text-align: center;
-  transition:
-    transform 0.2s,
-    box-shadow 0.2s;
+.catalog-header {
   display: flex;
-  flex-direction: column;
+  align-items: flex-start;
   justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
 }
 
-.product-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+.catalog-title {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
 }
 
-.product-image {
-  width: 100%;
-  height: 150px;
-  object-fit: cover;
-}
-
-.product-name {
-  font-size: 1.1rem;
-  margin: 0.5rem 0;
-}
-
-.product-points {
-  color: #555;
-  font-size: 0.9rem;
-  margin-bottom: 0.5rem;
-}
-
-.product-button {
-  background-color: #4caf50;
-  color: white;
-  border: none;
-  padding: 0.5rem;
-  margin: 0.5rem;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.product-button:hover {
-  background-color: #45a049;
-}
-
-/* Optional: style your logout button */
-.lsubmit {
-  margin-top: 2rem;
-  padding: 0.6rem 1.2rem;
-  border: none;
-  border-radius: 6px;
-  background-color: #f44336;
-  color: white;
-  cursor: pointer;
+.catalog-points {
+  margin-top: 0.35rem;
+  color: #4a5568;
   font-size: 1rem;
 }
 
-.lsubmit:hover {
-  background-color: #d32f2f;
+.catalog-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.catalog-filters {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem;
+  background: #fff;
+}
+
+.filters-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.filter-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filter-label {
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.filter-row input,
+.catalog-filters input,
+.catalog-filters select {
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #cbd5e0;
+  font-size: 0.95rem;
+}
+
+.filter-divider {
+  height: 1px;
+  background: #edf2f7;
+  margin: 1rem 0;
+}
+
+.catalog-results {
+  min-width: 0;
+}
+
+.catalog-error {
+  padding: 0.75rem 1rem;
+  border: 1px solid #feb2b2;
+  background: #fff5f5;
+  color: #c53030;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.catalog-list-header {
+  display: grid;
+  grid-template-columns: 120px 1fr 140px 170px 180px;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f7fafc;
+  font-weight: 700;
+}
+
+.catalog-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.catalog-row {
+  display: grid;
+  grid-template-columns: 120px 1fr 140px 170px 180px;
+  gap: 1rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  align-items: center;
+}
+
+.catalog-img {
+  width: 110px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #edf2f7;
+}
+
+.product-name {
+  font-weight: 700;
+  color: #2d3748;
+}
+
+.muted {
+  color: #718096;
+  font-size: 0.85rem;
+}
+
+.linkish {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: #2b6cb0;
+  cursor: pointer;
+  font-weight: 600;
+  text-align: left;
+}
+
+.linkish:hover {
+  text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 980px) {
+  .catalog-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .catalog-list-header,
+  .catalog-row {
+    grid-template-columns: 120px 1fr;
+    grid-auto-rows: auto;
+  }
+
+  .catalog-list-header .col.points,
+  .catalog-list-header .col.avail,
+  .catalog-list-header .col.action {
+    display: none;
+  }
+
+  .catalog-row .col.points,
+  .catalog-row .col.avail,
+  .catalog-row .col.action {
+    grid-column: 2 / -1;
+  }
 }

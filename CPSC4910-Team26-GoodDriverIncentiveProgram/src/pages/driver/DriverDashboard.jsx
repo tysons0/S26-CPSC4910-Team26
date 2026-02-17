@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import PageTitle from "../../components/PageTitle";
 import ProductCard from "../../components/product";
@@ -15,6 +15,9 @@ function DriverDashboard() {
   const [productLoading, setProductLoading] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [error, setError] = useState("");
+  const [minPoints, setMinPoints] = useState("");
+  const [maxPoints, setMaxPoints] = useState("");
+  const [availability, setAvailability] = useState("All");
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -34,7 +37,7 @@ function DriverDashboard() {
   }, []);
 
   useEffect(() => {
-    fetchProducts();
+    fetchProducts("");
   }, []);
 
   const fetchProducts = async (keyword = searchKeyword) => {
@@ -90,87 +93,197 @@ function DriverDashboard() {
     navigate("/Login");
   };
 
+  const filteredProducts = useMemo(() => {
+    const min = minPoints === "" ? null : Number(minPoints);
+    const max = maxPoints === "" ? null : Number(maxPoints);
+
+    return products.filter((p) => {
+      const pts = Number(p.points ?? 0);
+
+      const passMin = min === null || pts >= min;
+      const passMax = max === null || pts <= max;
+
+      const passAvail =
+        availability === "All" ||
+        String(p.availability || "")
+          .toLowerCase()
+          .includes(availability.toLowerCase());
+
+      return passMin && passMax && passAvail;
+    });
+  }, [products, minPoints, maxPoints, availability]);
+
+  const handleApplyFilters = (e) => {
+    e.preventDefault();
+    // Wireframe filters are client-side; if you want, you can also refetch by keyword:
+    // fetchProducts(searchKeyword);
+  };
+
+  const handleViewDetails = (product) => {
+    // Wireframe has "View Details / Redeem" :contentReference[oaicite:2]{index=2}
+    // If you have a details page route, send product id there:
+    // navigate(`/driver/products/${product.itemId}`);
+    console.log("View details:", product);
+  };
+
   if (loading) {
     return (
-      <div style={{ padding: "2rem" }}>
-        <PageTitle title="Driver Dashboard | Team 26" />
-        <h1>Loading...</h1>
+      <div className="catalog-page">
+        <PageTitle title="Driver Catalog | Team 26" />
+        <div className="catalog-shell">
+          <h1>Loading...</h1>
+        </div>
       </div>
     );
   }
 
+  const sponsorName = "Sponsor Organization";
+
   return (
-    <div style={{ padding: "2rem" }}>
-      <PageTitle title="Driver Dashboard | Team 26" />
-      <h1>Dashboard</h1>
+    <div className="catalog-page">
+      <PageTitle title="Driver Catalog | Team 26" />
 
-      <button className="submit" onClick={handleLogout}>
-        Logout
-      </button>
-
-      <p>
-        Welcome back, <strong> {user?.username || "Driver"}! </strong>
-      </p>
-
-      {user?.points !== undefined && (
-        <p style={{ fontSize: "1rem", color: "#4a5568", marginTop: "0.5rem" }}>
-          Current Points: <strong>{user.points}</strong>
-        </p>
-      )}
-
-      {/* Search Bar */}
-      <div style={{ margin: "2rem 0" }}>
-        <h3>Search Products</h3>
-        <form
-          onSubmit={handleSearch}
-          style={{
-            display: "flex",
-            gap: "1rem",
-            maxWidth: "600px",
-            marginTop: "1rem",
-          }}
-        >
-          <input
-            type="text"
-            value={searchKeyword}
-            onChange={(e) => setSearchKeyword(e.target.value)}
-            placeholder="Search for products (e.g., tshirts, hats, sunglasses)..."
-            style={{
-              flex: 1,
-              padding: "0.75rem",
-              borderRadius: "4px",
-              border: "1px solid #ccc",
-              fontSize: "1rem",
-            }}
-          />
-          <button
-            type="submit"
-            disabled={productLoading}
-            className="submit"
-            style={{ padding: "0.75rem 2rem" }}
-          >
-            {productLoading ? "Searching..." : "Search"}
-          </button>
-        </form>
-      </div>
-
-      {error && (
-        <p style={{ color: "#e53e3e", marginBottom: "1rem" }}>{error}</p>
-      )}
-
-      <h2>Available Products</h2>
-      {productLoading ? (
-        <p>Loading products...</p>
-      ) : (
-        <div className="product-grid">
-          {products.map((product, index) => (
-            <ProductCard
-              product={product}
-              key={product.itemId || product.name || index}
-            />
-          ))}
+      {/* Top header like the wireframe title + points balance :contentReference[oaicite:3]{index=3} */}
+      <header className="catalog-header">
+        <div>
+          <h1 className="catalog-title">
+            {sponsorName}&apos;s Product Catalog
+          </h1>
+          <div className="catalog-points">
+            Points Balance: <strong>{user?.points ?? 0}</strong>
+          </div>
         </div>
-      )}
+
+        <button className="submit" onClick={handleLogout}>
+          Logout
+        </button>
+      </header>
+
+      <div className="catalog-layout">
+        {/* Left Filters panel :contentReference[oaicite:4]{index=4} */}
+        <aside className="catalog-filters">
+          <h3>Filters</h3>
+
+          <form onSubmit={handleApplyFilters} className="filters-form">
+            <div className="filter-block">
+              <label className="filter-label">Points Range:</label>
+              <div className="filter-row">
+                <input
+                  type="number"
+                  min="0"
+                  value={minPoints}
+                  onChange={(e) => setMinPoints(e.target.value)}
+                  placeholder="Min Points"
+                />
+              </div>
+              <div className="filter-row">
+                <input
+                  type="number"
+                  min="0"
+                  value={maxPoints}
+                  onChange={(e) => setMaxPoints(e.target.value)}
+                  placeholder="Max Points"
+                />
+              </div>
+            </div>
+
+            <div className="filter-block">
+              <label className="filter-label">Availability:</label>
+              <select
+                value={availability}
+                onChange={(e) => setAvailability(e.target.value)}
+              >
+                <option value="All">All</option>
+                <option value="In Stock">In Stock</option>
+                <option value="Limited">Limited</option>
+                <option value="Out of Stock">Out of Stock</option>
+              </select>
+            </div>
+
+            <button type="submit" className="submit">
+              Apply
+            </button>
+          </form>
+
+          {/* Optional search (not in wireframe, but useful) */}
+          <div className="filter-divider" />
+
+          <form onSubmit={handleSearch} className="filters-form">
+            <div className="filter-block">
+              <label className="filter-label">Search</label>
+              <input
+                type="text"
+                value={searchKeyword}
+                onChange={(e) => setSearchKeyword(e.target.value)}
+                placeholder="tshirts, hats, sunglasses..."
+              />
+            </div>
+            <button type="submit" className="submit" disabled={productLoading}>
+              {productLoading ? "Searching..." : "Search"}
+            </button>
+          </form>
+        </aside>
+
+        {/* Right product list, wireframe-style rows (not a grid) :contentReference[oaicite:5]{index=5} */}
+        <main className="catalog-results">
+          {error && <div className="catalog-error">{error}</div>}
+
+          <div className="catalog-list-header">
+            <div className="col image">Image</div>
+            <div className="col name">Product</div>
+            <div className="col points">Points</div>
+            <div className="col avail">Availability</div>
+            <div className="col action" />
+          </div>
+
+          {productLoading ? (
+            <p style={{ marginTop: "1rem" }}>Loading products...</p>
+          ) : filteredProducts.length === 0 ? (
+            <p style={{ marginTop: "1rem" }}>No products match your filters.</p>
+          ) : (
+            <div className="catalog-list">
+              {filteredProducts.map((product) => (
+                <div
+                  className="catalog-row"
+                  key={product.itemId || product.name}
+                >
+                  <div className="col image">
+                    <img
+                      src={product.image || "https://via.placeholder.com/120"}
+                      alt={product.name}
+                      className="catalog-img"
+                    />
+                  </div>
+
+                  <div className="col name">
+                    <div className="product-name">{product.name}</div>
+                  </div>
+
+                  <div className="col points">
+                    <div className="muted">Points Price:</div>
+                    <strong>{product.points}</strong>
+                  </div>
+
+                  <div className="col avail">
+                    <div className="muted">Availability:</div>
+                    <strong>{product.availability || "Status"}</strong>
+                  </div>
+
+                  <div className="col action">
+                    <button
+                      className="linkish"
+                      type="button"
+                      onClick={() => handleViewDetails(product)}
+                    >
+                      View Details / Redeem
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   );
 }

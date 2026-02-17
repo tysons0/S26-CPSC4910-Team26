@@ -1,4 +1,4 @@
-const BASE_URL = "http://team26api.us-east-1.elasticbeanstalk.com";
+const BASE_URL = "http://localhost:5177";
 
 const ebayService = {
   searchProducts: async (keyword, limit = 12) => {
