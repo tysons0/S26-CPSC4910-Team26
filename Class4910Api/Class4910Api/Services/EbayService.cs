@@ -4,6 +4,7 @@ using System.Text.Json;
 using Class4910Api.Configuration;
 using Class4910Api.Services.Interfaces;
 using Microsoft.Extensions.Options;
+using Class4910Api.Models;
 
 public class EbayService : IEbayService
 {
@@ -82,10 +83,10 @@ public class EbayService : IEbayService
                         products.Add(new EbayProduct
                         {
                             Name = item.Title ?? "Unknown Product",
-                            Points = (int)Math.Round((item.Price?.Value ?? 0) * 10), // $1 = 10 points
+                             Points = (int)Math.Round(decimal.Parse(item.Price?.Value ?? "0") * 10),
                             Image = item.Image?.ImageUrl ?? item.ThumbnailImages?[0]?.ImageUrl ?? "",
                             Description = item.ShortDescription ?? "",
-                            Price = item.Price?.Value ?? 0,
+                            Price = decimal.Parse(item.Price?.Value ?? "0"),
                             Currency = item.Price?.Currency ?? "USD",
                             ItemId = item.ItemId ?? "",
                             ItemWebUrl = item.ItemWebUrl ?? "",

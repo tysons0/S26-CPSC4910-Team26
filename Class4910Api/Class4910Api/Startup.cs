@@ -111,7 +111,7 @@ public static class Startup
         builder.Services.AddScoped<ISponsorService, SponsorService>();
         builder.Services.AddScoped<IOrganizationService, OrganizationService>();
 
-        builder.Services.AddScoped<IEbayService, EbayService>();
+        // builder.Services.AddScoped<IEbayService, EbayService>();
 
         return builder;
     }
