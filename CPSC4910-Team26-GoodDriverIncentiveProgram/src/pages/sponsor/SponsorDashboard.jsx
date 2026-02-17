@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import PageTitle from "../../components/PageTitle";
-import ProductCard from "../../components/Product";
+import ProductCard from "../../components/product";
 import apiService from "../../services/api";
 import "../../css/Dashboard.css";
 
