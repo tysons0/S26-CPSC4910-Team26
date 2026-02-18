@@ -93,23 +93,6 @@ public class AuthService : IAuthService
         }
     }
 
-    public async Task<UserRead?> GetUserFromRequest(HttpContext requestContext)
-    {
-        int userId = _contextService.GetUserId(requestContext);
-
-        User? user = await _userService.FindUserById(userId);
-
-        if (user is null)
-        {
-            _logger.LogError("Failed to retrieve user information for user id {UserId}", userId);
-            return null;
-        }
-        UserRead userRead = user.ToReadFormat();
-
-        _logger.LogInformation("Retrieved user information from request: {UserData}", userRead);
-        return userRead;
-    }
-
     public async Task<bool> UserHasAccessToEditOrg(int userId, UserRole role, int orgId)
     {
         User? user = await _userService.FindUserById(userId);
@@ -146,6 +129,48 @@ public class AuthService : IAuthService
         else
         {
             _logger.LogWarning("User: {UserData} was denied access to edit Organization[{OrgId}]", user, orgId);
+            return false;
+        }
+    }
+
+    public async Task<bool> UpdateUserPassword(PasswordChangeRequest changeRequest)
+    {
+        try
+        {
+            _logger.LogInformation("Updating user {UserName} password.", changeRequest.UserName);
+
+            User updateUser = await _userService.FindUserByName(changeRequest.UserName)
+                ?? throw new("Failed to retrieve update user");
+
+            string hashedPassword = HashPassword(updateUser, changeRequest.NewPassword);
+
+            await using MySqlConnection conn = new(_dbConnection);
+            conn.Open();
+
+            MySqlCommand command = conn.CreateCommand();
+
+            command.CommandText = $@"
+                UPDATE {UsersTable.Name}
+                SET {UserHashedPasswordField.SelectName} = @HashedPassword
+                WHERE {UserIdField.SelectName} = @UserId;
+            ";
+
+            command.Parameters.Add(UserHashedPasswordField.GenerateParameter("@HashedPassword", hashedPassword));
+            command.Parameters.Add(UserIdField.GenerateParameter("@UserId", updateUser.Id));
+
+            int updateCount = await command.ExecuteNonQueryAsync();
+
+            if (updateCount != 1)
+            {
+                _logger.LogError("Failed to update password for user {UserName}", changeRequest.UserName);
+                return false;
+            }
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating password for user {UserName}: {ErrorMessage}", 
+                changeRequest.UserName, ex.Message);
             return false;
         }
     }

@@ -8,5 +8,7 @@ public interface IContextService
     RequestData? GetRequestData(HttpContext context);
 
     int GetUserId(HttpContext context);
-    string GetUserRole(HttpContext context);
+    UserRole GetUserRole(HttpContext context);
+
+    Task<UserRead?> GetUserFromRequest(HttpContext requestContext);
 }
