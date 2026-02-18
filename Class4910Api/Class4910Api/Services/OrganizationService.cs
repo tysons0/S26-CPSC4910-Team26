@@ -165,6 +165,8 @@ public class OrganizationService : IOrganizationService
         DateTime createdAtUtc = reader.GetDateTime($"{pfx}{OrgCreatedAtUtcField.Name}");
         double pointWorth = reader.GetDouble($"{pfx}{OrgPointWorthField.Name}");
 
+#warning Add Description field to reader
+
         return new Organization
         {
             OrgId = id,

@@ -41,8 +41,26 @@ public static class ConstantValues
     public static readonly DatabaseField UserUserNameField =
         new() { Name = "UserName", Type = MySqlDbType.String, Nullable = false };
 
+    public static readonly DatabaseField UserFirstNameField =
+        new() { Name = "FirstName", Type = MySqlDbType.String, Nullable = true };
+
+    public static readonly DatabaseField UserLastNameField =
+        new() { Name = "LastName", Type = MySqlDbType.String, Nullable = true };
+
     public static readonly DatabaseField UserEmailField =
         new() { Name = "Email", Type = MySqlDbType.String, Nullable = true };
+
+    public static readonly DatabaseField UserPhoneField =
+        new() { Name = "Phone", Type = MySqlDbType.String, Nullable = true };
+
+    public static readonly DatabaseField UserTimeZoneField =
+        new() { Name = "Timezone", Type = MySqlDbType.String, Nullable = true };
+
+    public static readonly DatabaseField UserCountryField =
+        new() { Name = "Country", Type = MySqlDbType.String, Nullable = true };
+
+    public static readonly DatabaseField UserLastLoginTimeUtcField =
+        new() { Name = "LastLoginUtc", Type = MySqlDbType.DateTime, Nullable = true };
 
     public static readonly DatabaseField UserHashedPasswordField =
         new() { Name = "HashedPassword", Type = MySqlDbType.String, Nullable = false };
@@ -56,8 +74,14 @@ public static class ConstantValues
         Fields =
         [
             UserIdField,
+            UserFirstNameField,
+            UserLastNameField,
             UserUserNameField,
             UserEmailField,
+            UserPhoneField,
+            UserCountryField,
+            UserLastLoginTimeUtcField,
+            UserTimeZoneField,
             UserHashedPasswordField,
             UserCreatedAtUtcField
         ]
