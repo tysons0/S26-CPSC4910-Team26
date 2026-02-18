@@ -32,5 +32,16 @@ public class OrganizationController : ControllerBase
 
         return Ok(organizations ?? []);
     }
+
+    [Authorize(Roles = ConstantValues.ADMIN)]
+    [HttpPost]
+    public async Task<ActionResult<Organization>> CreateOrganization([FromBody] OrganizationRequest request)
+    {
+        int userId = _contextService.GetUserId(HttpContext);
+        Organization? organization = await _organizationService.CreateOrganization(request.Name, userId);
+        if (organization is null)
+            return BadRequest("Failed to create organization");
+        return Ok(organization);
+    }
 }
 
