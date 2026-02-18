@@ -1,11 +1,8 @@
 using Class4910Api.Models;
+using Class4910Api.Models.Requests;
 using Class4910Api.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration.UserSecrets;
-using Microsoft.Extensions.Options;
-using MySql.Data.MySqlClient;
 using static Class4910Api.ConstantValues;
 
 namespace Class4910Api.Controllers;
@@ -34,7 +31,7 @@ public class AuthController : ControllerBase
     [HttpGet("me")]
     public async Task<ActionResult<UserRead>> GetCurrentUser()
     {
-        UserRead? userData = await _authService.GetUserFromRequest(HttpContext);
+        UserRead? userData = await _contextService.GetUserFromRequest(HttpContext);
 
         if (userData is null)
         {
@@ -67,6 +64,40 @@ public class AuthController : ControllerBase
         }
 
         return loginResult;
+    }
+
+    [Authorize]
+    [HttpPost("password-change")]
+    public async Task<ActionResult> ChangePassword([FromBody] PasswordChangeRequest changeRequest)
+    {
+        _logger.LogInformation("Password change attempt for user {User}", changeRequest.UserName);
+
+        RequestData? requestData = _contextService.GetRequestData(HttpContext);
+
+        if (requestData is null)
+        {
+            string error = $"Could not retrieve Request Data for password change attempt on {changeRequest.UserName}";
+            _logger.LogWarning("{Error}", error);
+            return BadRequest(error);
+        }
+
+        UserRequest userRequest = new()
+        {
+            UserName = changeRequest.UserName,
+            Password = changeRequest.CurrentPassword
+        };
+
+        LoginResult loginResult = await _authService.LoginAsync(userRequest, requestData);
+
+        if (loginResult.Error is not null || !loginResult.Token.StartsWith("ey") )
+        {
+            return BadRequest("Current password is incorrect.");
+        }
+
+        bool changeResult = await _authService.UpdateUserPassword(changeRequest);
+
+        _logger.LogInformation("Password change {Result} for user {User}", changeResult ? "succeeded" : "failed", changeRequest.UserName);
+        return Ok(changeResult);
     }
 
     [Authorize(Roles = ADMIN)]
@@ -141,7 +172,7 @@ public class AuthController : ControllerBase
     {
         RequestData? requestData = _contextService.GetRequestData(HttpContext);
         int creatorId = _contextService.GetUserId(HttpContext);
-        UserRole role = Enum.Parse<UserRole>(_contextService.GetUserRole(HttpContext));
+        UserRole role = _contextService.GetUserRole(HttpContext);
 
         bool orgEditAccess = await _authService.UserHasAccessToEditOrg(creatorId, role, orgId);
 

@@ -6,7 +6,6 @@ using Class4910Api.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using MySql.Data.MySqlClient;
-using Org.BouncyCastle.Asn1.Pkcs;
 using static Class4910Api.ConstantValues;
 
 

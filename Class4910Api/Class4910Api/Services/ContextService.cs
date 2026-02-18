@@ -1,16 +1,24 @@
 ﻿using System.Net;
 using System.Security.Claims;
 using Class4910Api.Models;
+using Class4910Api.Models.Requests;
 using Class4910Api.Services.Interfaces;
-using Microsoft.AspNetCore.Http;
 
 namespace Class4910Api.Services;
 
 public class ContextService : IContextService
 {
+    private readonly ILogger<ContextService> _logger;
+    private readonly IUserService _userService;
+    public ContextService(ILogger<ContextService> logger, IUserService userService)
+    {
+        _logger = logger;
+        _userService = userService;
+    }
+
     public int GetUserId(HttpContext context)
     {
-        var id = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        string? id = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         bool retrieved = int.TryParse(id, out var userId);
         if (retrieved)
         {
@@ -19,9 +27,18 @@ public class ContextService : IContextService
         throw new InvalidOperationException("User ID not found in context.");
     }
 
-    public string GetUserRole(HttpContext context)
+    public UserRole GetUserRole(HttpContext context)
     {
-        return context.User.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
+        string role = context.User.FindFirst(ClaimTypes.Role)?.Value 
+            ?? throw new("Role not found in context");
+
+        bool parsed = Enum.TryParse<UserRole>(role, out var userRole);
+        if (parsed == false)
+        {
+            throw new InvalidOperationException($"Invalid role value in context. [{role}]");
+        }
+
+        return userRole;
     }
 
     public RequestData? GetRequestData(HttpContext context)
@@ -66,5 +83,21 @@ public class ContextService : IContextService
         return context.Connection.RemoteIpAddress ?? IPAddress.None;
     }
 
+    public async Task<UserRead?> GetUserFromRequest(HttpContext requestContext)
+    {
+        int userId = GetUserId(requestContext);
+
+        User? user = await _userService.FindUserById(userId);
+
+        if (user is null)
+        {
+            _logger.LogError("Failed to retrieve user information for user id {UserId}", userId);
+            return null;
+        }
+        UserRead userRead = user.ToReadFormat();
+
+        _logger.LogInformation("Retrieved user information from request: {UserData}", userRead);
+        return userRead;
+    }
 
 }

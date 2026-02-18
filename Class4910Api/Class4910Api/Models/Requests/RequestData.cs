@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace Class4910Api.Models;
+namespace Class4910Api.Models.Requests;
 
 public class RequestData
 {

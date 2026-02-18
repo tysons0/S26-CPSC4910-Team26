@@ -1,8 +1,8 @@
 ﻿namespace Class4910Api;
 
-using System.Data;
-using Class4910Api.Configuration.Database;
+using Class4910Api.Configuration;
 using Class4910Api.Models;
+using Class4910Api.Models.Requests;
 using MySql.Data.MySqlClient;
 
 public static class ConstantValues
@@ -41,8 +41,26 @@ public static class ConstantValues
     public static readonly DatabaseField UserUserNameField =
         new() { Name = "UserName", Type = MySqlDbType.String, Nullable = false };
 
+    public static readonly DatabaseField UserFirstNameField =
+        new() { Name = "FirstName", Type = MySqlDbType.String, Nullable = true };
+
+    public static readonly DatabaseField UserLastNameField =
+        new() { Name = "LastName", Type = MySqlDbType.String, Nullable = true };
+
     public static readonly DatabaseField UserEmailField =
         new() { Name = "Email", Type = MySqlDbType.String, Nullable = true };
+
+    public static readonly DatabaseField UserPhoneField =
+        new() { Name = "Phone", Type = MySqlDbType.String, Nullable = true };
+
+    public static readonly DatabaseField UserTimeZoneField =
+        new() { Name = "Timezone", Type = MySqlDbType.String, Nullable = true };
+
+    public static readonly DatabaseField UserCountryField =
+        new() { Name = "Country", Type = MySqlDbType.String, Nullable = true };
+
+    public static readonly DatabaseField UserLastLoginTimeUtcField =
+        new() { Name = "LastLoginUtc", Type = MySqlDbType.DateTime, Nullable = true };
 
     public static readonly DatabaseField UserHashedPasswordField =
         new() { Name = "HashedPassword", Type = MySqlDbType.String, Nullable = false };
@@ -56,8 +74,14 @@ public static class ConstantValues
         Fields =
         [
             UserIdField,
+            UserFirstNameField,
+            UserLastNameField,
             UserUserNameField,
             UserEmailField,
+            UserPhoneField,
+            UserCountryField,
+            UserLastLoginTimeUtcField,
+            UserTimeZoneField,
             UserHashedPasswordField,
             UserCreatedAtUtcField
         ]
@@ -113,6 +137,49 @@ public static class ConstantValues
         ]
     };
 
+    #endregion
+
+    #region DriverAddresses
+    public static readonly DatabaseField DriverAddressIdField =
+        new() { Name = "DriverAddressId", Type = MySqlDbType.Int32, Nullable = false };
+
+    public static readonly DatabaseField DriverAddressCityField =
+        new() { Name = "City", Type = MySqlDbType.String, Nullable = false };
+
+    public static readonly DatabaseField DriverAddressZipCodeField =
+        new() { Name = "ZipCode", Type = MySqlDbType.String, Nullable = false };
+
+    public static readonly DatabaseField DriverAddressStateField =
+        new() { Name = "State", Type = MySqlDbType.String, Nullable = false };
+
+    public static readonly DatabaseField DriverAddressLine1Field =
+        new() { Name = "AddressLine1", Type = MySqlDbType.String, Nullable = false };
+
+    public static readonly DatabaseField DriverAddressLine2Field =
+        new() { Name = "AddressLine2", Type = MySqlDbType.String, Nullable = true };
+
+    public static readonly DatabaseField DriverAddressAliasField =
+        new() { Name = "Alias", Type = MySqlDbType.String, Nullable = true };
+
+    public static readonly DatabaseField DriverAddressPrimaryField =
+        new() { Name = "Primary", Type = MySqlDbType.Bit, Nullable = true };
+
+    public static readonly DatabaseTable DriverAddressesTable = new()
+    {
+        Name = "DriverAddresses",
+        Fields =
+        [
+            DriverIdField,
+            DriverAddressIdField,
+            DriverAddressCityField,
+            DriverAddressZipCodeField,
+            DriverAddressStateField,
+            DriverAddressLine1Field,
+            DriverAddressLine2Field,
+            DriverAddressAliasField,
+            DriverAddressPrimaryField
+        ]
+    };
     #endregion
 
     #region Sponsors
@@ -386,6 +453,7 @@ public static class ConstantValues
         UsersTable,
         AdminsTable,
         DriversTable,
+        DriverAddressesTable,
         SponsorsTable,
         DriverPointHistoryTable,
         NotificationsTable,

@@ -44,7 +44,7 @@ namespace Class4910Api.Models
 
     internal class EbayPrice
     {
-        public string Value { get; set; }
+        public string? Value { get; set; }
         public string? Currency { get; set; }
     }
 }
