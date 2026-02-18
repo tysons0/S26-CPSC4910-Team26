@@ -139,6 +139,49 @@ public static class ConstantValues
 
     #endregion
 
+    #region DriverAddresses
+    public static readonly DatabaseField DriverAddressIdField =
+        new() { Name = "DriverAddressId", Type = MySqlDbType.Int32, Nullable = false };
+
+    public static readonly DatabaseField DriverAddressCityField =
+        new() { Name = "City", Type = MySqlDbType.String, Nullable = false };
+
+    public static readonly DatabaseField DriverAddressZipCodeField =
+        new() { Name = "ZipCode", Type = MySqlDbType.String, Nullable = false };
+
+    public static readonly DatabaseField DriverAddressStateField =
+        new() { Name = "State", Type = MySqlDbType.String, Nullable = false };
+
+    public static readonly DatabaseField DriverAddressLine1Field =
+        new() { Name = "AddressLine1", Type = MySqlDbType.String, Nullable = false };
+
+    public static readonly DatabaseField DriverAddressLine2Field =
+        new() { Name = "AddressLine2", Type = MySqlDbType.String, Nullable = true };
+
+    public static readonly DatabaseField DriverAddressAliasField =
+        new() { Name = "Alias", Type = MySqlDbType.String, Nullable = true };
+
+    public static readonly DatabaseField DriverAddressPrimaryField =
+        new() { Name = "Primary", Type = MySqlDbType.Bit, Nullable = true };
+
+    public static readonly DatabaseTable DriverAddressesTable = new()
+    {
+        Name = "DriverAddresses",
+        Fields =
+        [
+            DriverIdField,
+            DriverAddressIdField,
+            DriverAddressCityField,
+            DriverAddressZipCodeField,
+            DriverAddressStateField,
+            DriverAddressLine1Field,
+            DriverAddressLine2Field,
+            DriverAddressAliasField,
+            DriverAddressPrimaryField
+        ]
+    };
+    #endregion
+
     #region Sponsors
 
     public static readonly DatabaseField SponsorIdField =
@@ -410,6 +453,7 @@ public static class ConstantValues
         UsersTable,
         AdminsTable,
         DriversTable,
+        DriverAddressesTable,
         SponsorsTable,
         DriverPointHistoryTable,
         NotificationsTable,

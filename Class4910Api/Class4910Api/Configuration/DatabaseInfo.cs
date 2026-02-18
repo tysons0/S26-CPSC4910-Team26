@@ -1,7 +1,6 @@
-﻿namespace Class4910Api.Configuration.Database;
+﻿namespace Class4910Api.Configuration;
 
 using System.Data;
-using Class4910Api.Models;
 using MySql.Data.MySqlClient;
 
 public class DatabaseTable
@@ -28,7 +27,7 @@ public class DatabaseField
     public required MySqlDbType Type { get; init; }
     public required bool Nullable { get; init; }
 
-    public MySqlParameter GenerateParameter(string paramName, object value)
+    public MySqlParameter GenerateParameter(string paramName, object? value)
     {
         return new MySqlParameter()
         {
