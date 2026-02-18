@@ -1,13 +1,21 @@
 ﻿using System.Net;
 using System.Security.Claims;
 using Class4910Api.Models;
+using Class4910Api.Models.Requests;
 using Class4910Api.Services.Interfaces;
-using Microsoft.AspNetCore.Http;
 
 namespace Class4910Api.Services;
 
 public class ContextService : IContextService
 {
+    private readonly ILogger<ContextService> _logger;
+    private readonly IUserService _userService;
+    public ContextService(ILogger<ContextService> logger, IUserService userService)
+    {
+        _logger = logger;
+        _userService = userService;
+    }
+
     public int GetUserId(HttpContext context)
     {
         var id = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

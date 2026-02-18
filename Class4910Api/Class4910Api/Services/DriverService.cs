@@ -1,12 +1,10 @@
-﻿using System.Data.Common;
+﻿using System.Data;
+using System.Data.Common;
 using Class4910Api.Configuration;
 using Class4910Api.Models;
 using Class4910Api.Services.Interfaces;
 using Microsoft.Extensions.Options;
-using System.Data;
 using MySql.Data.MySqlClient;
-
-
 using static Class4910Api.ConstantValues;
 
 namespace Class4910Api.Services;

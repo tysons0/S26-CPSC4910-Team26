@@ -1,4 +1,5 @@
 ﻿using Class4910Api.Models;
+using Class4910Api.Models.Requests;
 
 namespace Class4910Api.Services.Interfaces;
 

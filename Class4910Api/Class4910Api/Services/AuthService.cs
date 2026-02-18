@@ -1,14 +1,16 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using static Class4910Api.ConstantValues;
+using Class4910Api.Configuration;
+using Class4910Api.Models;
+using Class4910Api.Models.Requests;
+using Class4910Api.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using MySql.Data.MySqlClient;
-using Class4910Api.Configuration;
-using Class4910Api.Models;
-using Class4910Api.Services.Interfaces;
+using Org.BouncyCastle.Asn1.Ocsp;
+using static Class4910Api.ConstantValues;
 
 namespace Class4910Api.Services;
 

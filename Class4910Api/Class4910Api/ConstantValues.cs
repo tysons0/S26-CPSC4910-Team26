@@ -1,8 +1,8 @@
 ﻿namespace Class4910Api;
 
-using System.Data;
-using Class4910Api.Configuration.Database;
+using Class4910Api.Configuration;
 using Class4910Api.Models;
+using Class4910Api.Models.Requests;
 using MySql.Data.MySqlClient;
 
 public static class ConstantValues

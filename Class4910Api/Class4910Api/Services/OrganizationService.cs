@@ -1,6 +1,5 @@
 ﻿using System.Data;
 using System.Data.Common;
-using System.Reflection.PortableExecutable;
 using Class4910Api.Configuration;
 using Class4910Api.Models;
 using Class4910Api.Services.Interfaces;
@@ -170,6 +169,7 @@ public class OrganizationService : IOrganizationService
         {
             OrgId = id,
             Name = name,
+            Description = string.Empty,
             CreatedAtUtc = createdAtUtc,
             PointWorth = pointWorth
         };

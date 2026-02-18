@@ -2,15 +2,19 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using Class4910Api.Configuration;
+using Class4910Api.Models;
 using Class4910Api.Services.Interfaces;
 using Microsoft.Extensions.Options;
-using Class4910Api.Models;
 
 public class EbayService : IEbayService
 {
     private readonly HttpClient _httpClient;
     private readonly EbayConfig _config;
     private readonly ILogger<EbayService> _logger;
+    private readonly JsonSerializerOptions _serializerOptions = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
 
     private string? _accessToken;
     private DateTime _tokenExpiry;
@@ -40,7 +44,7 @@ public class EbayService : IEbayService
 
         HttpResponseMessage respone = await _httpClient.SendAsync(request);
         respone.EnsureSuccessStatusCode();
-        
+
         string json = await respone.Content.ReadAsStringAsync();
         JsonDocument doc = JsonDocument.Parse(json);
 
@@ -51,62 +55,58 @@ public class EbayService : IEbayService
         return _accessToken!;
     }
 
-     public async Task<EbaySearchResponse> SearchProductsAsync(string keyword, int limit = 12)
+    public async Task<EbaySearchResponse> SearchProductsAsync(string keyword, int limit = 12)
+    {
+        try
         {
-            try
+            string token = await GetAccessToken();
+
+            string searchUrl = $"{_config.BaseUrl}/buy/browse/v1/item_summary/search?q={Uri.EscapeDataString(keyword)}&limit={limit}";
+
+            HttpRequestMessage request = new(HttpMethod.Get, searchUrl);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Headers.Add("X-EBAY-C-MARKETPLACE-ID", _config.MarketplaceId);
+
+            HttpResponseMessage response = await _httpClient.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+
+            string content = await response.Content.ReadAsStringAsync();
+
+            EbayApiResponse? searchResponse = JsonSerializer.Deserialize<EbayApiResponse>(content, _serializerOptions);
+
+            List<EbayProduct> products = [];
+
+            if (searchResponse?.ItemSummaries != null)
             {
-                var token = await GetAccessToken();
-
-                var searchUrl = $"{_config.BaseUrl}/buy/browse/v1/item_summary/search?q={Uri.EscapeDataString(keyword)}&limit={limit}";
-
-                var request = new HttpRequestMessage(HttpMethod.Get, searchUrl);
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                request.Headers.Add("X-EBAY-C-MARKETPLACE-ID", _config.MarketplaceId);
-
-                var response = await _httpClient.SendAsync(request);
-                response.EnsureSuccessStatusCode();
-
-                var content = await response.Content.ReadAsStringAsync();
-
-                var options = new JsonSerializerOptions
+                foreach (var item in searchResponse.ItemSummaries)
                 {
-                    PropertyNameCaseInsensitive = true
-                };
-
-                var searchResponse = JsonSerializer.Deserialize<EbayApiResponse>(content, options);
-
-                var products = new List<EbayProduct>();
-                if (searchResponse?.ItemSummaries != null)
-                {
-                    foreach (var item in searchResponse.ItemSummaries)
+                    products.Add(new EbayProduct
                     {
-                        products.Add(new EbayProduct
-                        {
-                            Name = item.Title ?? "Unknown Product",
-                             Points = (int)Math.Round(decimal.Parse(item.Price?.Value ?? "0") * 10),
-                            Image = item.Image?.ImageUrl ?? item.ThumbnailImages?[0]?.ImageUrl ?? "",
-                            Description = item.ShortDescription ?? "",
-                            Price = decimal.Parse(item.Price?.Value ?? "0"),
-                            Currency = item.Price?.Currency ?? "USD",
-                            ItemId = item.ItemId ?? "",
-                            ItemWebUrl = item.ItemWebUrl ?? "",
-                            Condition = item.Condition ?? ""
-                        });
-                    }
+                        Name = item.Title ?? "Unknown Product",
+                        Points = (int)Math.Round(decimal.Parse(item.Price?.Value ?? "0") * 10),
+                        Image = item.Image?.ImageUrl ?? item.ThumbnailImages?[0]?.ImageUrl ?? "",
+                        Description = item.ShortDescription ?? "",
+                        Price = decimal.Parse(item.Price?.Value ?? "0"),
+                        Currency = item.Price?.Currency ?? "USD",
+                        ItemId = item.ItemId ?? "",
+                        ItemWebUrl = item.ItemWebUrl ?? "",
+                        Condition = item.Condition ?? ""
+                    });
                 }
-
-                _logger.LogInformation("eBay search for '{Keyword}' returned {Count} products", keyword, products.Count);
-
-                return new EbaySearchResponse
-                {
-                    Products = products,
-                    Total = searchResponse?.Total ?? 0
-                };
             }
-            catch (Exception ex)
+
+            _logger.LogInformation("eBay search for '{Keyword}' returned {Count} products", keyword, products.Count);
+
+            return new EbaySearchResponse
             {
-                _logger.LogError(ex, "eBay product search failed for keyword: {Keyword}", keyword);
-                throw new Exception($"eBay product search failed: {ex.Message}");
-            }
+                Products = products,
+                Total = searchResponse?.Total ?? 0
+            };
         }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "eBay product search failed for keyword: {Keyword}", keyword);
+            throw new Exception($"eBay product search failed: {ex.Message}");
+        }
+    }
 }

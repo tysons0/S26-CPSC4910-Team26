@@ -1,16 +1,12 @@
 ﻿using Class4910Api.Models;
+using Class4910Api.Models.Requests;
 using Class4910Api.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration.UserSecrets;
-using Microsoft.Extensions.Options;
-using MySql.Data.MySqlClient;
-using static Class4910Api.ConstantValues;
 
 namespace Class4910Api.Controllers;
 
-
+[Authorize]
 [ApiController]
 [Route("[controller]")]
 public class OrganizationController : ControllerBase
@@ -29,7 +25,6 @@ public class OrganizationController : ControllerBase
         _organizationService = organizationService;
     }
 
-    [Authorize]
     [HttpGet]
     public async Task<ActionResult<List<Organization>>> GetOrganizations()
     {

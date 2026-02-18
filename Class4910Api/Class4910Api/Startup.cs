@@ -1,18 +1,18 @@
 ﻿using System.Text;
 using Class4910Api.Configuration;
-using Class4910Api.Configuration.Database;
 using Class4910Api.Models;
+using Class4910Api.Models.Requests;
 using Class4910Api.Services;
 using Class4910Api.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using MySql.Data.MySqlClient;
 using Scalar.AspNetCore;
 using Serilog;
-using Serilog.Sinks.MySQL;
+
+using static Class4910Api.ConstantValues;
 
 namespace Class4910Api;
 
@@ -22,6 +22,8 @@ public static class Startup
 
     public static WebApplicationBuilder CreateBuilder(WebApplicationBuilder builder)
     {
+        try
+        {
         builder = AddServices(builder);
 
         DatabaseConnection dbConn = builder.Configuration.GetRequiredSection("DatabaseConnection").Get<DatabaseConnection>()!;
@@ -31,6 +33,13 @@ public static class Startup
         SeedDatabaseMethods.SeedDatabase(dbConn.Connection);
 
         return builder;
+    }
+        catch(Exception ex)
+        {
+            Console.WriteLine($"An error occurred during startup: {ex.Message}");
+            Log.Error(ex, "An error occurred during startup");
+            throw;
+        }
     }
 
     public static WebApplicationBuilder AddLogging(WebApplicationBuilder builder, DatabaseConnection dbConn)
@@ -47,6 +56,8 @@ public static class Startup
                 tableName: ConstantValues.ApiLoggingTable.Name
             )
             .CreateLogger();
+
+        Log.Information("Logger configured successfully");
 
         builder.Host.UseSerilog();
         return builder;
@@ -111,7 +122,7 @@ public static class Startup
         builder.Services.AddScoped<ISponsorService, SponsorService>();
         builder.Services.AddScoped<IOrganizationService, OrganizationService>();
 
-        // builder.Services.AddScoped<IEbayService, EbayService>();
+        builder.Services.AddHttpClient<IEbayService, EbayService>();
 
         return builder;
     }
@@ -131,6 +142,12 @@ public static class Startup
         app.UseCors(corsPolicyName);
 
         app.UseAuthorization();
+
+        app.MapGet("/", () => Results.Ok(new
+        {
+            status = "Healthy",
+            time = DateTime.UtcNow
+        }));
 
         app.MapControllers();
         try

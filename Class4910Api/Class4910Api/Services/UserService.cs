@@ -2,6 +2,7 @@
 using System.Data.Common;
 using Class4910Api.Configuration;
 using Class4910Api.Models;
+using Class4910Api.Models.Requests;
 using Class4910Api.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
