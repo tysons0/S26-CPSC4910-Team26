@@ -110,7 +110,7 @@ public class EbayService : IEbayService
         }
     }
 
-    public async Task<EbayProduct?> GetProductbyIDAsync(string itemID)
+    public async Task<EbayProduct?> GetProductByIDAsync(string itemID)
     {
         string token = await GetAccessToken();
         string url = $"{_config.BaseUrl}/buy/browse/v1/item/{itemID}";
@@ -143,7 +143,6 @@ public class EbayService : IEbayService
             Image = item.Image?.ImageUrl ?? "",
             Description = item.Description ?? "",
             ItemId = item.ItemId ?? "",
-            ItemWebUrl = item.ItemWebUrl ?? "",
             Condition = item.Condition ?? ""
         };
 

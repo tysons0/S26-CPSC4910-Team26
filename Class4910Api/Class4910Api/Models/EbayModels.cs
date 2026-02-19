@@ -54,7 +54,7 @@ namespace Class4910Api.Models
         public string? Title { get; set; }
         public EbayPrice? Price{ get; set; }
         public EbayImage? Image{ get; set; }
-        public string? Description { get; set; 
+        public string? Description { get; set; } 
         public string? ImageWebUrl { get; set;}
         public string? Condition { get; set; }
         public EbayAvailability? Availability { get; set; }
@@ -62,7 +62,7 @@ namespace Class4910Api.Models
     }
     internal class EbayAvailability
     {
-        public EbayShipToLocationAvailability? ShipToLocationAvailability { get; set;
+        public EbayShipToLocationAvailability? ShipToLocationAvailability { get; set; }
     }
     internal class EbayShipToLocationAvailability
     {
