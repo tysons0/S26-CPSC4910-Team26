@@ -5,6 +5,7 @@ using Class4910Api.Models.Requests;
 using Class4910Api.Services;
 using Class4910Api.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -67,6 +68,15 @@ public static class Startup
 
     public static WebApplicationBuilder AddServices(WebApplicationBuilder builder)
     {
+        builder.Services.Configure<ForwardedHeadersOptions>(options =>
+        {
+            //https://learn.microsoft.com/en-us/azure/container-apps/dotnet-overview#define-x-forwarded-headers
+            options.ForwardedHeaders =
+                ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+            options.KnownIPNetworks.Clear();
+            options.KnownProxies.Clear();
+        });
+
         JwtSettings jwt = builder.Configuration.GetRequiredSection("JwtSettings").Get<JwtSettings>()!;
 
         builder.Services.AddControllers();
@@ -135,6 +145,7 @@ public static class Startup
 
         app.UseStaticFiles();
         app.MapOpenApi();
+        app.UseForwardedHeaders();
         app.MapScalarApiReference(options =>
         {
             options.WithTitle($"[{deploymentInfo.Environment}] Class4910 API")
