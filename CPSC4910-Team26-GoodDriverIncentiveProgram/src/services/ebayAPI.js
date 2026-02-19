@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:5177";
+const BASE_URL = "https://team26api.cpsc4911.com";
 
 const ebayService = {
   searchProducts: async (keyword, limit = 12) => {
