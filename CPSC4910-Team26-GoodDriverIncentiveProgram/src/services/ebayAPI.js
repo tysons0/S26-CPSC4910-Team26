@@ -1,31 +1,33 @@
+import apiService from "./api";
 const BASE_URL = "https://team26api.cpsc4911.com";
 
 const ebayService = {
   searchProducts: async (keyword, limit = 12) => {
-    try {
-      const params = new URLSearchParams({
-        keyword: keyword,
-        limit: limit.toString(),
-      });
+    const token = apiService.getToken(); // <-- pull from localStorage
 
-      const response = await fetch(`${BASE_URL}/api/Ebay/products?${params}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(`Product search failed: ${response.status} - ${error}`);
-      }
-
-      const data = await response.json();
-      return data.products || [];
-    } catch (error) {
-      console.error("eBay Product Search Error:", error);
-      throw error;
+    if (!token) {
+      throw new Error("No auth token found. User may not be logged in.");
     }
+
+    const params = new URLSearchParams({
+      keyword: keyword ?? "",
+      limit: String(limit),
+    });
+
+    const response = await fetch(`${BASE_URL}/api/Ebay/products?${params}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Product search failed: ${response.status} - ${error}`);
+    }
+
+    const data = await response.json();
+    return data.products || [];
   },
 };
 
