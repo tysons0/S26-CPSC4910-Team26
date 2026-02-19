@@ -18,7 +18,7 @@ jobs:
         dotnet-version: 10.0.x
 
     - name: Publish
-      run: dotnet publish -c Release -r linux-x64 --self-contained false -o publish
+      run: dotnet publish -c Release -r linux-x64 --self-contained false
 
     - name: Copy files to EC2
       uses: appleboy/scp-action@v0.1.7
@@ -36,4 +36,7 @@ jobs:
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
+          sudo sed -i '/DEPLOYED_AT=/d' /etc/systemd/system/team26api.service
+          echo "Environment=DEPLOYED_AT=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" | sudo tee -a /etc/systemd/system/team26api.service
+          sudo systemctl daemon-reload
           sudo systemctl restart team26api
