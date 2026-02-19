@@ -68,6 +68,7 @@ public static class Startup
 
     public static WebApplicationBuilder AddServices(WebApplicationBuilder builder)
     {
+        //https://github.com/scalar/scalar/discussions/4468#discussioncomment-15371071
         builder.Services.Configure<ForwardedHeadersOptions>(options =>
         {
             //https://learn.microsoft.com/en-us/azure/container-apps/dotnet-overview#define-x-forwarded-headers
@@ -143,9 +144,12 @@ public static class Startup
     {
         WebApplication app = builder.Build();
 
+        // https://github.com/scalar/scalar/discussions/4468#discussioncomment-15371071
+        app.UseForwardedHeaders();
+
         app.UseStaticFiles();
         app.MapOpenApi();
-        app.UseForwardedHeaders();
+
         app.MapScalarApiReference(options =>
         {
             options.WithTitle($"[{deploymentInfo.Environment}] Class4910 API")
