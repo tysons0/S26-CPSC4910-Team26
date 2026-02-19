@@ -143,6 +143,7 @@ public static class Startup
                    .AddPreferredSecuritySchemes(JwtBearerDefaults.AuthenticationScheme);
         });
 
+        app.UseHttpsRedirection();
         app.UseCors(corsPolicyName);
 
         app.UseAuthorization();
