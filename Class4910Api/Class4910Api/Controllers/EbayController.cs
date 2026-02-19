@@ -41,4 +41,15 @@ public class EbayController : ControllerBase
             return StatusCode(500, new { error = "Failed to search products", details = ex.Message });
         }
     }
+
+    [HttpGet("products/{itemId}")]
+    public async Task<ActionResult<EbayProduct>> GetProduct(string itemId)
+    {
+        var product = await _ebayService.GetProductByIDAsync(itemId);
+
+        if (product == null)
+            return NotFound(new { error = "Product not found or unavailable" });
+
+        return Ok(product);
+    }
 }
