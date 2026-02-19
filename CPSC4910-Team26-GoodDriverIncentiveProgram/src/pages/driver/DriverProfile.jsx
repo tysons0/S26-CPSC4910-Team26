@@ -2,11 +2,12 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import PageTitle from "../../components/PageTitle";
 import apiService from "../../services/api";
+import "../../css/Profile.css";
 
 function DriverProfile() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const naviagte = useNavigate();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -27,7 +28,7 @@ function DriverProfile() {
       }
     };
     fetchUserData();
-  }, [naviagte]);
+  }, [navigate]);
 
   if (loading) {
     return (

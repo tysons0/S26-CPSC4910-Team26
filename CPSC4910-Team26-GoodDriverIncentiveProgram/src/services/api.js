@@ -77,6 +77,9 @@ const apiService = {
       const registerData = JSON.stringify({
         userName: userData.userName,
         password: userData.password,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
       });
 
       return await apiService.postData("Auth/register/driver", registerData);
@@ -106,6 +109,9 @@ const apiService = {
           body: JSON.stringify({
             userName: userData.userName,
             password: userData.password,
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            email: userData.email,
           }),
         },
       );
@@ -133,6 +139,9 @@ const apiService = {
         body: JSON.stringify({
           userName: userData.userName,
           password: userData.password,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          email: userData.email,
         }),
       });
 

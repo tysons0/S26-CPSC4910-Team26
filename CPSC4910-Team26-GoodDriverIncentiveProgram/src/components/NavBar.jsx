@@ -60,6 +60,7 @@ function NavBar() {
       <h2 className="project-title">Good Driver Incentive Program</h2>
       <Link to="/"> About </Link>
       <Link to="/Sponsors"> View Sponsors </Link>
+      {!isAuthenticated && <Link to="/DriverSighUp"> Sign Up </Link>}
       {isAuthenticated && <Link to={getDashboardLink()}> Dashboard </Link>}
       {isAuthenticated && <Link to={getProfileLink()}> Profile </Link>}
 

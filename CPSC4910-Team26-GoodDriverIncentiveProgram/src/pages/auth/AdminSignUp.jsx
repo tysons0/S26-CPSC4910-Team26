@@ -79,6 +79,9 @@ function AdminSignUp() {
       const response = await apiService.registerAdmin({
         userName: formData.userName,
         password: formData.password,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
       });
       console.log("Registration successful:", response);
       alert("Admin successfully registered! ");

@@ -91,6 +91,9 @@ function SponsorSignUp() {
         {
           userName: formData.userName,
           password: formData.password,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
         },
         orgId,
       );
