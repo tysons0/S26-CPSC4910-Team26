@@ -1,4 +1,4 @@
-const BASE_URL = "http://team26api.us-east-1.elasticbeanstalk.com";
+const BASE_URL = "https://team26api.cpsc4911.com";
 
 const handleResponse = async (response) => {
   const contentType = response.headers.get("content-type") || "";
