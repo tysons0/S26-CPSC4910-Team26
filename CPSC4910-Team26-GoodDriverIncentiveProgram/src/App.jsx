@@ -12,6 +12,9 @@ import SponsorDashboard from "./pages/sponsor/SponsorDashboard";
 import DriverSignUp from "./pages/auth/DriverSignUp";
 import SponsorSignUp from "./pages/auth/SponsorSignUp";
 import AdminSignUp from "./pages/auth/AdminSignUp";
+import DriverProfile from "./pages/driver/DriverProfile";
+import SponsorProfile from "./pages/sponsor/SponsorProfile";
+import AdminProfile from "./pages/admin/AdminProfile";
 
 function App() {
   return (
@@ -23,6 +26,7 @@ function App() {
         <Route path="/Login" element={<Login />} />
         <Route path="/DriverSignUp" element={<DriverSignUp />} />
         <Route path="/Sponsors" element={<Sponsors />} />
+        <Route path="/SignUp" element={<SignUp />} />
 
         {/* Protected Routes */}
         <Route path="/AdminDashboard" element={<AdminDashboard />} />
@@ -30,9 +34,9 @@ function App() {
         <Route path="/SponsorDashboard" element={<SponsorDashboard />} />
         <Route path="/SponsorSignUp" element={<SponsorSignUp />} />
         <Route path="/AdminSignUp" element={<AdminSignUp />} />
-
-        <Route path="/Profile" element={<Profile />} />
-        <Route path="/SignUp" element={<SignUp />} />
+        <Route path="/DriverProfile" element={<DriverProfile />} />
+        <Route path="/SponsorProfile" element={<SponsorProfile />} />
+        <Route path="/AdminProfile" element={<AdminProfile />} />
       </Routes>
     </>
   );

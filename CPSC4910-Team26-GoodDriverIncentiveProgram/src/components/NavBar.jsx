@@ -5,12 +5,14 @@ import apiService from "../services/api";
 
 function NavBar() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userRole, setUserRole] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     //Check auth status
     const checkAuth = async () => {
       setIsAuthenticated(await apiService.isAuthenticated());
+      setUserRole(apiService.getUserRole());
     };
 
     checkAuth();
@@ -33,8 +35,24 @@ function NavBar() {
   const handleLogout = () => {
     apiService.logout();
     setIsAuthenticated(false);
-    window.dispatchEvent(new Event("storage"));
+    window.dispatchEvent(new Event("authChange"));
     navigate("/Login");
+  };
+
+  const getDashboardLink = () => {
+    const role = userRole?.toLowerCase();
+    if (role == "driver") return "/DriverDashboard";
+    if (role == "sponsor") return "/SponsorDashboard";
+    if (role == "admin") return "/AdminDashboard";
+    return "/Dashboard";
+  };
+
+  const getProfileLink = () => {
+    const role = userRole?.toLowerCase();
+    if (role == "driver") return "/DriverProfile";
+    if (role == "sponsor") return "/SponsorProfile";
+    if (role == "admin") return "/AdminProfile";
+    return "/Profle";
   };
 
   return (
@@ -42,8 +60,8 @@ function NavBar() {
       <h2 className="project-title">Good Driver Incentive Program</h2>
       <Link to="/"> About </Link>
       <Link to="/Sponsors"> View Sponsors </Link>
-      <Link to="/Dashboard">Product Dashboard</Link>
-      {isAuthenticated && <Link to="/Profile"> User Profile</Link>}
+      {isAuthenticated && <Link to={getDashboardLink()}> Dashboard </Link>}
+      {isAuthenticated && <Link to={getProfileLink()}> Profile </Link>}
 
       {isAuthenticated ? (
         <button onClick={handleLogout} className="nav-link-button">
