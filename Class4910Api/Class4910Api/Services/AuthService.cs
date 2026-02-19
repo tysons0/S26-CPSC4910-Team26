@@ -44,7 +44,7 @@ public class AuthService : IAuthService
     {
         _logger.LogInformation("LoginAsync called for user: {UserName} with data: {RequestData}",
                                request.UserName, loginData);
-        string messageForInvalidLogin = "Invalid login attempt";
+        string messageForInvalidLogin = "Invalid credentials, confirm the username and password are correct.";
         bool loginSuccess = false;
         bool recordLoginAttempt = true;
         try

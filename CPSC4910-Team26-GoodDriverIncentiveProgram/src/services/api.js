@@ -1,11 +1,21 @@
 const BASE_URL = "http://team26api.us-east-1.elasticbeanstalk.com";
 
 const handleResponse = async (response) => {
+  const contentType = response.headers.get("content-type") || "";
+  const isJson = contentType.includes("application/json");
+
+  const data = isJson ? await response.json() : await response.text();
+
   if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`API Error: ${response.status} - ${error}`);
+    const message =
+      typeof data === "string"
+        ? data
+        : data?.message || data?.title || "Request failed";
+
+    throw new Error(message);
   }
-  return response.json();
+
+  return data;
 };
 
 //API Service Object
