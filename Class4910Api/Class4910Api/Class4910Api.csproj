@@ -15,4 +15,8 @@
     <PackageReference Include="Serilog.Sinks.MySQL" Version="5.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="wwwroot\favicon.png" />
+  </ItemGroup>
+
 </Project>

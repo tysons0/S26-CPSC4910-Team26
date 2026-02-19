@@ -13,6 +13,7 @@ using Scalar.AspNetCore;
 using Serilog;
 
 using static Class4910Api.ConstantValues;
+using static Class4910Api.FormatHelper;
 
 namespace Class4910Api;
 
@@ -26,7 +27,8 @@ public static class Startup
         {
             builder = AddServices(builder);
 
-            DatabaseConnection dbConn = builder.Configuration.GetRequiredSection("DatabaseConnection").Get<DatabaseConnection>()!;
+            DatabaseConnection dbConn = 
+                builder.Configuration.GetRequiredSection("DatabaseConnection").Get<DatabaseConnection>()!;
 
             AddLogging(builder, dbConn);
 
@@ -127,14 +129,16 @@ public static class Startup
         return builder;
     }
 
-    public static async Task<WebApplication> ConfigureApp(WebApplicationBuilder builder)
+    public static async Task<WebApplication> ConfigureApp(WebApplicationBuilder builder, DeploymentInfo deploymentInfo)
     {
         WebApplication app = builder.Build();
 
+        app.UseStaticFiles();
         app.MapOpenApi();
         app.MapScalarApiReference(options =>
         {
-            options.WithTitle("Class4910 API")
+            options.WithTitle($"[{deploymentInfo.Environment}] Class4910 API")
+                   .WithFavicon("/favicon.png")
                    .WithTheme(ScalarTheme.Kepler)
                    .AddPreferredSecuritySchemes(JwtBearerDefaults.AuthenticationScheme);
         });
@@ -146,7 +150,8 @@ public static class Startup
         app.MapGet("/", () => Results.Ok(new
         {
             status = "Healthy",
-            time = DateTime.UtcNow
+            time = DateTime.UtcNow,
+            deploymentInfo
         }));
 
         app.MapControllers();
