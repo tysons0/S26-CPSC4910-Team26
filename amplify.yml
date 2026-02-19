@@ -1,0 +1,16 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - cd CPSC4910-Team26-GoodDriverIncentiveProgram
+        - ls -R src
+        - npm ci
+    build:
+      commands:
+        - ls -R src/components
+        - npm run build
+  artifacts:
+    baseDirectory: CPSC4910-Team26-GoodDriverIncentiveProgram/dist
+    files:
+      - '**/*'
