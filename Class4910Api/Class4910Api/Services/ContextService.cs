@@ -43,6 +43,8 @@ public class ContextService : IContextService
 
     public RequestData? GetRequestData(HttpContext context)
     {
+        _logger.LogInformation("Getting Request Data: {RemoteIP}", context.Connection.RemoteIpAddress);
+
         HttpRequest request = context.Request;
 
         IPAddress clientIp = GetClientIp(context);
@@ -63,10 +65,11 @@ public class ContextService : IContextService
         string? forwardedFor =
             context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
 
-        IPAddress? remoteIp = context.Connection.RemoteIpAddress ;
+        IPAddress? remoteIp = context.Connection.RemoteIpAddress;
         IPAddress? localIp = context.Connection.LocalIpAddress;
 
-        if (!string.IsNullOrWhiteSpace(forwardedFor))
+
+        if (!string.IsNullOrWhiteSpace(forwardedFor) && remoteIp?.Equals(IPAddress.Loopback) == false)
         {
             string firstIp = forwardedFor.Split(',')[0].Trim();
             if (IPAddress.TryParse(firstIp, out IPAddress? parsed))
