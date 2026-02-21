@@ -2,7 +2,7 @@ import apiService from "./api";
 const BASE_URL = "https://team26api.cpsc4911.com";
 
 const ebayService = {
-  searchProducts: async (keyword, limit = 100) => {
+  searchProducts: async (keyword, limit = 50) => {
     const token = apiService.getToken(); // <-- pull from localStorage
 
     if (!token) {

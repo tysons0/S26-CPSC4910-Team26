@@ -198,6 +198,35 @@ const apiService = {
     }
   },
 
+  updateUserProfile: async (userId, userData) => {
+    try {
+      const token = apiService.getToken();
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      const response = await fetch(`${BASE_URL}/User/${userId}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(userData),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error || "Failed to update profile");
+      }
+
+      const updatedUser = await response.json();
+      return updatedUser;
+    } catch (error) {
+      console.error("Update Profile Error:", error);
+      throw error;
+    }
+  },
+
   //Refresh user info
   refreshUserInfo: async () => {
     try {

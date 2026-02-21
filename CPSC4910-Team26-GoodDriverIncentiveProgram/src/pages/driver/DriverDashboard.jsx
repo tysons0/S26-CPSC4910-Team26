@@ -44,7 +44,7 @@ function DriverDashboard() {
     setProductLoading(true);
     setError("");
     try {
-      const ebayProducts = await ebayService.searchProducts(keyword, 12);
+      const ebayProducts = await ebayService.searchProducts(keyword, 50);
       setProducts(ebayProducts);
     } catch (error) {
       console.error("Error fetching products:", error);
