@@ -227,18 +227,34 @@ const apiService = {
     }
   },
 
-  //Refresh user info
-  refreshUserInfo: async () => {
+  changePassword: async (userName, currentPassword, newPassword) => {
     try {
-      const userInfo = await apiService.getUserInfo();
-      if (userInfo) {
-        localStorage.setItem("user", JSON.stringify(userInfo));
-        return userInfo;
+      const token = apiService.getToken();
+      if (!token) {
+        throw new Error("No authentication token found");
       }
-      return null;
+      const response = await fetch(`${BASE_URL}/Auth/password-change`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userName: userName,
+          currentPassword: currentPassword,
+          newPassword: newPassword,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error || "Failed to change password");
+      }
+
+      return await response.json();
     } catch (error) {
-      console.error("Refresh User Info Error:", error);
-      return null;
+      console.error("Change password error", error);
+      throw error;
     }
   },
 
