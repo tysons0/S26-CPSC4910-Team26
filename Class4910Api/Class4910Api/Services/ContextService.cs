@@ -3,6 +3,7 @@ using System.Security.Claims;
 using Class4910Api.Models;
 using Class4910Api.Models.Requests;
 using Class4910Api.Services.Interfaces;
+using Org.BouncyCastle.Asn1.Ocsp;
 
 namespace Class4910Api.Services;
 
@@ -43,7 +44,9 @@ public class ContextService : IContextService
 
     public RequestData? GetRequestData(HttpContext context)
     {
-        _logger.LogInformation("Getting Request Data: {RemoteIP}", context.Connection.RemoteIpAddress);
+        var forwardedFor = context.Request.Headers["X-Forwarded-For"].ToString();
+        var realIp = context.Request.Headers["X-Real-IP"].ToString();
+        _logger.LogCritical($"Forwarded For: {forwardedFor} RealIP: {realIp}");
 
         HttpRequest request = context.Request;
 
