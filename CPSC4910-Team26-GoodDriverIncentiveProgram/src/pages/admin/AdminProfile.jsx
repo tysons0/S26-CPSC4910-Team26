@@ -11,6 +11,16 @@ function AdminProfile() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordSuccess, setPasswordSuccess] = useState("");
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -97,6 +107,83 @@ function AdminProfile() {
     setSuccessMessage("");
   };
 
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handlePasswordSubmit = async (e) => {
+    e.preventDefault();
+    setPasswordError("");
+    setPasswordSuccess("");
+
+    //Validation
+    if (
+      !passwordData.currentPassword ||
+      !passwordData.newPassword ||
+      !passwordData.confirmPassword
+    ) {
+      setPasswordError("All password fields are required");
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordError("New passwords do not match");
+      return;
+    }
+
+    if (passwordData.newPassword.length < 8) {
+      setPasswordError("New password must be at least 8 characters long");
+      return;
+    }
+
+    if (passwordData.currentPassword === passwordData.newPassword) {
+      setPasswordError("New password must be different from current password");
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      await apiService.changePassword(
+        user.username,
+        passwordData.currentPassword,
+        passwordData.newPassword,
+      );
+
+      setPasswordSuccess("Successfully changed password!");
+      setPasswordData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+
+      setTimeout(() => {
+        setChangingPassword(false);
+        setPasswordSuccess("");
+      }, 2000);
+    } catch (error) {
+      console.error("Error changing password:", error);
+      setPasswordError(
+        error.message ||
+          "Failed to change password. Please check your current password",
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancelPasswordChange = () => {
+    setPasswordData({
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    });
+    setChangingPassword(false);
+    setPasswordError("");
+    setPasswordSuccess("");
+  };
+
   if (loading) {
     return (
       <div style={{ padding: "2rem" }}>
@@ -129,7 +216,11 @@ function AdminProfile() {
         </div>
       )}
 
+      {/* Profile Information Card */}
       <div className="profile-card">
+        <h2 style={{ marginBottom: "1.5rem", fontSize: "1.25rem" }}>
+          Profile Information
+        </h2>
         {!editing ? (
           <>
             <div className="profile-grid">
@@ -311,6 +402,99 @@ function AdminProfile() {
                 type="button"
                 className="btn btn-secondary"
                 onClick={handleCancel}
+                disabled={saving}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+
+      {/* Password Change Card */}
+      <div className="profile-card" style={{ marginTop: "2rem" }}>
+        <h2 style={{ marginBottom: "1.5rem", fontSize: "1.25rem" }}>
+          Security
+        </h2>
+
+        {passwordSuccess && (
+          <div className="alert alert-success" style={{ marginBottom: "1rem" }}>
+            <span className="alert-icon">✓</span>
+            {passwordSuccess}
+          </div>
+        )}
+
+        {passwordError && (
+          <div className="alert alert-error" style={{ marginBottom: "1rem" }}>
+            <span className="alert-icon">✕</span>
+            {passwordError}
+          </div>
+        )}
+
+        {!changingPassword ? (
+          <button
+            className="btn btn-secondary"
+            onClick={() => setChangingPassword(true)}
+          >
+            Change Password
+          </button>
+        ) : (
+          <form onSubmit={handlePasswordSubmit} className="profile-form">
+            <div className="form-grid">
+              <div className="form-group full-width">
+                <label>Current Password</label>
+                <input
+                  type="password"
+                  name="currentPassword"
+                  value={passwordData.currentPassword}
+                  onChange={handlePasswordChange}
+                  className="form-input"
+                  placeholder="Enter current password"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>New Password</label>
+                <input
+                  type="password"
+                  name="newPassword"
+                  value={passwordData.newPassword}
+                  onChange={handlePasswordChange}
+                  className="form-input"
+                  placeholder="Enter new password"
+                  required
+                  minLength={8}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Confirm New Password</label>
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  value={passwordData.confirmPassword}
+                  onChange={handlePasswordChange}
+                  className="form-input"
+                  placeholder="Confirm new password"
+                  required
+                  minLength={8}
+                />
+              </div>
+            </div>
+
+            <div className="form-actions">
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={saving}
+              >
+                {saving ? "Changing..." : "Change Password"}
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={handleCancelPasswordChange}
                 disabled={saving}
               >
                 Cancel
