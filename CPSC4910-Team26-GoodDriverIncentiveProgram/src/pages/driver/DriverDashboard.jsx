@@ -18,6 +18,8 @@ function DriverDashboard() {
   const [minPoints, setMinPoints] = useState("");
   const [maxPoints, setMaxPoints] = useState("");
   const [availability, setAvailability] = useState("All");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -37,20 +39,37 @@ function DriverDashboard() {
   }, []);
 
   useEffect(() => {
-    fetchProducts("");
+    fetchDiverseProducts("");
   }, []);
 
-  const fetchProducts = async (keyword = searchKeyword) => {
+  const fetchDiverseProducts = async () => {
     setProductLoading(true);
     setError("");
-    try {
-      const ebayProducts = await ebayService.searchProducts(keyword, 50);
-      setProducts(ebayProducts);
-    } catch (error) {
-      console.error("Error fetching products:", error);
-      setError("Failed to load products from eBay. Showing default products.");
+    setSearchKeyword("");
 
-      // Fallback to placeholder products if eBay fails
+    try {
+      const categories = [
+        "electronics",
+        "fashion",
+        "home",
+        "sports",
+        "books",
+        "toys",
+      ];
+      const allProducts = [];
+
+      for (const category of categories) {
+        const results = await ebayService.searchProducts(category, 8);
+        allProducts.push(...results);
+      }
+
+      setProducts(allProducts);
+      setCurrentPage(1);
+      setHasMore(true);
+    } catch (error) {
+      console.error("Error fetching diverse products:", error);
+      setError("Failed to load products from eBay.");
+      // Fallback products
       setProducts([
         {
           name: "T-Shirt",
@@ -80,10 +99,54 @@ function DriverDashboard() {
     }
   };
 
+  const fetchProducts = async (keyword = searchKeyword, append = false) => {
+    if (!keyword.trim()) {
+      alert("Please enter a search term");
+      return;
+    }
+
+    setProductLoading(true);
+    setError("");
+    try {
+      const page = append ? currentPage : 1;
+      const limit = 24;
+      const offset = (page - 1) * limit;
+
+      const ebayProducts = await ebayService.searchProducts(
+        keyword,
+        limit,
+        offset,
+      );
+
+      if (append) {
+        setProducts((prev) => [...prev, ...ebayProducts]);
+        setCurrentPage(page + 1);
+      } else {
+        setProducts(ebayProducts);
+        setCurrentPage(2);
+      }
+
+      setHasMore(ebayProducts.length === limit);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      setError("Failed to load products from eBay. Showing default products.");
+    } finally {
+      setProductLoading(false);
+    }
+  };
+
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchKeyword.trim()) {
-      fetchProducts(searchKeyword);
+      fetchProducts(searchKeyword, false);
+    }
+  };
+
+  const handleLoadMore = () => {
+    if (searchKeyword.trim()) {
+      fetchProducts(searchKeyword, true);
+    } else {
+      alert("Please search for a specific product to load more");
     }
   };
 
@@ -143,7 +206,6 @@ function DriverDashboard() {
     <div className="catalog-page">
       <PageTitle title="Driver Catalog | Team 26" />
 
-      {/* Top header like the wireframe title + points balance :contentReference[oaicite:3]{index=3} */}
       <header className="catalog-header">
         <div>
           <h1 className="catalog-title">
@@ -160,7 +222,6 @@ function DriverDashboard() {
       </header>
 
       <div className="catalog-layout">
-        {/* Left Filters panel :contentReference[oaicite:4]{index=4} */}
         <aside className="catalog-filters">
           <h3>Filters</h3>
 
@@ -201,30 +262,37 @@ function DriverDashboard() {
             </div>
 
             <button type="submit" className="submit">
-              Apply
+              Apply Filters
             </button>
           </form>
 
-          {/* Optional search (not in wireframe, but useful) */}
           <div className="filter-divider" />
 
           <form onSubmit={handleSearch} className="filters-form">
             <div className="filter-block">
-              <label className="filter-label">Search</label>
+              <label className="filter-label">Search Products</label>
               <input
                 type="text"
                 value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
-                placeholder="tshirts, hats, sunglasses..."
+                placeholder="headphones, laptops..."
               />
             </div>
             <button type="submit" className="submit" disabled={productLoading}>
               {productLoading ? "Searching..." : "Search"}
             </button>
           </form>
+
+          <button
+            onClick={fetchDiverseProducts}
+            className="submit"
+            style={{ width: "100%", marginTop: "1rem" }}
+            disabled={productLoading}
+          >
+            Browse All Categories
+          </button>
         </aside>
 
-        {/* Right product list, wireframe-style rows (not a grid) :contentReference[oaicite:5]{index=5} */}
         <main className="catalog-results">
           {error && <div className="catalog-error">{error}</div>}
 
@@ -236,51 +304,81 @@ function DriverDashboard() {
             <div className="col action" />
           </div>
 
-          {productLoading ? (
+          {productLoading && products.length === 0 ? (
             <p style={{ marginTop: "1rem" }}>Loading products...</p>
           ) : filteredProducts.length === 0 ? (
             <p style={{ marginTop: "1rem" }}>No products match your filters.</p>
           ) : (
-            <div className="catalog-list">
-              {filteredProducts.map((product) => (
+            <>
+              <div className="catalog-list">
+                {filteredProducts.map((product, index) => (
+                  <div
+                    className="catalog-row"
+                    key={product.itemId || `${product.name}-${index}`}
+                  >
+                    <div className="col image">
+                      <img
+                        src={product.image || "https://via.placeholder.com/120"}
+                        alt={product.name}
+                        className="catalog-img"
+                        onError={(e) => {
+                          e.target.src =
+                            "https://via.placeholder.com/120?text=No+Image";
+                        }}
+                      />
+                    </div>
+
+                    <div className="col name">
+                      <div className="product-name">{product.name}</div>
+                    </div>
+
+                    <div className="col points">
+                      <div className="muted">Points Price:</div>
+                      <strong>{product.points}</strong>
+                    </div>
+
+                    <div className="col avail">
+                      <div className="muted">Availability:</div>
+                      <strong>{product.availability || "Available"}</strong>
+                    </div>
+
+                    <div className="col action">
+                      <button
+                        className="linkish"
+                        type="button"
+                        onClick={() => handleViewDetails(product)}
+                      >
+                        View Details / Redeem
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Load More Button */}
+              {searchKeyword.trim() && hasMore && (
                 <div
-                  className="catalog-row"
-                  key={product.itemId || product.name}
+                  style={{
+                    textAlign: "center",
+                    marginTop: "2rem",
+                    paddingBottom: "2rem",
+                  }}
                 >
-                  <div className="col image">
-                    <img
-                      src={product.image || "https://via.placeholder.com/120"}
-                      alt={product.name}
-                      className="catalog-img"
-                    />
-                  </div>
-
-                  <div className="col name">
-                    <div className="product-name">{product.name}</div>
-                  </div>
-
-                  <div className="col points">
-                    <div className="muted">Points Price:</div>
-                    <strong>{product.points}</strong>
-                  </div>
-
-                  <div className="col avail">
-                    <div className="muted">Availability:</div>
-                    <strong>{product.availability || "Status"}</strong>
-                  </div>
-
-                  <div className="col action">
-                    <button
-                      className="linkish"
-                      type="button"
-                      onClick={() => handleViewDetails(product)}
-                    >
-                      View Details / Redeem
-                    </button>
-                  </div>
+                  <button
+                    onClick={handleLoadMore}
+                    disabled={productLoading}
+                    className="submit"
+                    style={{
+                      padding: "0.75rem 2rem",
+                      fontSize: "1rem",
+                      cursor: productLoading ? "not-allowed" : "pointer",
+                    }}
+                  >
+                    {productLoading ? "Loading More..." : "Load More Products"}
+                  </button>
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
         </main>
       </div>

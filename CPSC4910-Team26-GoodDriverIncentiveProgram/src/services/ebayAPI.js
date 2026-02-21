@@ -2,7 +2,7 @@ import apiService from "./api";
 const BASE_URL = "https://team26api.cpsc4911.com";
 
 const ebayService = {
-  searchProducts: async (keyword, limit = 50) => {
+  searchProducts: async (keyword, limit = 24, offset = 0) => {
     const token = apiService.getToken(); // <-- pull from localStorage
 
     if (!token) {
@@ -10,8 +10,9 @@ const ebayService = {
     }
 
     const params = new URLSearchParams({
-      keyword: keyword ?? "",
-      limit: String(limit),
+      keyword: keyword,
+      limit: limit.toString(),
+      offset: offset.toString(),
     });
 
     const response = await fetch(`${BASE_URL}/api/Ebay/products?${params}`, {
