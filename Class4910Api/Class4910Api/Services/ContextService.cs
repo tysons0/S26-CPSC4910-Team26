@@ -63,6 +63,9 @@ public class ContextService : IContextService
         string? forwardedFor =
             context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
 
+        IPAddress? remoteIp = context.Connection.RemoteIpAddress ;
+        IPAddress? localIp = context.Connection.LocalIpAddress;
+
         if (!string.IsNullOrWhiteSpace(forwardedFor))
         {
             string firstIp = forwardedFor.Split(',')[0].Trim();
@@ -70,17 +73,7 @@ public class ContextService : IContextService
                 return parsed;
         }
 
-        // Cloudflare
-        string? cfConnectingIp =
-            context.Request.Headers["CF-Connecting-IP"].FirstOrDefault();
-
-        if (!string.IsNullOrWhiteSpace(cfConnectingIp) &&
-            IPAddress.TryParse(cfConnectingIp, out IPAddress? cfIp))
-        {
-            return cfIp;
-        }
-
-        return context.Connection.RemoteIpAddress ?? IPAddress.None;
+        return remoteIp ?? localIp ?? IPAddress.None;
     }
 
     public async Task<UserRead?> GetUserFromRequest(HttpContext requestContext)
