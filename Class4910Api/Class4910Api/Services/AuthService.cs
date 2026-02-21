@@ -1,4 +1,5 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
+using System.Net;
 using System.Security.Claims;
 using System.Text;
 using Class4910Api.Configuration;
@@ -430,6 +431,13 @@ public class AuthService : IAuthService
         try
         {
             string loginStatus = success ? "Success" : "Failure";
+
+            if (requestData.ClientIP == IPAddress.Loopback)
+            {
+                _logger.LogInformation("Not Storing login attempt due to IP. User: {User}, Status: {Status}, IP: {Ip}",
+                username, loginStatus, requestData.ClientIP);
+                return;
+            }
 
             _logger.LogInformation("Storing login attempt. User: {User}, Status: {Status}, IP: {Ip}",
                 username, loginStatus, requestData.ClientIP);
