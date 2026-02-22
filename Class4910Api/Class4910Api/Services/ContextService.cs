@@ -44,10 +44,10 @@ public class ContextService : IContextService
 
     public RequestData? GetRequestData(HttpContext context)
     {
-        var forwardedFor = context.Request.Headers["X-Forwarded-For"].ToString();
-        var realIp = context.Request.Headers["X-Real-IP"].ToString();
-        _logger.LogCritical($"Forwarded For: {forwardedFor} RealIP: {realIp}");
-
+        foreach(var header in context.Request.Headers)
+        {
+            _logger.LogCritical("Header: {HeaderKey} = {HeaderValue}", header.Key, header.Value);
+        }
         HttpRequest request = context.Request;
 
         IPAddress clientIp = GetClientIp(context);
