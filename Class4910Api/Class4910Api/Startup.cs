@@ -14,7 +14,6 @@ using Scalar.AspNetCore;
 using Serilog;
 
 using static Class4910Api.ConstantValues;
-using static Class4910Api.FormatHelper;
 
 namespace Class4910Api;
 
@@ -28,7 +27,7 @@ public static class Startup
         {
             builder = AddServices(builder);
 
-            DatabaseConnection dbConn = 
+            DatabaseConnection dbConn =
                 builder.Configuration.GetRequiredSection("DatabaseConnection").Get<DatabaseConnection>()!;
 
             AddLogging(builder, dbConn);
@@ -37,7 +36,7 @@ public static class Startup
 
             return builder;
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             Console.WriteLine($"An error occurred during startup: {ex.Message}");
             Log.Error(ex, "An error occurred during startup");
@@ -254,6 +253,7 @@ public static class Startup
 	            {OrgIdField.SelectName} int AUTO_INCREMENT,
 
 	            {OrgNameField.SelectName} varchar(100) NOT NULL,
+                {OrgDescriptionField.SelectName} varchar(500) NULL,
 	            {OrgPointWorthField.SelectName} decimal(4,2) NOT NULL DEFAULT 0.01,
 
 	            {OrgCreatedAtUtcField.SelectName} DATETIME(6) NOT NULL,

@@ -3,7 +3,6 @@ using System.Security.Claims;
 using Class4910Api.Models;
 using Class4910Api.Models.Requests;
 using Class4910Api.Services.Interfaces;
-using Org.BouncyCastle.Asn1.Ocsp;
 
 namespace Class4910Api.Services;
 
@@ -30,7 +29,7 @@ public class ContextService : IContextService
 
     public UserRole GetUserRole(HttpContext context)
     {
-        string role = context.User.FindFirst(ClaimTypes.Role)?.Value 
+        string role = context.User.FindFirst(ClaimTypes.Role)?.Value
             ?? throw new("Role not found in context");
 
         bool parsed = Enum.TryParse<UserRole>(role, out var userRole);

@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using MySql.Data.MySqlClient;
-using Org.BouncyCastle.Asn1.Ocsp;
+
 using static Class4910Api.ConstantValues;
 
 namespace Class4910Api.Services;
@@ -170,7 +170,7 @@ public class AuthService : IAuthService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error updating password for user {UserName}: {ErrorMessage}", 
+            _logger.LogError(ex, "Error updating password for user {UserName}: {ErrorMessage}",
                 changeRequest.UserName, ex.Message);
             return false;
         }

@@ -1,10 +1,11 @@
 ﻿using Class4910Api.Models;
+using Class4910Api.Models.Requests;
 
 namespace Class4910Api.Services.Interfaces;
 
 public interface IOrganizationService
 {
-    Task<Organization?> CreateOrganization(string orgName, int creatorUserId);
+    Task<Organization?> CreateOrganization(OrganizationCreationRequest creationRequest, int creatorUserId);
 
     Task<Organization?> GetOrganizationById(int organizationId);
 

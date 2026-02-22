@@ -89,7 +89,7 @@ public class AuthController : ControllerBase
 
         LoginResult loginResult = await _authService.LoginAsync(userRequest, requestData);
 
-        if (loginResult.Error is not null || !loginResult.Token.StartsWith("ey") )
+        if (loginResult.Error is not null || !loginResult.Token.StartsWith("ey"))
         {
             return BadRequest("Current password is incorrect.");
         }

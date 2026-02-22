@@ -19,6 +19,9 @@ public static class ConstantValues
     public static readonly DatabaseField OrgNameField =
         new() { Name = "Name", Type = MySqlDbType.String, Nullable = false };
 
+    public static readonly DatabaseField OrgDescriptionField =
+        new() { Name = "Description", Type = MySqlDbType.String, Nullable = true };
+
     public static readonly DatabaseField OrgPointWorthField =
         new() { Name = "PointWorth", Type = MySqlDbType.Decimal, Nullable = false };
 
@@ -28,7 +31,7 @@ public static class ConstantValues
     public static readonly DatabaseTable OrgsTable = new()
     {
         Name = "Orgs",
-        Fields = [OrgIdField, OrgNameField, OrgPointWorthField, OrgCreatedAtUtcField]
+        Fields = [OrgIdField, OrgNameField, OrgDescriptionField, OrgPointWorthField, OrgCreatedAtUtcField]
     };
 
     #endregion

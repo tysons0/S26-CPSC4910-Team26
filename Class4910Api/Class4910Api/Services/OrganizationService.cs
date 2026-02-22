@@ -2,6 +2,7 @@
 using System.Data.Common;
 using Class4910Api.Configuration;
 using Class4910Api.Models;
+using Class4910Api.Models.Requests;
 using Class4910Api.Services.Interfaces;
 using Microsoft.Extensions.Options;
 using MySql.Data.MySqlClient;
@@ -20,7 +21,7 @@ public class OrganizationService : IOrganizationService
         _dbConnection = databaseConnection.Value.Connection;
     }
 
-    public async Task<Organization?> CreateOrganization(string orgName, int creatorUserId)
+    public async Task<Organization?> CreateOrganization(OrganizationCreationRequest creationRequest, int creatorUserId)
     {
         try
         {
@@ -30,9 +31,10 @@ public class OrganizationService : IOrganizationService
 
             command.CommandText =
                 @$"INSERT INTO {OrgsTable.Name}
-                   ({OrgNameField.SelectName}, {OrgCreatedAtUtcField.SelectName}) VALUES
-                   (@OrgName, @CreatedAtUtc);";
-            command.Parameters.Add(OrgNameField.GenerateParameter("@OrgName", orgName));
+                   ({OrgNameField.SelectName}, {OrgDescriptionField.SelectName}, {OrgCreatedAtUtcField.SelectName}) VALUES
+                   (@OrgName, @OrgDesc, @CreatedAtUtc);";
+            command.Parameters.Add(OrgNameField.GenerateParameter("@OrgName", creationRequest.Name));
+            command.Parameters.Add(OrgDescriptionField.GenerateParameter("@OrgDesc", creationRequest.Description));
             command.Parameters.Add(OrgCreatedAtUtcField.GenerateParameter("@CreatedAtUtc", DateTime.UtcNow));
 
             await command.ExecuteNonQueryAsync();
@@ -45,7 +47,8 @@ public class OrganizationService : IOrganizationService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating organization[{Name}] for User[{Id}]", orgName, creatorUserId);
+            _logger.LogError(ex, "Error creating organization with request[{Request}] for User[{Id}]", 
+                creationRequest, creatorUserId);
             return null;
         }
     }
@@ -151,9 +154,44 @@ public class OrganizationService : IOrganizationService
         }
     }
 
-    public Task<Organization?> UpdateOrganizationPointValue(int organizationId, float newPointValue, int updaterUserId)
+    public async Task<Organization?> UpdateOrganizationPointValue(int organizationId, float newPointValue, int updaterUserId)
     {
-        throw new NotImplementedException();
+        try
+        {
+            await using MySqlConnection conn = new(_dbConnection);
+            conn.Open();
+            MySqlCommand command = conn.CreateCommand();
+
+            command.CommandText =
+                @$"UPDATE {OrgsTable.Name}
+                   SET {OrgPointWorthField.SelectName} = @NewPointWorth
+                   WHERE {OrgIdField.SelectName} = @OrgId";
+
+            command.Parameters.Add(OrgPointWorthField.GenerateParameter("@NewPointWorth", newPointValue));
+            command.Parameters.Add(OrgIdField.GenerateParameter("@OrgId", organizationId));
+
+            await command.ExecuteNonQueryAsync();
+
+            Organization? updatedOrg = await GetOrganizationById(organizationId);
+
+            if (updatedOrg != null)
+            {
+                _logger.LogInformation("Updated Organization[{Org}] point value to newPointValue[{NewPointValue}] using orgId[{Id}] for User[{UserId}]",
+                    updatedOrg, newPointValue, organizationId, updaterUserId);
+                return updatedOrg;
+            }
+            else
+            {
+                _logger.LogWarning("No Organization found to update using orgId[{Id}]", organizationId);
+                return null;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating Organization point value using orgId[{Id}] with newPointValue[{NewPointValue}] for User[{UserId}]",
+                organizationId, newPointValue, updaterUserId);
+            return null;
+        }
     }
 
     private async Task<Organization> GetOrganizationFromReader(DbDataReader reader, string? readPrefix = null)
@@ -162,16 +200,15 @@ public class OrganizationService : IOrganizationService
 
         int id = reader.GetInt32($"{pfx}{OrgIdField.Name}");
         string name = reader.GetString($"{pfx}{OrgNameField.Name}");
+        string? description = reader[$"{pfx}{OrgDescriptionField.Name}"].ToString();
         DateTime createdAtUtc = reader.GetDateTime($"{pfx}{OrgCreatedAtUtcField.Name}");
         double pointWorth = reader.GetDouble($"{pfx}{OrgPointWorthField.Name}");
-
-#warning Add Description field to reader
 
         return new Organization
         {
             OrgId = id,
             Name = name,
-            Description = string.Empty,
+            Description = description,
             CreatedAtUtc = createdAtUtc,
             PointWorth = pointWorth
         };
