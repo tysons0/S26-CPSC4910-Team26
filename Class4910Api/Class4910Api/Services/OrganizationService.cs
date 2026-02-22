@@ -154,7 +154,7 @@ public class OrganizationService : IOrganizationService
         }
     }
 
-    public async Task<Organization?> UpdateOrganizationPointValue(int organizationId, float newPointValue, int updaterUserId)
+    public async Task<Organization?> UpdateOrganizationPointValue(int organizationId, double newPointValue, int updaterUserId)
     {
         try
         {

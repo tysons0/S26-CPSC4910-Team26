@@ -512,5 +512,10 @@ public static class ConstantValues
     };
 
     public const string seedOrgName = "Seed Org";
+    public static readonly OrganizationCreationRequest seedOrgRequest = new()
+    {
+        Name = seedOrgName,
+        Description = null
+    };
     #endregion
 }

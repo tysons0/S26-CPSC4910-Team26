@@ -201,7 +201,7 @@ public static class Startup
                     throw new("Failed to create Seed Admin");
 
                 Organization? seedOrg = await orgService.GetOrganizationByName(ConstantValues.seedOrgName);
-                seedOrg ??= await orgService.CreateOrganization(ConstantValues.seedOrgName, seedAdmin.UserData.Id);
+                seedOrg ??= await orgService.CreateOrganization(seedOrgRequest, seedAdmin.UserData.Id);
 
                 if (seedOrg is null)
                     throw new("Failed to create Seed Org");
