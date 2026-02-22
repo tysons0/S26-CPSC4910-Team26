@@ -44,10 +44,7 @@ public class ContextService : IContextService
 
     public RequestData? GetRequestData(HttpContext context)
     {
-        foreach(var header in context.Request.Headers)
-        {
-            _logger.LogCritical("Header: {HeaderKey} = {HeaderValue}", header.Key, header.Value);
-        }
+
         HttpRequest request = context.Request;
 
         IPAddress clientIp = GetClientIp(context);
@@ -62,7 +59,7 @@ public class ContextService : IContextService
         };
     }
 
-    private static IPAddress GetClientIp(HttpContext context)
+    private IPAddress GetClientIp(HttpContext context)
     {
         // X-Forwarded-For may contain multiple IPs
         string? forwardedFor =
@@ -76,10 +73,24 @@ public class ContextService : IContextService
         {
             string firstIp = forwardedFor.Split(',')[0].Trim();
             if (IPAddress.TryParse(firstIp, out IPAddress? parsed))
+            {
+                _logger.LogInformation("Found Client IP using Parsed forwarded for: {ForwardIp}", parsed);
                 return parsed;
+            }
+        }
+        if (remoteIp != null && !remoteIp.Equals(IPAddress.Loopback))
+        {
+            _logger.LogInformation("Found Client IP using Remote: {RemoteIp}", remoteIp);
+            return remoteIp;
+        }
+        if (localIp != null && !localIp.Equals(IPAddress.Loopback))
+        {
+            _logger.LogInformation("Found Client IP using Local: {LocalIp}", localIp);
+            return localIp;
         }
 
-        return remoteIp ?? localIp ?? IPAddress.None;
+        _logger.LogWarning("Failed to determine client IP address. Defaulting to None.");
+        return IPAddress.None;
     }
 
     public async Task<UserRead?> GetUserFromRequest(HttpContext requestContext)

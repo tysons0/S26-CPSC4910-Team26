@@ -432,7 +432,7 @@ public class AuthService : IAuthService
         {
             string loginStatus = success ? "Success" : "Failure";
 
-            if (requestData.ClientIP.Equals(IPAddress.Loopback))
+            if (requestData.ClientIP.Equals(IPAddress.Loopback) || requestData.ClientIP.Equals(IPAddress.None))
             {
                 _logger.LogInformation("Not Storing login attempt due to IP. User: {User}, Status: {Status}, IP: {Ip}",
                 username, loginStatus, requestData.ClientIP);
