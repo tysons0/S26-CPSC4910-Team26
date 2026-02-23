@@ -41,12 +41,7 @@ jobs:
           COMMIT_NAME=${{ github.sha }}
           GIT_TAG=${{ github.ref_type == 'tag' && github.ref_name || 'none' }}
           
-          # Add your real app variables below:
           ASPNETCORE_ENVIRONMENT=Production
-          DB_HOST=${{ secrets.DB_HOST }}
-          DB_USER=${{ secrets.DB_USER }}
-          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-          CONNECTION_STRING=${{ secrets.CONNECTION_STRING }}
           EOF'
 
           sudo chmod 644 /etc/team26api.env
