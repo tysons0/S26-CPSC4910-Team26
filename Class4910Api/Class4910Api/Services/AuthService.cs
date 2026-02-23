@@ -134,6 +134,11 @@ public class AuthService : IAuthService
         }
     }
 
+    public Task<bool> UserCanSeeUser(int viewerUser, int userBeingViewed)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task<bool> UpdateUserPassword(PasswordChangeRequest changeRequest)
     {
         try

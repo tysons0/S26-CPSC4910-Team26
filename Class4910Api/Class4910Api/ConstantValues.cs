@@ -242,6 +242,9 @@ public static class ConstantValues
     public static readonly DatabaseField NotificationTypeField =
         new() { Name = "NotificationType", Type = MySqlDbType.String, Nullable = false };
 
+    public static readonly DatabaseField NotificationCreatedAtUtcField =
+        new() { Name = "CreatedAtUtc", Type = MySqlDbType.String, Nullable = false };
+
     public static readonly DatabaseTable NotificationsTable = new()
     {
         Name = "Notifications",
@@ -251,7 +254,8 @@ public static class ConstantValues
             UserIdField,
             NotificationSeenField,
             NotificationMessageField,
-            NotificationTypeField
+            NotificationTypeField,
+            NotificationCreatedAtUtcField
         ]
     };
 
