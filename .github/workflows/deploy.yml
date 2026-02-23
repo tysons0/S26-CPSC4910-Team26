@@ -1,4 +1,3 @@
-#Comment
 name: Deploy .NET API to EC2
 
 on:
@@ -29,22 +28,37 @@ jobs:
         source: "publish/*"
         target: "/var/www/team26api"
 
-    - name: Restart service
+    - name: Write environment file and restart service
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.EC2_HOST }}
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
-            sudo sed -i '/Environment=DEPLOYED_AT=/d' /etc/systemd/system/team26api.service
-            sudo sed -i '/Environment=VERSION=/d' /etc/systemd/system/team26api.service
-            sudo sed -i '/Environment=COMMIT_NAME=/d' /etc/systemd/system/team26api.service
-            sudo sed -i '/Environment=GIT_TAG=/d' /etc/systemd/system/team26api.service
-      
-            echo "Environment=DEPLOYED_AT=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" | sudo tee -a /etc/systemd/system/team26api.service
-            echo "Environment=VERSION=${{ github.run_number }}" | sudo tee -a /etc/systemd/system/team26api.service
-            echo "Environment=COMMIT_NAME=${{ github.sha }}" | sudo tee -a /etc/systemd/system/team26api.service
-            echo "Environment=GIT_TAG=${{ github.ref_type == 'tag' && github.ref_name || 'none' }}" | sudo tee -a /etc/systemd/system/team26api.service
-      
-            sudo systemctl daemon-reload
-            sudo systemctl restart team26api
+          sudo bash -c 'cat > /etc/team26api.env <<EOF
+          DEPLOYED_AT=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          VERSION=${{ github.run_number }}
+          COMMIT_NAME=${{ github.sha }}
+          GIT_TAG=${{ github.ref_type == 'tag' && github.ref_name || 'none' }}
+          
+          # Add your real app variables below:
+          ASPNETCORE_ENVIRONMENT=Production
+          DB_HOST=${{ secrets.DB_HOST }}
+          DB_USER=${{ secrets.DB_USER }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          CONNECTION_STRING=${{ secrets.CONNECTION_STRING }}
+          EOF'
+
+          sudo chmod 644 /etc/team26api.env
+          sudo systemctl daemon-reload
+          sudo systemctl restart team26api
+
+    - name: Verify service is running
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USER }}
+        key: ${{ secrets.EC2_SSH_KEY }}
+        script: |
+          sleep 5
+          sudo systemctl is-active --quiet team26api || exit 1
