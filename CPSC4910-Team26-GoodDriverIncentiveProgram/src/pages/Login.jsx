@@ -35,6 +35,7 @@ function Login() {
         navigate("/About");
       }
     } catch (err) {
+      
       setError(err.message || "Login failed");
     } finally {
       setLoading(false);

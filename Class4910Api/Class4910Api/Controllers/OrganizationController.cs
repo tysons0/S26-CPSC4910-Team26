@@ -38,9 +38,15 @@ public class OrganizationController : ControllerBase
     public async Task<ActionResult<Organization>> CreateOrganization([FromBody] OrganizationCreationRequest request)
     {
         int userId = _contextService.GetUserId(HttpContext);
-        Organization? organization = await _organizationService.CreateOrganization(request, userId);
+        Organization? organization = await _organizationService.GetOrganizationByName(request.Name);
+        if (organization is not null)
+            return BadRequest("Organization with the same name already exists");
+
+        organization = await _organizationService.CreateOrganization(request, userId);
+
         if (organization is null)
             return BadRequest("Failed to create organization");
+
         return Ok(organization);
     }
 }

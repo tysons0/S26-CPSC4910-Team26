@@ -258,7 +258,9 @@ public static class Startup
 
 	            {OrgCreatedAtUtcField.SelectName} DATETIME(6) NOT NULL,
 
-	            CONSTRAINT Org_PK Primary Key ({OrgIdField.SelectName})
+	            CONSTRAINT Org_PK Primary Key ({OrgIdField.SelectName}),
+                CONSTRAINT Orgs_UniqueName UNIQUE({OrgNameField.SelectName},
+                CONSTRAINT Org_PointWorth_NonNegative CHECK({OrgPointWorthField.SelectName} >= 0)
             )
             ";
             command.ExecuteNonQuery();

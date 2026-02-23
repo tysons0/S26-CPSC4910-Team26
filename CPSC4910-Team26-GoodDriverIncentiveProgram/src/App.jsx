@@ -15,6 +15,7 @@ import AdminSignUp from "./pages/auth/AdminSignUp";
 import DriverProfile from "./pages/driver/DriverProfile";
 import SponsorProfile from "./pages/sponsor/SponsorProfile";
 import AdminProfile from "./pages/admin/AdminProfile";
+import OrganizationCreate from "./pages/organization/OrganizationCreate";
 
 function App() {
   return (
@@ -37,6 +38,7 @@ function App() {
         <Route path="/DriverProfile" element={<DriverProfile />} />
         <Route path="/SponsorProfile" element={<SponsorProfile />} />
         <Route path="/AdminProfile" element={<AdminProfile />} />
+        <Route path="/CreateOrganization" element={<OrganizationCreate />} />
       </Routes>
     </>
   );

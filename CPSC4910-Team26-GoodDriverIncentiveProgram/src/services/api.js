@@ -1,3 +1,5 @@
+import { post } from "aws-amplify/api";
+
 const BASE_URL = "https://team26api.cpsc4911.com";
 
 const handleResponse = async (response) => {
@@ -63,6 +65,23 @@ const apiService = {
     }
   },
 
+  postDataWithAuth: async (endpoint, jsonData, token) => {
+    try {
+      const response = await fetch(`${BASE_URL}/${endpoint}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: jsonData,
+      });
+      return await handleResponse(response);
+    } catch (error) {
+      console.error("API POST With Auth Error:", error);
+      throw error;
+    }
+  },
+
   getTeamInfo: async () => {
     try {
       return await apiService.getData("ApiInfo/TeamInfo");
@@ -93,8 +112,8 @@ const apiService = {
     try {
       const token = apiService.getToken();
       if (!token) {
-        throw new error(
-          "You must be loggen in as a admin or sponsor to register a sponsor",
+        throw new Error(
+          "You must be logged in as a admin or sponsor to register a sponsor",
         );
       }
 
@@ -127,7 +146,7 @@ const apiService = {
     try {
       const token = apiService.getToken();
       if (!token) {
-        throw new error("You must be logged in as a admin to register a admin");
+        throw new Error("You must be logged in as a admin to register a admin");
       }
 
       const response = await fetch(`${BASE_URL}/Auth/register/admin`, {
@@ -223,6 +242,23 @@ const apiService = {
       return updatedUser;
     } catch (error) {
       console.error("Update Profile Error:", error);
+      throw error;
+    }
+  },
+
+  createOrganization: async (orgData) => {
+    try {
+      const token = apiService.getToken();
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      console.log("Creating organization with data:", orgData);
+      const response = await apiService.postDataWithAuth("Organization", JSON.stringify(orgData), token);
+      console.log("Organization created successfully:", response);
+      return response;
+    } catch (error) {
+      console.error("Create Organization Error:", error);
       throw error;
     }
   },

@@ -52,6 +52,9 @@ function AdminDashboard() {
           Register an Admin <Link to="/AdminSignUp">Create one Here</Link>
         </p>
         <p>
+          Create an Organization <Link to="/CreateOrganization">Create one Here</Link>
+        </p>
+        <p>
           <Link to="/">Back to About Page</Link>
         </p>
       </div>
