@@ -1,4 +1,4 @@
-function SponsorCard(sponsor) {
+function OrganizationCard({ organization }) {
   return (
     <div className="sponsor-card">
       <div className="sponsor-image">
@@ -9,8 +9,13 @@ function SponsorCard(sponsor) {
         <p>
           Apply to be sponsored by {sponsor.name} and earn exclusive rewards!
         </p>
+        <div className="col action">
+          <button className="linkish" type="button">
+            Apply To Organization!
+          </button>
+        </div>
       </div>
     </div>
   );
 }
-export default SponsorCard;
+export default OrganizationCard;

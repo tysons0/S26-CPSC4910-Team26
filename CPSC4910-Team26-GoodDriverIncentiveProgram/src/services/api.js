@@ -254,7 +254,11 @@ const apiService = {
       }
 
       console.log("Creating organization with data:", orgData);
-      const response = await apiService.postDataWithAuth("Organization", JSON.stringify(orgData), token);
+      const response = await apiService.postDataWithAuth(
+        "Organization",
+        JSON.stringify(orgData),
+        token,
+      );
       console.log("Organization created successfully:", response);
       return response;
     } catch (error) {
@@ -330,6 +334,27 @@ const apiService = {
     const token = apiService.getToken();
     const user = apiService.getCurrentUser();
     return !!(token && user);
+  },
+
+  getOrganizations: async () => {
+    try {
+      const token = apiService.getToken();
+      if (!token) {
+        throw new Error("No authentication token found!");
+      }
+
+      const response = await fetch(`${BASE_URL}/Organization`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-type": "application/json",
+        },
+      });
+      return handleResponse(response);
+    } catch (error) {
+      console.error("Failed to get Organization", error);
+      throw error;
+    }
   },
 };
 
