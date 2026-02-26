@@ -1,5 +1,3 @@
-import { post } from "aws-amplify/api";
-
 const BASE_URL = "https://team26api.cpsc4911.com";
 
 const handleResponse = async (response) => {
@@ -365,12 +363,26 @@ const apiService = {
       }
 
       const response = await apiService.getDataWithAuth("Auth/me", token);
-      
-      
 
       return response;
     } catch (error) {
       console.error("Failed to get token info", error);
+      throw error;
+    }
+  },
+
+  getNotifications: async () => {
+      try {
+      const token = apiService.getToken();
+      if (!token) {
+        throw new Error("No authentication token found!");
+      }
+
+      const response = await apiService.getDataWithAuth("Notification/me", token);
+
+      return response;
+    } catch (error) {
+      console.error("Failed to get notifications", error);
       throw error;
     }
   }

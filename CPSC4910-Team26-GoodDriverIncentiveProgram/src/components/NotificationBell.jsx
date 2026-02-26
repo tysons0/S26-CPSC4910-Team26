@@ -1,13 +1,38 @@
-import { useState } from "react";
-import "../css/NavBar.css"; // or create NotificationBell.css if you prefer
+import { useState, useEffect } from "react";
+import apiService from "../services/api";
+import "../css/NotificationBell.css";
 
 function NotificationBell() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [notifications, setNotifications] = useState([
-    "New message received",
-    "Server restarted successfully",
-    "New user registered"
-  ]);
+  const [notifications, setNotifications] = useState([]);
+  const [tokenInfo, setTokenInfo] = useState([]);
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const notificationData = await apiService.getNotifications();
+        console.log("Fetched notifications:", notificationData);
+
+        setNotifications(notificationData ?? []);
+      } catch (err) {
+        console.error("Failed to load notifications", err);
+      }
+    };
+    const fetchTokenInfo = async () => {
+      // CHANGE THIS TO RETRIEVE EXPIRY ETC.
+      try {
+        const tokenData = await apiService.getTokenInfo();
+        console.log("Token info:", tokenData);
+        
+        setTokenInfo(tokenData ?? []);
+      } catch (err) {
+        console.error("Failed to load token info", err);
+      }
+    };
+
+    fetchNotifications();
+    fetchTokenInfo();
+  }, []);
 
   return (
     <>
@@ -26,8 +51,11 @@ function NotificationBell() {
         </button>
       </div>
 
-      {/* Drawer */}
-      <div className={`notification-drawer ${isDrawerOpen ? "open" : ""}`}>
+      <div
+        className={`notification-drawer ${
+          isDrawerOpen ? "open" : ""
+        }`}
+      >
         <div className="drawer-header">
           <h3>Notifications</h3>
           <button
@@ -39,25 +67,22 @@ function NotificationBell() {
         </div>
 
         <div className="drawer-content">
-          {notifications.length === 0 ? (
-            <div className="notification-item">
-              No notifications
-            </div>
-          ) : (
-            notifications.map((note, index) => (
-              <div key={index} className="notification-item">
-                {note}
+          {(
+            notifications.map((note) => (
+              <div key={note.notificationId} className="notification-item">
+                <strong>{note.type}</strong>
+                <div>{note.message}</div>
+                <small>
+                  {new Date(note.createdAtUtc).toLocaleString()}
+                </small>
               </div>
             ))
           )}
         </div>
       </div>
 
-      {/* Overlay */}
       <div
-        className={`drawer-overlay ${
-          isDrawerOpen ? "show" : ""
-        }`}
+        className={`drawer-overlay ${isDrawerOpen ? "show" : "" }`}
         onClick={() => setIsDrawerOpen(false)}
       />
     </>

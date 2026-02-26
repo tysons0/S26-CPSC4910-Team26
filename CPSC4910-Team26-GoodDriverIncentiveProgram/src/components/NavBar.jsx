@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import apiService from "../services/api";
 import NotificationBell from "./NotificationBell";
+import ThemeToggle from "./ThemeToggle";
 
 function NavBar() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -68,6 +69,8 @@ function NavBar() {
       {isAuthenticated && <Link to={getProfileLink()}> Profile </Link>}
 
       {isAuthenticated && <NotificationBell />}
+
+      <ThemeToggle />
       
       {isAuthenticated ? (
         <button onClick={handleLogout} className="nav-link-button">
