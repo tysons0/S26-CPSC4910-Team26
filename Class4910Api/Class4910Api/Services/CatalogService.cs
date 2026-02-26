@@ -8,10 +8,12 @@ using MySql.Data.MySqlClient;
 public class CatalogService : ICatalogService
 {
     private readonly string _dbConnection;
+    private readonly IEbayService _ebaService;
 
-    public CatalogService(IOptions<DatabaseConnection> dbConnection)
+    public CatalogService(IOptions<DatabaseConnection> dbConnection, IEbayService ebayService)
     {
         _dbConnection = dbConnection.Value.Connection;
+        _ebaService = ebayService;
     }
 
 
@@ -22,12 +24,17 @@ public class CatalogService : ICatalogService
             SELECT
                 c.CatalogItemID,
                 c.EbayItemID,
-                e.Title,
-                e.ImageUrl,
                 c.Points,
-                c.IsActive
+                c.IsActive,
+                e.Name,
+                e.Description,
+                e.ImageURL,
+                e.ItemWebURL,
+                e.LastKnownPrice,
+                e.Currency,
+                e.ItemCondition
             FROM SponsorCatalogItems c
-            JOIN EbayItems e ON e.ItemID = c.EbayItemID
+            INNER JOIN EbayItems e ON e.EbayItemID = c.EbayItemID
             WHERE c.OrgID = @OrgID;
         """;
 
@@ -43,8 +50,13 @@ public class CatalogService : ICatalogService
             {
                 CatalogItemID = reader.GetInt32(reader.GetOrdinal("CatalogItemID")),
                 EbayItemId = reader.GetString(reader.GetOrdinal("EbayItemID")),
-                Title = reader.GetString(reader.GetOrdinal("Title")),
-                ImageUrl = reader.GetString(reader.GetOrdinal("ImageUrl")),
+                Title = reader.GetString(reader.GetOrdinal("Name")),
+                Description = reader.GetString(reader.GetOrdinal("Description")),
+                ImageUrl = reader.GetString(reader.GetOrdinal("ImageURL")),
+                ItemWebUrl = reader.GetString(reader.GetOrdinal("ItemWebURL")),
+                Price = reader.GetDecimal(reader.GetOrdinal("LastKnownPrice")),
+                Currency = reader.GetString(reader.GetOrdinal("Currency")),
+                Condition = reader.GetString(reader.GetOrdinal("ItemCondition")),
                 Points = reader.GetInt32(reader.GetOrdinal("Points")),
                 IsActive = reader.GetBoolean(reader.GetOrdinal("IsActive"))
             });
@@ -54,20 +66,60 @@ public class CatalogService : ICatalogService
 
     public async Task AddItemAsync(int orgId, AddCatalogItemRequest request)
     {
-        const string sql = """
-            INSERT INTO SponsorCatalogItems (OrgID, EbayItemID, Points)
-            VALUES (@OrgID, @EbayItemID, @Points);
+        using MySqlConnection conn = new(_dbConnection);
+        await conn.OpenAsync();
+
+        const string checkSQL = """
+            SELECT COUNT(*)
+            FROM EbayItems
+            WHERE EbayItemID = @EbayItemID;
+            """;
+        using MySqlCommand checkCmd = new(checkSQL, conn);
+        checkCmd.Parameters.AddWithValue("@EbayItemID", request.EbayItemId);
+        int exists = Convert.ToInt32(await checkCmd.ExecuteScalarAsync());
+        if (exists == 0)
+        {
+            var ebayItem = await _ebaService.GetProductByIDAsync(request.EbayItemId);
+            if (ebayItem == null)
+            {
+                throw new Exception("Invalid Ebay item ID.");
+            }
+            const string insertEbaySql = """
+            INSERT INTO EbayItems
+                (EbayItemID, Name, Description, ImageURL, ItemWebURL,
+                 LastKnownPrice, Currency, ItemCondition,
+                 CreatedAtUtc, LastUpdateUtc)
+            VALUES
+                (@EbayItemID, @Name, @Description, @ImageURL, @ItemWebURL,
+                 @Price, @Currency, @Condition,
+                 UTC_TIMESTAMP(), UTC_TIMESTAMP());
+            """;
+            using MySqlCommand insertEbayCmd = new(insertEbaySql, conn);
+
+            insertEbayCmd.Parameters.AddWithValue("@EbayItemID", ebayItem.ItemId);
+            insertEbayCmd.Parameters.AddWithValue("@Name", ebayItem.Name ?? "");
+            insertEbayCmd.Parameters.AddWithValue("@Description", ebayItem.Description ?? "");
+            insertEbayCmd.Parameters.AddWithValue("@ImageURL", ebayItem.Image ?? "");
+            insertEbayCmd.Parameters.AddWithValue("@ItemWebURL", ebayItem.ItemWebUrl ?? "");
+            insertEbayCmd.Parameters.AddWithValue("@Price", ebayItem.Price);
+            insertEbayCmd.Parameters.AddWithValue("@Currency", ebayItem.Currency ?? "USD");
+            insertEbayCmd.Parameters.AddWithValue("@Condition", ebayItem.Condition ?? "");
+
+            await insertEbayCmd.ExecuteNonQueryAsync();
+        }
+        const string insertCatalogSql = """
+        INSERT INTO SponsorCatalogItems
+            (OrgID, EbayItemID, Points, IsActive, CreatedAtUtc, UpdatedAtUtc)
+        VALUES
+            (@OrgID, @EbayItemID, @Points, 1, UTC_TIMESTAMP(), UTC_TIMESTAMP());
         """;
 
-        using MySqlConnection conn = new MySqlConnection(_dbConnection);
-        using MySqlCommand cmd = new(sql, conn);
+        using MySqlCommand insertCatalogCmd = new(insertCatalogSql, conn);
+        insertCatalogCmd.Parameters.AddWithValue("@OrgID", orgId);
+        insertCatalogCmd.Parameters.AddWithValue("@EbayItemID", request.EbayItemId);
+        insertCatalogCmd.Parameters.AddWithValue("@Points", request.Points);
 
-        cmd.Parameters.AddWithValue("@OrgID", orgId);
-        cmd.Parameters.AddWithValue("@EbayItemID", request.EbayItemId);
-        cmd.Parameters.AddWithValue("@Points", request.Points);
-
-        await conn.OpenAsync();
-        await cmd.ExecuteNonQueryAsync();
+        await insertCatalogCmd.ExecuteNonQueryAsync();
     }
 
     public async Task UpdateItemAsync(int orgId, int catalogItemId, UpdateCatalogItemRequest request)
@@ -75,7 +127,8 @@ public class CatalogService : ICatalogService
         const string sql = """
             UPDATE SponsorCatalogItems
             SET Points = @Points,
-                IsActive = @IsActive
+                IsActive = @IsActive,
+                UpdatedAtUtc = UTC_TIMESTAMP()
             WHERE CatalogItemID = @CatalogItemID
               AND OrgID = @OrgID;
         """;
