@@ -356,6 +356,24 @@ const apiService = {
       throw error;
     }
   },
+
+  getTokenInfo: async () => {
+    try {
+      const token = apiService.getToken();
+      if (!token) {
+        throw new Error("No authentication token found!");
+      }
+
+      const response = await apiService.getDataWithAuth("Auth/me", token);
+      
+      
+
+      return response;
+    } catch (error) {
+      console.error("Failed to get token info", error);
+      throw error;
+    }
+  }
 };
 
 export default apiService;
