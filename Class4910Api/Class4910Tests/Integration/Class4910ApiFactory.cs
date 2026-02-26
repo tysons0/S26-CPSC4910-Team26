@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestPlatform.TestHost;
 using Testcontainers.MySql;
@@ -35,15 +36,12 @@ public class Class4910ApiFactory : WebApplicationFactory<Program>, IAsyncDisposa
 
         builder.ConfigureAppConfiguration((context, config) =>
         {
-            config.AddJsonFile(Path.Combine(FindApiProjectFolder(), "appsettings.Development.json"),
-                               optional: false, reloadOnChange: true);
-
-            Dictionary<string, string?> overrideConfigDictionary = new()
+            Dictionary<string, string?> overrideConfig = new()
             {
                 ["DatabaseConnection:Connection"] = ConnectionString
             };
 
-            config.AddInMemoryCollection(overrideConfigDictionary);
+            config.AddInMemoryCollection(overrideConfig);
         });
     }
 
@@ -58,22 +56,5 @@ public class Class4910ApiFactory : WebApplicationFactory<Program>, IAsyncDisposa
         await _dbContainer.StopAsync();
         await _dbContainer.DisposeAsync();
         await base.DisposeAsync();
-    }
-
-    private static string FindApiProjectFolder()
-    {
-        DirectoryInfo dir = new(AppContext.BaseDirectory);
-        string apiProjectName = "Class4910Api";
-
-        while (dir != null && dir.Exists)
-        {
-            string candidate = Path.Combine(dir.FullName, apiProjectName);
-            if (Directory.Exists(candidate))
-                return candidate; // Found the API project folder
-
-            dir = dir.Parent!; // Move up one directory
-        }
-
-        throw new DirectoryNotFoundException($"Could not find '{apiProjectName}'");
     }
 }
