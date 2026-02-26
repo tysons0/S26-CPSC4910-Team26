@@ -298,6 +298,37 @@ const apiService = {
     }
   },
 
+  changeDriverPassword: async (currentPassword, newPassword) => {
+    try {
+      const token = apiService.getToken();
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      const response = await fetch(`${BASE_URL}/Auth/driver/password-change`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          currentPassword: currentPassword,
+          newPassword: newPassword,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error || "Failed to reset password");
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("Driver password reset error", error);
+      throw error;
+    }
+  },
+
   logout: () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
