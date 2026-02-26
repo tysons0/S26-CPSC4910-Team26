@@ -43,6 +43,20 @@ public class AuthController : ControllerBase
         return userData;
     }
 
+    [Authorize]
+    [HttpGet(Routes.Auth.MeTokenInfo)]
+    public async Task<ActionResult<TokenInfo>> GetTokenInfo()
+    {
+        TokenInfo? tokenInfo = _contextService.GetTokenInfoFromRequest(HttpContext);
+        if (tokenInfo is null)
+        {
+            string error = $"Failed to retrieve token information from request";
+            _logger.LogError("{Error}", error);
+            return BadRequest(error);
+        }
+        return tokenInfo;
+    }
+
     [HttpPost(Routes.Auth.Login)]
     public async Task<ActionResult<LoginResult>> Login([FromBody] UserRequest loginRequest)
     {

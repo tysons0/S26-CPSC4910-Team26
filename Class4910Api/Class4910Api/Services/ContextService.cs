@@ -1,4 +1,6 @@
-﻿using System.Net;
+﻿using System;
+using System.IdentityModel.Tokens.Jwt;
+using System.Net;
 using System.Security.Claims;
 using Class4910Api.Models;
 using Class4910Api.Models.Requests;
@@ -109,4 +111,29 @@ public class ContextService : IContextService
         return userRead;
     }
 
+    public TokenInfo? GetTokenInfoFromRequest(HttpContext requestContext)
+    {
+        ClaimsPrincipal user = requestContext.User;
+
+        if (user?.Identity?.IsAuthenticated != true)
+        {
+            _logger.LogWarning("Attempted to retrieve token info for unauthenticated request.");
+            return null;
+        }
+
+        string? expClaim = user.FindFirst(JwtRegisteredClaimNames.Exp)?.Value;
+        string? iatClaim = user.FindFirst(JwtRegisteredClaimNames.Iat)?.Value;
+
+        if (!long.TryParse(expClaim, out long expUnix) || !long.TryParse(iatClaim, out long iatUnix))
+        {
+            _logger.LogWarning("Token time claims missing or invalid.");
+            return null;
+        }
+
+        return new TokenInfo
+        {
+            Expiration = DateTimeOffset.FromUnixTimeSeconds(expUnix),
+            IssuedAt = DateTimeOffset.FromUnixTimeSeconds(iatUnix)
+        };
+    }
 }

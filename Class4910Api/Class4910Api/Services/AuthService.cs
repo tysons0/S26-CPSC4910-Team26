@@ -360,7 +360,9 @@ public class AuthService : IAuthService
                 new(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new(ClaimTypes.Name, user.Username),
                 new(ClaimTypes.Email, user.Email ?? ""),
-                new(ClaimTypes.Role, user.Role.ToString())
+                new(ClaimTypes.Role, user.Role.ToString()),
+                // Iat stands for Issued At
+                new(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString())
             ];
             SymmetricSecurityKey key = new(Encoding.UTF8.GetBytes(jwtSettings.JwtKey));
 
