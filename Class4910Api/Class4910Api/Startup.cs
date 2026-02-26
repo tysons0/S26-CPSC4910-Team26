@@ -122,6 +122,7 @@ public static class Startup
         builder.Services.Configure<AppSettings>(builder.Configuration.GetRequiredSection("AppSettings"));
         builder.Services.Configure<DatabaseConnection>(builder.Configuration.GetRequiredSection("DatabaseConnection"));
         builder.Services.Configure<EbayConfig>(builder.Configuration.GetRequiredSection("EbayConfig"));
+        
 
         builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
@@ -134,6 +135,7 @@ public static class Startup
         builder.Services.AddScoped<ISponsorService, SponsorService>();
         builder.Services.AddScoped<IOrganizationService, OrganizationService>();
         builder.Services.AddScoped<INotificationService, NotificationService>();
+        builder.Services.AddScoped<EmailService>();
 
         builder.Services.AddHttpClient<IEbayService, EbayService>();
 
