@@ -8,7 +8,7 @@ using static Class4910Api.ConstantValues;
 namespace Class4910Api.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route(Routes.Auth.Base)]
 public class AuthController : ControllerBase
 {
     private readonly ILogger<AuthController> _logger;
@@ -28,7 +28,7 @@ public class AuthController : ControllerBase
     }
 
     [Authorize]
-    [HttpGet("me")]
+    [HttpGet(Routes.Auth.Me)]
     public async Task<ActionResult<UserRead>> GetCurrentUser()
     {
         UserRead? userData = await _contextService.GetUserFromRequest(HttpContext);
@@ -43,7 +43,7 @@ public class AuthController : ControllerBase
         return userData;
     }
 
-    [HttpPost("login")]
+    [HttpPost(Routes.Auth.Login)]
     public async Task<ActionResult<LoginResult>> Login([FromBody] UserRequest loginRequest)
     {
         RequestData? requestData = _contextService.GetRequestData(HttpContext);
@@ -67,7 +67,7 @@ public class AuthController : ControllerBase
     }
 
     [Authorize]
-    [HttpPost("password-change")]
+    [HttpPost(Routes.Auth.PasswordChange)]
     public async Task<ActionResult> ChangePassword([FromBody] PasswordChangeRequest changeRequest)
     {
         _logger.LogInformation("Password change attempt for user {User}", changeRequest.UserName);
@@ -101,7 +101,7 @@ public class AuthController : ControllerBase
     }
 
     [Authorize(Roles = ADMIN)]
-    [HttpPost("register/admin")]
+    [HttpPost(Routes.Auth.RegisterAdmin)]
     public async Task<ActionResult<Admin>> RegisterAdmin([FromBody] UserRequest request)
     {
         RequestData? requestData = _contextService.GetRequestData(HttpContext);
@@ -134,7 +134,7 @@ public class AuthController : ControllerBase
         return Created(string.Empty, admin);
     }
 
-    [HttpPost("register/driver")]
+    [HttpPost(Routes.Auth.RegisterDriver)]
     public async Task<ActionResult<Driver>> RegisterDriver([FromBody] UserRequest request)
     {
         RequestData? requestData = _contextService.GetRequestData(HttpContext);
@@ -167,7 +167,7 @@ public class AuthController : ControllerBase
     }
 
     [Authorize(Roles = $"{ADMIN},{SPONSOR}")]
-    [HttpPost("register/sponsor")]
+    [HttpPost(Routes.Auth.RegisterSponsor)]
     public async Task<ActionResult<Sponsor>> RegisterSponsor([FromBody] UserRequest request, [FromQuery] int orgId)
     {
         RequestData? requestData = _contextService.GetRequestData(HttpContext);
