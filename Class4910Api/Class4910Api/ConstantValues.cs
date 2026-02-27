@@ -269,8 +269,11 @@ public static class ConstantValues
     public static readonly DatabaseField ApplicationStatusField =
         new() { Name = "ApplicationStatus", Type = MySqlDbType.String, Nullable = false };
 
-    public static readonly DatabaseField ApplicationReasonField =
-        new() { Name = "Reason", Type = MySqlDbType.String, Nullable = false };
+    public static readonly DatabaseField ApplicationDriverMessageField =
+        new() { Name = "DriverMessage", Type = MySqlDbType.String, Nullable = false };
+
+    public static readonly DatabaseField ApplicationChangeReasonField =
+        new() { Name = "ChangeReason", Type = MySqlDbType.String, Nullable = false };
 
     public static readonly DatabaseField ApplicationCreatedAtUtcField =
         new() { Name = "CreatedAtUtc", Type = MySqlDbType.DateTime, Nullable = false };
@@ -288,7 +291,7 @@ public static class ConstantValues
             DriverIdField,
             OrgIdField,
             ApplicationStatusField,
-            ApplicationReasonField,
+            ApplicationChangeReasonField,
             ApplicationCreatedAtUtcField,
             ApplicationLastModifiedUtcField
         ]

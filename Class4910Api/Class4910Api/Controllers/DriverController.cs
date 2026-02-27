@@ -45,27 +45,73 @@ public class DriverController : ControllerBase
         return Ok(driver);
     }
 
-    [HttpPost("{driverId:int}/address")]
-    public async Task<ActionResult> AddDriverAddress(int driverId, [FromBody] AddressRequest addressRequest)
+    [HttpGet("{driverId:int}/address")]
+    public async Task<ActionResult<List<DriverAddress>>> GetDriverAddresses(int driverId)
     {
-        return Ok("");
+        DriverAddress address = new()
+        {
+            DriverId = driverId,
+            City = "City1",
+            ZipCode = "29150",
+            State = "South Carolina",
+            AddressAlias = "Home Address",
+            AddressLine1 = "1",
+            AddressLine2 = "2",
+            Primary = true,
+        };
+
+        DriverAddress address2 = new()
+        {
+            DriverId = driverId,
+            City = "City2",
+            ZipCode = "29151",
+            State = "South Carolina",
+            AddressAlias = "Work Address",
+            AddressLine1 = "1",
+            AddressLine2 = "2",
+            Primary = false,
+        };
+
+        List<DriverAddress> addresses = [address, address2];
+
+        return Ok(addresses);
+
+    }
+
+    [HttpPost("{driverId:int}/address")]
+    public async Task<ActionResult<DriverAddress>> AddDriverAddress(int driverId, [FromBody] AddressRequest addressRequest)
+    {
+
+        DriverAddress address = new()
+        {
+            DriverId = driverId,
+            City = addressRequest.City,
+            ZipCode = addressRequest.ZipCode,
+            State = addressRequest.State,
+            AddressAlias = addressRequest.AddressAlias,
+            AddressLine1 = addressRequest.AddressLine1,
+            AddressLine2 = addressRequest.AddressLine2,
+            Primary = addressRequest.Primary,
+        };
+
+        return Ok(address);
     }
 
     [HttpPost("{driverId:int}/address/{addressId:int}")]
     public async Task<ActionResult> ChangePrimaryAddress(int driverId, int addressId)
     {
-        return Ok("");
+        return Ok("Changed Primary Address");
     }
 
     [HttpPut("{driverId:int}/address/{addressId:int}")]
     public async Task<ActionResult> UpdateAddress(int driverId, int addressId, [FromBody] AddressRequest addressRequest)
     {
-        return Ok("");
+        return Ok("Updated");
     }
 
     [HttpDelete("{driverId:int}/address")]
     public async Task<ActionResult> DeleteDriverAddress(int driverId, [FromBody] AddressRequest addressRequest)
     {
-        return Ok("");
+        return Ok("Deleted");
     }
 }

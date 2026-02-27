@@ -4,6 +4,8 @@ using Class4910Api.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+using static Class4910Api.ConstantValues;
+
 namespace Class4910Api.Controllers;
 
 [Authorize]
@@ -15,14 +17,21 @@ public class OrganizationController : ControllerBase
     private readonly IAuthService _authService;
     private readonly IContextService _contextService;
     private readonly IOrganizationService _organizationService;
+    private readonly IUserService _userService;
+    private readonly ISponsorService _sponsorService;
+    private readonly IDriverService _driverService;
 
     public OrganizationController(ILogger<AuthController> logger, IContextService contextService,
-        IAuthService authService, IOrganizationService organizationService)
+        IAuthService authService, IOrganizationService organizationService,
+        IUserService userService, ISponsorService sponsorService, IDriverService driverService)
     {
         _logger = logger;
         _authService = authService;
         _contextService = contextService;
         _organizationService = organizationService;
+        _userService = userService;
+        _sponsorService = sponsorService;
+        _driverService = driverService;
     }
 
     [HttpGet]
@@ -33,7 +42,7 @@ public class OrganizationController : ControllerBase
         return Ok(organizations ?? []);
     }
 
-    [Authorize(Roles = ConstantValues.ADMIN)]
+    [Authorize(Roles = ADMIN)]
     [HttpPost]
     public async Task<ActionResult<Organization>> CreateOrganization([FromBody] OrganizationCreationRequest request)
     {
@@ -49,5 +58,46 @@ public class OrganizationController : ControllerBase
 
         return Ok(organization);
     }
+
+    [Authorize(Roles = $"{ADMIN},{SPONSOR}")]
+    public async Task<ActionResult<List<Driver>>> GetDriversFromOrganization([FromQuery] int? orgId = null)
+    {
+        int contextUserId = _contextService.GetUserId(HttpContext);
+        User? user = await _userService.FindUserById(contextUserId);
+        if (user is null)
+        {
+            return BadRequest();
+        }
+
+        int requestingOrgId;
+        if ((orgId is null || orgId == 0) && user.Role == UserRole.Sponsor)
+        {
+            Sponsor? sponsor = await _sponsorService.GetSponsorByUserId(contextUserId);
+            if (sponsor is null)
+            {
+                return BadRequest();
+            }
+            requestingOrgId = sponsor.OrganizationId;
+        }
+        else
+        {
+            return BadRequest();
+        }
+
+        if (requestingOrgId == 0)
+        {
+            return BadRequest();
+        }
+
+        List<Driver>? driverList = await _driverService.GetDriversByOrgId(requestingOrgId);
+
+        if (driverList is null)
+        {
+            return BadRequest();
+        }
+
+        return Ok(driverList);
+    }
+
 }
 
