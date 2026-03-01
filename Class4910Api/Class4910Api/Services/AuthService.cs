@@ -143,12 +143,26 @@ public class AuthService : IAuthService
     {
         try
         {
-            _logger.LogInformation("Updating user {UserName} password.", changeRequest.UserName);
+            User? updateUser = null;
 
-            User updateUser = await _userService.FindUserByName(changeRequest.UserName)
-                ?? throw new("Failed to retrieve update user");
+            if (userName is not null)
+            {
+                _logger.LogInformation("Updating user {UserName} password.", userName);
+                updateUser = await _userService.FindUserByName(userName)
+                    ?? throw new("Failed to retrieve update user");
+            }
+            else if (userId is not null && userId != default)
+            {
+                _logger.LogInformation("Updating user[{Id}] password.", userId);
+                updateUser = await _userService.FindUserById((int)userId)
+                    ?? throw new("Failed to retrieve update user");
+            }
+            else
+            {
+                throw new("Received request to update user password but both username and userId were null");
+            }
 
-            string hashedPassword = HashPassword(updateUser, changeRequest.NewPassword);
+            string hashedPassword = HashPassword(updateUser, password);
 
             await using MySqlConnection conn = new(_dbConnection);
             conn.Open();
@@ -168,15 +182,14 @@ public class AuthService : IAuthService
 
             if (updateCount != 1)
             {
-                _logger.LogError("Failed to update password for user {UserName}", changeRequest.UserName);
+                _logger.LogError("Failed to update password for user {UserName}", updateUser.Username);
                 return false;
             }
             return true;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error updating password for user {UserName}: {ErrorMessage}",
-                changeRequest.UserName, ex.Message);
+            _logger.LogError(ex, "Error updating password for user: {ErrorMessage}", ex.Message);
             return false;
         }
     }
@@ -365,7 +378,9 @@ public class AuthService : IAuthService
                 new(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new(ClaimTypes.Name, user.Username),
                 new(ClaimTypes.Email, user.Email ?? ""),
-                new(ClaimTypes.Role, user.Role.ToString())
+                new(ClaimTypes.Role, user.Role.ToString()),
+                // Iat stands for Issued At
+                new(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString())
             ];
             SymmetricSecurityKey key = new(Encoding.UTF8.GetBytes(jwtSettings.JwtKey));
 

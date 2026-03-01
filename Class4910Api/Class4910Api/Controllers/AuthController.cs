@@ -8,7 +8,7 @@ using static Class4910Api.ConstantValues;
 namespace Class4910Api.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route(Routes.Auth.Base)]
 public class AuthController : ControllerBase
 {
     private readonly ILogger<AuthController> _logger;
@@ -28,7 +28,7 @@ public class AuthController : ControllerBase
     }
 
     [Authorize]
-    [HttpGet("me")]
+    [HttpGet(Routes.Auth.Me)]
     public async Task<ActionResult<UserRead>> GetCurrentUser()
     {
         UserRead? userData = await _contextService.GetUserFromRequest(HttpContext);
@@ -43,7 +43,21 @@ public class AuthController : ControllerBase
         return userData;
     }
 
-    [HttpPost("login")]
+    [Authorize]
+    [HttpGet(Routes.Auth.MeTokenInfo)]
+    public async Task<ActionResult<TokenInfo>> GetTokenInfo()
+    {
+        TokenInfo? tokenInfo = _contextService.GetTokenInfoFromRequest(HttpContext);
+        if (tokenInfo is null)
+        {
+            string error = $"Failed to retrieve token information from request";
+            _logger.LogError("{Error}", error);
+            return BadRequest(error);
+        }
+        return tokenInfo;
+    }
+
+    [HttpPost(Routes.Auth.Login)]
     public async Task<ActionResult<LoginResult>> Login([FromBody] UserRequest loginRequest)
     {
         RequestData? requestData = _contextService.GetRequestData(HttpContext);
@@ -67,7 +81,7 @@ public class AuthController : ControllerBase
     }
 
     [Authorize]
-    [HttpPost("password-change")]
+    [HttpPost(Routes.Auth.PasswordChange)]
     public async Task<ActionResult> ChangePassword([FromBody] PasswordChangeRequest changeRequest)
     {
         _logger.LogInformation("Password change attempt for user {User}", changeRequest.UserName);
@@ -94,64 +108,26 @@ public class AuthController : ControllerBase
             return BadRequest("Current password is incorrect.");
         }
 
-        bool changeResult = await _authService.UpdateUserPassword(changeRequest);
+        bool changeResult = await _authService.UpdateUserPassword(changeRequest.NewPassword, userName: changeRequest.UserName);
 
         _logger.LogInformation("Password change {Result} for user {User}", changeResult ? "succeeded" : "failed", changeRequest.UserName);
         return Ok(changeResult);
     }
 
-    [Authorize(Roles = DRIVER)]
-    [HttpPost("driver/password-change")]
-    public async Task<ActionResult> DriverChangePassword([FromBody] DriverPasswordChangeRequest changeRequest)
+    [Authorize (Roles = ADMIN)]
+    [HttpPost(Routes.Auth.ForcePasswordChange)]
+    public async Task<ActionResult> ForceChangePassword([FromBody] ForcePasswordChangeRequest changeRequest)
     {
-        int driverUserId = _contextService.GetUserId(HttpContext);
-        User? driverUser = await _userService.FindUserById(driverUserId);
+        _logger.LogInformation("Password change attempt for user[{Id}]", changeRequest.UserId);
 
-        if (driverUser is null)
-        {
-            _logger.LogWarning("Password change denied for missing driver user id {UserId}", driverUserId);
-            return BadRequest("Unable to resolve current user.");
-        }
+        bool changeResult = await _authService.UpdateUserPassword(changeRequest.NewPassword, userId: changeRequest.UserId);
 
-        _logger.LogInformation("Driver password change attempt for user {User}", driverUser.Username);
-
-        RequestData? requestData = _contextService.GetRequestData(HttpContext);
-
-        if (requestData is null)
-        {
-            string error = $"Could not retrieve Request Data for driver password change attempt on {driverUser.Username}";
-            _logger.LogWarning("{Error}", error);
-            return BadRequest(error);
-        }
-
-        UserRequest userRequest = new()
-        {
-            UserName = driverUser.Username,
-            Password = changeRequest.CurrentPassword
-        };
-
-        LoginResult loginResult = await _authService.LoginAsync(userRequest, requestData);
-
-        if (loginResult.Error is not null || !loginResult.Token.StartsWith("ey"))
-        {
-            return BadRequest("Current password is incorrect.");
-        }
-
-        PasswordChangeRequest updateRequest = new()
-        {
-            UserName = driverUser.Username,
-            CurrentPassword = changeRequest.CurrentPassword,
-            NewPassword = changeRequest.NewPassword
-        };
-
-        bool changeResult = await _authService.UpdateUserPassword(updateRequest);
-
-        _logger.LogInformation("Driver password change {Result} for user {User}", changeResult ? "succeeded" : "failed", driverUser.Username);
+        _logger.LogInformation("Password change {Result} for user[{Id}]", changeResult ? "succeeded" : "failed", changeRequest.UserId);
         return Ok(changeResult);
     }
 
     [Authorize(Roles = ADMIN)]
-    [HttpPost("register/admin")]
+    [HttpPost(Routes.Auth.RegisterAdmin)]
     public async Task<ActionResult<Admin>> RegisterAdmin([FromBody] UserRequest request)
     {
         RequestData? requestData = _contextService.GetRequestData(HttpContext);
@@ -184,7 +160,7 @@ public class AuthController : ControllerBase
         return Created(string.Empty, admin);
     }
 
-    [HttpPost("register/driver")]
+    [HttpPost(Routes.Auth.RegisterDriver)]
     public async Task<ActionResult<Driver>> RegisterDriver([FromBody] UserRequest request)
     {
         RequestData? requestData = _contextService.GetRequestData(HttpContext);
@@ -217,7 +193,7 @@ public class AuthController : ControllerBase
     }
 
     [Authorize(Roles = $"{ADMIN},{SPONSOR}")]
-    [HttpPost("register/sponsor")]
+    [HttpPost(Routes.Auth.RegisterSponsor)]
     public async Task<ActionResult<Sponsor>> RegisterSponsor([FromBody] UserRequest request, [FromQuery] int orgId)
     {
         RequestData? requestData = _contextService.GetRequestData(HttpContext);

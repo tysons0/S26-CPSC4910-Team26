@@ -41,15 +41,11 @@
 		<ProjectReference Include="..\Class4910Api\Class4910Api.csproj" />
 	</ItemGroup>
 
-	<Target Name="GenerateHtmlCoverage"
-        AfterTargets="Build"
-        Condition="'$(IsTestProject)' == 'true'
-                   AND Exists('$(TargetDir)TestResults\coverage.cobertura.xml')">
+	<Target Name="GenerateHtmlCoverage" AfterTargets="Build" Condition="'$(IsTestProject)' == 'true'&#xD;&#xA;                   AND Exists('$(TargetDir)TestResults\coverage.cobertura.xml')">
 
 		<Exec Command="dotnet tool run reportgenerator -reports:&quot;$(TargetDir)TestResults\coverage.cobertura.xml&quot; -targetdir:&quot;$(TargetDir)TestResults\CoverageReport&quot; -reporttypes:Html" />
 
-		<Exec Condition="'$(Configuration)' == 'Debug'"
-			  Command="start &quot;&quot; &quot;$(TargetDir)TestResults\CoverageReport\index.html&quot;" />
+		<Exec Condition="'$(Configuration)' == 'Debug'" Command="start &quot;&quot; &quot;$(TargetDir)TestResults\CoverageReport\index.html&quot;" />
 	</Target>
 	
 </Project>
