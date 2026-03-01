@@ -129,6 +129,7 @@ public static class Startup
         builder.Services.AddScoped<IDriverService, DriverService>();
         builder.Services.AddScoped<ISponsorService, SponsorService>();
         builder.Services.AddScoped<IOrganizationService, OrganizationService>();
+        builder.Services.AddScoped<INotificationService, NotificationService>();
 
         builder.Services.AddHttpClient<IEbayService, EbayService>();
 
@@ -348,7 +349,8 @@ public static class Startup
 	            {OrgIdField.SelectName} int NOT NULL,
 
 	            {ApplicationStatusField.SelectName} varchar(50) DEFAULT 'Waiting' NOT NULL,
-	            {ApplicationReasonField.SelectName} TEXT NULL,
+                {ApplicationDriverMessageField.SelectName} varchar(1000) NOT NULL,
+	            {ApplicationChangeReasonField.SelectName} varchar(1000) NULL,
 
 	            {ApplicationCreatedAtUtcField.SelectName} DATETIME(6) NOT NULL,
 	            {ApplicationLastModifiedUtcField.SelectName} DATETIME(6) NOT NULL,

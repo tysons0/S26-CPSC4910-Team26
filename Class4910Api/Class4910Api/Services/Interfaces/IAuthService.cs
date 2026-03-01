@@ -15,5 +15,7 @@ public interface IAuthService
 
     Task<bool> UserHasAccessToEditOrg(int userId, UserRole role, int orgId);
 
+    Task<bool> UserCanSeeUser(int viewerUser, int userBeingViewed);
+  
     Task<bool> UpdateUserPassword(string password, string? userName = null, int? userId = null);
 }

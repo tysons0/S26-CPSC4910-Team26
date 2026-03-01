@@ -1,5 +1,3 @@
-import { post } from "aws-amplify/api";
-
 const BASE_URL = "https://team26api.cpsc4911.com";
 
 const handleResponse = async (response) => {
@@ -254,7 +252,11 @@ const apiService = {
       }
 
       console.log("Creating organization with data:", orgData);
-      const response = await apiService.postDataWithAuth("Organization", JSON.stringify(orgData), token);
+      const response = await apiService.postDataWithAuth(
+        "Organization",
+        JSON.stringify(orgData),
+        token,
+      );
       console.log("Organization created successfully:", response);
       return response;
     } catch (error) {
@@ -290,6 +292,37 @@ const apiService = {
       return await response.json();
     } catch (error) {
       console.error("Change password error", error);
+      throw error;
+    }
+  },
+
+  changeDriverPassword: async (currentPassword, newPassword) => {
+    try {
+      const token = apiService.getToken();
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      const response = await fetch(`${BASE_URL}/Auth/driver/password-change`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          currentPassword: currentPassword,
+          newPassword: newPassword,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error || "Failed to reset password");
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("Driver password reset error", error);
       throw error;
     }
   },
@@ -331,6 +364,59 @@ const apiService = {
     const user = apiService.getCurrentUser();
     return !!(token && user);
   },
+
+  getOrganizations: async () => {
+    try {
+      const token = apiService.getToken();
+      if (!token) {
+        throw new Error("No authentication token found!");
+      }
+
+      const response = await fetch(`${BASE_URL}/Organization`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-type": "application/json",
+        },
+      });
+      return handleResponse(response);
+    } catch (error) {
+      console.error("Failed to get Organization", error);
+      throw error;
+    }
+  },
+
+  getTokenInfo: async () => {
+    try {
+      const token = apiService.getToken();
+      if (!token) {
+        throw new Error("No authentication token found!");
+      }
+
+      const response = await apiService.getDataWithAuth("Auth/me", token);
+
+      return response;
+    } catch (error) {
+      console.error("Failed to get token info", error);
+      throw error;
+    }
+  },
+
+  getNotifications: async () => {
+      try {
+      const token = apiService.getToken();
+      if (!token) {
+        throw new Error("No authentication token found!");
+      }
+
+      const response = await apiService.getDataWithAuth("Notification/me", token);
+
+      return response;
+    } catch (error) {
+      console.error("Failed to get notifications", error);
+      throw error;
+    }
+  }
 };
 
 export default apiService;

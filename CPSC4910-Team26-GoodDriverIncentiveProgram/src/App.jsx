@@ -3,7 +3,7 @@ import "./css/App.css";
 import About from "./pages/About";
 import Login from "./pages/Login";
 import NavBar from "./components/NavBar";
-import Sponsors from "./pages/Sponsors";
+import Organizations from "./pages/Organizations";
 import Profile from "./pages/Profile";
 import SignUp from "./pages/auth/DriverSignUp";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -26,7 +26,7 @@ function App() {
         <Route path="/" element={<About />} />
         <Route path="/Login" element={<Login />} />
         <Route path="/DriverSignUp" element={<DriverSignUp />} />
-        <Route path="/Sponsors" element={<Sponsors />} />
+        <Route path="/Organizations" element={<Organizations />} />
         <Route path="/SignUp" element={<SignUp />} />
 
         {/* Protected Routes */}

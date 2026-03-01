@@ -134,7 +134,12 @@ public class AuthService : IAuthService
         }
     }
 
-    public async Task<bool> UpdateUserPassword(string password, string? userName = null, int? userId = null)
+    public Task<bool> UserCanSeeUser(int viewerUser, int userBeingViewed)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task<bool> UpdateUserPassword(PasswordChangeRequest changeRequest)
     {
         try
         {

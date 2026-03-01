@@ -145,8 +145,7 @@ function DriverProfile() {
     setSaving(true);
 
     try {
-      await apiService.changePassword(
-        user.username,
+      await apiService.changeDriverPassword(
         passwordData.currentPassword,
         passwordData.newPassword,
       );

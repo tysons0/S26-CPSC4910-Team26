@@ -2,6 +2,8 @@ import "../css/NavBar.css";
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import apiService from "../services/api";
+import NotificationBell from "./NotificationBell";
+import ThemeToggle from "./ThemeToggle";
 
 function NavBar() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -52,18 +54,24 @@ function NavBar() {
     if (role == "driver") return "/DriverProfile";
     if (role == "sponsor") return "/SponsorProfile";
     if (role == "admin") return "/AdminProfile";
-    return "/Profle";
+    return "/Profile";
   };
 
   return (
     <nav className="NavBar">
       <h2 className="project-title">Good Driver Incentive Program</h2>
+
       <Link to="/"> About </Link>
-      <Link to="/Sponsors"> View Sponsors </Link>
-      {!isAuthenticated && <Link to="/DriverSighUp"> Sign Up </Link>}
+      <Link to="/Organizations"> Organizations </Link>
+
+      {!isAuthenticated && <Link to="/DriverSignUp"> Sign Up </Link>}
       {isAuthenticated && <Link to={getDashboardLink()}> Dashboard </Link>}
       {isAuthenticated && <Link to={getProfileLink()}> Profile </Link>}
 
+      {isAuthenticated && <NotificationBell />}
+
+      <ThemeToggle />
+      
       {isAuthenticated ? (
         <button onClick={handleLogout} className="nav-link-button">
           Logout

@@ -70,7 +70,7 @@ function About() {
 
           <div className="about-section">
             <h2>Built by CPSC4910 Team 26:</h2>
-            <h2>{teamData?.teamMembers}</h2>
+            <h2>{teamData?.teamMembers?.join(", ") ?? ""}</h2>
           </div>
           <div className="about-actions">
             <Link to="/Login" className="login-link-button">
