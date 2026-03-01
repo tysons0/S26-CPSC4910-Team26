@@ -47,7 +47,10 @@ public class AdminService : IAdminService
                 return adminFromUserId;
             }
             else
-                throw new($"No data found.");
+            {
+                _logger.LogWarning("AdminId[{Id}] not found", adminId);
+                return null;
+            }
         }
         catch (Exception ex)
         {
@@ -80,7 +83,10 @@ public class AdminService : IAdminService
                 return adminFromUserId;
             }
             else
-                throw new($"No data found.");
+            {
+                _logger.LogWarning("Admin[{Name}] not found", userName);
+                return null;
+            }
         }
         catch (Exception ex)
         {
@@ -113,7 +119,10 @@ public class AdminService : IAdminService
                 return adminFromUserId;
             }
             else
-                throw new($"No data found.");
+            {
+                _logger.LogWarning("Admin UserId[{Id}] not found", userId);
+                return null;
+            }
         }
         catch (Exception ex)
         {

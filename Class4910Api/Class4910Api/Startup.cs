@@ -332,6 +332,7 @@ public static class Startup
 
 	            {NotificationSeenField.SelectName} BOOLEAN DEFAULT 0 NOT NULL,
 	            {NotificationMessageField.SelectName} TEXT NULL,
+                {NotificationCreatedAtUtcField.SelectName} DATETIME(6) NOT NULL,  
 	            {NotificationTypeField.SelectName} varchar(50) NOT NULL,
 
 	            CONSTRAINT Notifications_PK Primary Key ({NotificationIdField.SelectName}),
@@ -399,7 +400,7 @@ public static class Startup
 
             // ApiLogging Create
             command.CommandText = $@"
-            CREATE TABLE `ApiLogging` (
+            CREATE TABLE IF NOT EXISTS `ApiLogging` (
               `id` int NOT NULL AUTO_INCREMENT,
               `Timestamp` varchar(100) DEFAULT NULL,
               `Level` varchar(15) DEFAULT NULL,

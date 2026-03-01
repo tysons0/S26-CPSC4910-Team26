@@ -139,7 +139,7 @@ public class AuthService : IAuthService
         throw new NotImplementedException();
     }
 
-    public async Task<bool> UpdateUserPassword(PasswordChangeRequest changeRequest)
+    public async Task<bool> UpdateUserPassword(string password, string? userName = null, int? userId = null)
     {
         try
         {
