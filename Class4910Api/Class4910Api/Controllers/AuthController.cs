@@ -108,9 +108,21 @@ public class AuthController : ControllerBase
             return BadRequest("Current password is incorrect.");
         }
 
-        bool changeResult = await _authService.UpdateUserPassword(changeRequest);
+        bool changeResult = await _authService.UpdateUserPassword(changeRequest.NewPassword, userName: changeRequest.UserName);
 
         _logger.LogInformation("Password change {Result} for user {User}", changeResult ? "succeeded" : "failed", changeRequest.UserName);
+        return Ok(changeResult);
+    }
+
+    [Authorize (Roles = ADMIN)]
+    [HttpPost(Routes.Auth.ForcePasswordChange)]
+    public async Task<ActionResult> ForceChangePassword([FromBody] ForcePasswordChangeRequest changeRequest)
+    {
+        _logger.LogInformation("Password change attempt for user[{Id}]", changeRequest.UserId);
+
+        bool changeResult = await _authService.UpdateUserPassword(changeRequest.NewPassword, userId: changeRequest.UserId);
+
+        _logger.LogInformation("Password change {Result} for user[{Id}]", changeResult ? "succeeded" : "failed", changeRequest.UserId);
         return Ok(changeResult);
     }
 

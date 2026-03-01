@@ -134,16 +134,30 @@ public class AuthService : IAuthService
         }
     }
 
-    public async Task<bool> UpdateUserPassword(PasswordChangeRequest changeRequest)
+    public async Task<bool> UpdateUserPassword(string password, string? userName = null, int? userId = null)
     {
         try
         {
-            _logger.LogInformation("Updating user {UserName} password.", changeRequest.UserName);
+            User? updateUser = null;
 
-            User updateUser = await _userService.FindUserByName(changeRequest.UserName)
-                ?? throw new("Failed to retrieve update user");
+            if (userName is not null)
+            {
+                _logger.LogInformation("Updating user {UserName} password.", userName);
+                updateUser = await _userService.FindUserByName(userName)
+                    ?? throw new("Failed to retrieve update user");
+            }
+            else if (userId is not null && userId != default)
+            {
+                _logger.LogInformation("Updating user[{Id}] password.", userId);
+                updateUser = await _userService.FindUserById((int)userId)
+                    ?? throw new("Failed to retrieve update user");
+            }
+            else
+            {
+                throw new("Received request to update user password but both username and userId were null");
+            }
 
-            string hashedPassword = HashPassword(updateUser, changeRequest.NewPassword);
+            string hashedPassword = HashPassword(updateUser, password);
 
             await using MySqlConnection conn = new(_dbConnection);
             conn.Open();
@@ -163,15 +177,14 @@ public class AuthService : IAuthService
 
             if (updateCount != 1)
             {
-                _logger.LogError("Failed to update password for user {UserName}", changeRequest.UserName);
+                _logger.LogError("Failed to update password for user {UserName}", updateUser.Username);
                 return false;
             }
             return true;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error updating password for user {UserName}: {ErrorMessage}",
-                changeRequest.UserName, ex.Message);
+            _logger.LogError(ex, "Error updating password for user: {ErrorMessage}", ex.Message);
             return false;
         }
     }
