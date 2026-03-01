@@ -109,4 +109,42 @@ public class EbayService : IEbayService
             throw new Exception($"eBay product search failed: {ex.Message}");
         }
     }
+
+    public async Task<EbayProduct?> GetProductByIDAsync(string itemID)
+    {
+        string token = await GetAccessToken();
+        string url = $"{_config.BaseUrl}/buy/browse/v1/item/{itemID}";
+
+        HttpRequestMessage request = new(HttpMethod.Get, url);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        request.Headers.Add("X-EBAY-C-MARKETPLACE-ID", _config.MarketplaceId);
+
+        HttpResponseMessage response = await _httpClient.SendAsync(request);
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogWarning("Failed to fetch eBay item {ItemId}", itemID);
+            return null;
+        }
+
+        string content = await response.Content.ReadAsStringAsync();
+        EbayItemDetails? item =
+            JsonSerializer.Deserialize<EbayItemDetails>(content, _serializerOptions);
+        if (item == null)
+        {
+            return null;
+        }
+
+        return new EbayProduct
+        {
+            Name = item.Title ?? "Unknown Product",
+            Price = decimal.Parse(item.Price?.Value ?? "0"),
+            Currency = item.Price?.Currency ?? "USD",
+            Points = (int)Math.Round(decimal.Parse(item.Price?.Value ?? "0") * 10),
+            Image = item.Image?.ImageUrl ?? "",
+            Description = item.Description ?? "",
+            ItemId = item.ItemId ?? "",
+            Condition = item.Condition ?? ""
+        };
+
+    }
 }
