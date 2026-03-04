@@ -318,13 +318,23 @@ function DriverDashboard() {
                   >
                     <div className="col image">
                       <img
-                        src={product.image || "https://via.placeholder.com/120"}
+                        src={
+                          product.image ||
+                          "https://via.placeholder.com/120?text=No+Image"
+                        }
                         alt={product.name}
                         className="catalog-img"
                         onError={(e) => {
-                          e.target.src =
-                            "https://via.placeholder.com/120?text=No+Image";
+                          // Prevent infinite loop - only set fallback once
+                          if (
+                            e.target.src !==
+                            "https://via.placeholder.com/120?text=No+Image"
+                          ) {
+                            e.target.src =
+                              "https://via.placeholder.com/120?text=No+Image";
+                          }
                         }}
+                        loading="lazy"
                       />
                     </div>
 
