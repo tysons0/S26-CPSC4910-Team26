@@ -3,7 +3,7 @@ import "./css/App.css";
 import About from "./pages/About";
 import Login from "./pages/Login";
 import NavBar from "./components/NavBar";
-import Organizations from "./pages/Organizations";
+import Organizations from "./pages/organization/Organizations";
 import Profile from "./pages/Profile";
 import SignUp from "./pages/auth/DriverSignUp";
 import AdminDashboard from "./pages/admin/AdminDashboard";
