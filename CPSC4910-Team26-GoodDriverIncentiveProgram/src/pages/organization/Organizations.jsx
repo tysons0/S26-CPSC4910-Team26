@@ -1,9 +1,9 @@
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import PageTitle from "../components/PageTitle";
-import OrganizationCard from "../components/OrganizationCard";
-import apiService from "../services/api";
-import "../css/Organizations.css";
+import PageTitle from "../../components/PageTitle";
+import OrganizationCard from "../../components/OrganizationCard";
+import apiService from "../../services/api";
+import "../../css/Organizations.css";
 
 function Organizations() {
   const [organizations, setOrganizations] = useState([]);
@@ -34,21 +34,6 @@ function Organizations() {
       </div>
     );
   }
-
-  const TempSponsors = [
-    {
-      name: "Jordan",
-      sponsorImage: "jordan.png",
-    },
-    {
-      name: "Nike",
-      sponsorImage: "nike.png",
-    },
-    {
-      name: "Adidas",
-      sponsorImage: "adidas.png",
-    },
-  ];
 
   return (
     <div style={{ padding: "2rem" }}>

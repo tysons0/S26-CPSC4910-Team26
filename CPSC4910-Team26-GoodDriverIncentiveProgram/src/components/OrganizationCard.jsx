@@ -7,18 +7,23 @@ function OrganizationCard({ organization }) {
   const [success, setSuccess] = useState(false);
 
   const handleApply = async () => {
+    const confirmed = window.confirm(
+      `Are you sure you want to apply to ${organization.name}?`,
+    );
+
+    if (!confirmed) return;
+
     setApplying(true);
     setError("");
-    try {
-      // TODO: Implement the actual apply endpoint
-      // await apiService.applyToOrganization(organization.orgId);
 
-      // For now, just show success
-      console.log("Applying to:", organization);
+    try {
+      await apiService.applyToOrganization(organization.orgId);
+
       setSuccess(true);
 
-      // You'll replace this with actual API call once backend is ready
-      alert(`Successfully applied to ${organization.name}!`);
+      setTimeout(() => {
+        setSuccess(false);
+      }, 3000);
     } catch (error) {
       console.error("Error applying to organization:", error);
       setError("Failed to apply. Please try again.");
@@ -77,7 +82,7 @@ function OrganizationCard({ organization }) {
               marginTop: "1rem",
             }}
           >
-            Application submitted!
+            ✓ Application submitted successfully!
           </div>
         ) : (
           <div className="col action">

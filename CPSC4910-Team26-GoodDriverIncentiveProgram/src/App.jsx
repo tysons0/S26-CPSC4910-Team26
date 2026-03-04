@@ -39,6 +39,7 @@ function App() {
         <Route path="/SponsorProfile" element={<SponsorProfile />} />
         <Route path="/AdminProfile" element={<AdminProfile />} />
         <Route path="/CreateOrganization" element={<OrganizationCreate />} />
+        <Route path="/Organizations" element={<Organizations />} />
       </Routes>
     </>
   );

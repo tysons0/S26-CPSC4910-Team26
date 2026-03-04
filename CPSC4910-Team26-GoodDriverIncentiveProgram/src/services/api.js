@@ -386,6 +386,33 @@ const apiService = {
     }
   },
 
+  applyToOrganization: async (orgId) => {
+    try {
+      const token = apiService.getToken();
+      if (!token) {
+        throw new Error("No authentication token found. Please log in.");
+      }
+
+      const response = await fetch(`${BASE_URL}/Application/${orgId}/apply`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error("Failed to apply to organization." || error);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("Apply to Organization error", error);
+      throw error;
+    }
+  },
+
   getTokenInfo: async () => {
     try {
       const token = apiService.getToken();
@@ -403,20 +430,23 @@ const apiService = {
   },
 
   getNotifications: async () => {
-      try {
+    try {
       const token = apiService.getToken();
       if (!token) {
         throw new Error("No authentication token found!");
       }
 
-      const response = await apiService.getDataWithAuth("Notification/me", token);
+      const response = await apiService.getDataWithAuth(
+        "Notification/me",
+        token,
+      );
 
       return response;
     } catch (error) {
       console.error("Failed to get notifications", error);
       throw error;
     }
-  }
+  },
 };
 
 export default apiService;
