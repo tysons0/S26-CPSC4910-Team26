@@ -60,6 +60,7 @@ public class OrganizationController : ControllerBase
     }
 
     [Authorize(Roles = $"{ADMIN},{SPONSOR}")]
+    [HttpGet("drivers")]
     public async Task<ActionResult<List<Driver>>> GetDriversFromOrganization([FromQuery] int? orgId = null)
     {
         int contextUserId = _contextService.GetUserId(HttpContext);
@@ -98,6 +99,30 @@ public class OrganizationController : ControllerBase
 
         return Ok(driverList);
     }
+    [Authorize(Roles = $"{ADMIN},{SPONSOR}, {DRIVER}")]
+    [HttpGet("{orgId:int}")]
+    public async Task<ActionResult<Organization>> GetOrganizationById(int orgId)
+    {
+        int userId = _contextService.GetUserId(HttpContext);
+        UserRole role = _contextService.GetUserRole(HttpContext);
+
+        if (role == UserRole.Sponsor)
+        {
+            Sponsor? sponsor = await _sponsorService.GetSponsorByUserId(userId);
+            if (sponsor is null || sponsor.OrganizationId != orgId)
+            {
+                return BadRequest("You do not have access to this organization");
+            }
+        }
+
+        Organization? organization = await _organizationService.GetOrganizationById(orgId);
+        if (organization is null)
+        {
+            return NotFound("Organization not found");
+        }
+        return Ok(organization);
+    }
+
 
 }
 

@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Class4910Api.Models;
+﻿using Class4910Api.Models;
 using Class4910Api.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using static Class4910Api.ConstantValues;
 
 namespace Class4910Api.Controllers;
@@ -34,4 +34,14 @@ public class SponsorController : ControllerBase
 
 		return Ok(sponsor);
 	}
+
+    [Authorize(Roles = $"{ADMIN}")]
+    [HttpGet("organization/{orgId}")]
+    public async Task<ActionResult<List<Sponsor>>> GetSponsorsByOrganization(int orgId)
+    {
+        List<Sponsor>? sponsors = await _sponsorService.GetSponsorsByOrganizationId(orgId);
+
+        return Ok(sponsors);
+    }
+
 }
