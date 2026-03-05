@@ -388,6 +388,20 @@ const apiService = {
     }
   },
 
+  getDriverByUserId: async (userId) => {
+    try {
+      const token = apiService.getToken();
+      if (!token) {
+        throw new Error("No authentication token found. Please log in.");
+      }
+
+      return await apiService.getDataWithAuth(`Driver/${userId}`, token);
+    } catch (error) {
+      console.error("Failed to get driver profile", error);
+      throw error;
+    }
+  },
+
   getMySponsorInfo: async () => {
     try {
       const token = apiService.getToken();

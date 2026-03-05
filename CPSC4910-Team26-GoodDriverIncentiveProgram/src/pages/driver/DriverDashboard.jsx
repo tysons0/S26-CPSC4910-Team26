@@ -1,15 +1,14 @@
-import { Link } from "react-router-dom";
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import PageTitle from "../../components/PageTitle";
-import ProductCard from "../../components/Product";
 import apiService from "../../services/api";
-import ebayService from "../../services/ebayAPI";
 import "../../css/Dashboard.css";
 
 function DriverDashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [organizationId, setOrganizationId] = useState(null);
+  const [organizationName, setOrganizationName] = useState("Organization");
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState([]);
   const [productLoading, setProductLoading] = useState(false);
@@ -18,136 +17,91 @@ function DriverDashboard() {
   const [minPoints, setMinPoints] = useState("");
   const [maxPoints, setMaxPoints] = useState("");
   const [availability, setAvailability] = useState("All");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
+
+  const loadCatalogProducts = async (orgId) => {
+    setProductLoading(true);
+    setError("");
+
+    try {
+      const catalogItems = await apiService.getCatalog(orgId);
+      const normalizedProducts = (Array.isArray(catalogItems) ? catalogItems : []).map((item) => ({
+        id: item.catalogItemID ?? item.catalogItemId ?? item.ebayItemId,
+        name: item.title || item.name || "Catalog Item",
+        points: Number(item.points ?? 0),
+        availability: item.isActive === false ? "Unavailable" : "Available",
+        image:
+          item.imageUrl ||
+          item.image ||
+          "https://via.placeholder.com/120?text=No+Image",
+        itemWebUrl: item.itemWebUrl || "",
+      }));
+
+      setProducts(normalizedProducts);
+    } catch (catalogError) {
+      console.error("Error loading organization catalog:", catalogError);
+      setError(catalogError.message || "Failed to load organization catalog.");
+      setProducts([]);
+    } finally {
+      setProductLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchUserData = async () => {
+    const fetchDriverCatalog = async () => {
       try {
-        const userData = await apiService.getUserInfo();
-        if (userData) {
-          setUser(userData);
-          localStorage.setItem("user", JSON.stringify(userData));
+        if (!apiService.isAuthenticated()) {
+          navigate("/Login");
+          return;
         }
-      } catch (error) {
-        console.error("Error fetching user data:", error);
+
+        const userData = await apiService.getUserInfo();
+        if (!userData) {
+          throw new Error("Unable to load user profile.");
+        }
+
+        setUser(userData);
+        localStorage.setItem("user", JSON.stringify(userData));
+
+        const driverData = await apiService.getDriverByUserId(userData.id);
+        const driverOrgId = driverData?.organizationId;
+
+        if (!driverOrgId) {
+          setError(
+            "You are not currently assigned to an organization. Join an organization to view its catalog.",
+          );
+          setProducts([]);
+          return;
+        }
+
+        setOrganizationId(driverOrgId);
+
+        try {
+          const organizations = await apiService.getOrganizations();
+          const matchingOrg = (Array.isArray(organizations) ? organizations : []).find(
+            (organization) => organization.orgId === driverOrgId,
+          );
+
+          if (matchingOrg?.name) {
+            setOrganizationName(matchingOrg.name);
+          }
+        } catch (orgError) {
+          console.error("Error loading organizations:", orgError);
+        }
+
+        await loadCatalogProducts(driverOrgId);
+      } catch (fetchError) {
+        console.error("Error loading driver dashboard:", fetchError);
+        setError(fetchError.message || "Failed to load dashboard data.");
       } finally {
         setLoading(false);
       }
     };
-    fetchUserData();
-  }, []);
 
-  useEffect(() => {
-    fetchDiverseProducts("");
-  }, []);
-
-  const fetchDiverseProducts = async () => {
-    setProductLoading(true);
-    setError("");
-    setSearchKeyword("");
-
-    try {
-      const categories = [
-        "electronics",
-        "fashion",
-        "home",
-        "sports",
-        "books",
-        "toys",
-      ];
-      const allProducts = [];
-
-      for (const category of categories) {
-        const results = await ebayService.searchProducts(category, 8);
-        allProducts.push(...results);
-      }
-
-      setProducts(allProducts);
-      setCurrentPage(1);
-      setHasMore(true);
-    } catch (error) {
-      console.error("Error fetching diverse products:", error);
-      setError("Failed to load products from eBay.");
-      // Fallback products
-      setProducts([
-        {
-          name: "T-Shirt",
-          points: 100,
-          image: "https://via.placeholder.com/150",
-        },
-        { name: "Hat", points: 150, image: "https://via.placeholder.com/150" },
-        {
-          name: "Hoodie",
-          points: 250,
-          image: "https://via.placeholder.com/150",
-        },
-        { name: "Cup", points: 50, image: "https://via.placeholder.com/150" },
-        {
-          name: "Sunglasses",
-          points: 75,
-          image: "https://via.placeholder.com/150",
-        },
-        {
-          name: "Backpack",
-          points: 200,
-          image: "https://via.placeholder.com/150",
-        },
-      ]);
-    } finally {
-      setProductLoading(false);
-    }
-  };
-
-  const fetchProducts = async (keyword = searchKeyword, append = false) => {
-    if (!keyword.trim()) {
-      alert("Please enter a search term");
-      return;
-    }
-
-    setProductLoading(true);
-    setError("");
-    try {
-      const page = append ? currentPage : 1;
-      const limit = 24;
-      const offset = (page - 1) * limit;
-
-      const ebayProducts = await ebayService.searchProducts(
-        keyword,
-        limit,
-        offset,
-      );
-
-      if (append) {
-        setProducts((prev) => [...prev, ...ebayProducts]);
-        setCurrentPage(page + 1);
-      } else {
-        setProducts(ebayProducts);
-        setCurrentPage(2);
-      }
-
-      setHasMore(ebayProducts.length === limit);
-    } catch (error) {
-      console.error("Error fetching products:", error);
-      setError("Failed to load products from eBay. Showing default products.");
-    } finally {
-      setProductLoading(false);
-    }
-  };
+    fetchDriverCatalog();
+  }, [navigate]);
 
   const handleSearch = (e) => {
     e.preventDefault();
-    if (searchKeyword.trim()) {
-      fetchProducts(searchKeyword, false);
-    }
-  };
-
-  const handleLoadMore = () => {
-    if (searchKeyword.trim()) {
-      fetchProducts(searchKeyword, true);
-    } else {
-      alert("Please search for a specific product to load more");
-    }
   };
 
   const handleLogout = () => {
@@ -162,6 +116,11 @@ function DriverDashboard() {
 
     return products.filter((p) => {
       const pts = Number(p.points ?? 0);
+      const searchMatch =
+        searchKeyword.trim() === "" ||
+        String(p.name || "")
+          .toLowerCase()
+          .includes(searchKeyword.trim().toLowerCase());
 
       const passMin = min === null || pts >= min;
       const passMax = max === null || pts <= max;
@@ -172,21 +131,21 @@ function DriverDashboard() {
           .toLowerCase()
           .includes(availability.toLowerCase());
 
-      return passMin && passMax && passAvail;
+      return searchMatch && passMin && passMax && passAvail;
     });
-  }, [products, minPoints, maxPoints, availability]);
+  }, [products, searchKeyword, minPoints, maxPoints, availability]);
 
   const handleApplyFilters = (e) => {
     e.preventDefault();
-    // Wireframe filters are client-side; if you want, you can also refetch by keyword:
-    // fetchProducts(searchKeyword);
   };
 
   const handleViewDetails = (product) => {
-    // Wireframe has "View Details / Redeem" :contentReference[oaicite:2]{index=2}
-    // If you have a details page route, send product id there:
-    // navigate(`/driver/products/${product.itemId}`);
-    console.log("View details:", product);
+    if (product.itemWebUrl) {
+      window.open(product.itemWebUrl, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    console.log("No product details URL available", product);
   };
 
   if (loading) {
@@ -200,8 +159,6 @@ function DriverDashboard() {
     );
   }
 
-  const sponsorName = "Sponsor Organization";
-
   return (
     <div className="catalog-page">
       <PageTitle title="Driver Catalog | Team 26" />
@@ -209,7 +166,7 @@ function DriverDashboard() {
       <header className="catalog-header">
         <div>
           <h1 className="catalog-title">
-            {sponsorName}&apos;s Product Catalog
+            {organizationName}&apos;s Product Catalog
           </h1>
           <div className="catalog-points">
             Points Balance: <strong>{user?.points ?? 0}</strong>
@@ -255,9 +212,8 @@ function DriverDashboard() {
                 onChange={(e) => setAvailability(e.target.value)}
               >
                 <option value="All">All</option>
-                <option value="In Stock">In Stock</option>
-                <option value="Limited">Limited</option>
-                <option value="Out of Stock">Out of Stock</option>
+                <option value="Available">Available</option>
+                <option value="Unavailable">Unavailable</option>
               </select>
             </div>
 
@@ -275,21 +231,21 @@ function DriverDashboard() {
                 type="text"
                 value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
-                placeholder="headphones, laptops..."
+                placeholder="Search catalog products..."
               />
             </div>
-            <button type="submit" className="submit" disabled={productLoading}>
-              {productLoading ? "Searching..." : "Search"}
+            <button type="submit" className="submit">
+              Search
             </button>
           </form>
 
           <button
-            onClick={fetchDiverseProducts}
+            onClick={() => organizationId && loadCatalogProducts(organizationId)}
             className="submit"
             style={{ width: "100%", marginTop: "1rem" }}
-            disabled={productLoading}
+            disabled={productLoading || !organizationId}
           >
-            Browse All Categories
+            {productLoading ? "Refreshing..." : "Refresh Catalog"}
           </button>
         </aside>
 
@@ -314,7 +270,7 @@ function DriverDashboard() {
                 {filteredProducts.map((product, index) => (
                   <div
                     className="catalog-row"
-                    key={product.itemId || `${product.name}-${index}`}
+                    key={product.id || `${product.name}-${index}`}
                   >
                     <div className="col image">
                       <img
@@ -349,7 +305,7 @@ function DriverDashboard() {
 
                     <div className="col avail">
                       <div className="muted">Availability:</div>
-                      <strong>{product.availability || "Available"}</strong>
+                      <strong>{product.availability}</strong>
                     </div>
 
                     <div className="col action">
@@ -358,36 +314,12 @@ function DriverDashboard() {
                         type="button"
                         onClick={() => handleViewDetails(product)}
                       >
-                        View Details / Redeem
+                        View Details
                       </button>
                     </div>
                   </div>
                 ))}
               </div>
-
-              {/* Load More Button */}
-              {searchKeyword.trim() && hasMore && (
-                <div
-                  style={{
-                    textAlign: "center",
-                    marginTop: "2rem",
-                    paddingBottom: "2rem",
-                  }}
-                >
-                  <button
-                    onClick={handleLoadMore}
-                    disabled={productLoading}
-                    className="submit"
-                    style={{
-                      padding: "0.75rem 2rem",
-                      fontSize: "1rem",
-                      cursor: productLoading ? "not-allowed" : "pointer",
-                    }}
-                  >
-                    {productLoading ? "Loading More..." : "Load More Products"}
-                  </button>
-                </div>
-              )}
             </>
           )}
         </main>
