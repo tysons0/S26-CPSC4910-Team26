@@ -372,7 +372,7 @@ const apiService = {
         throw new Error("No authentication token found!");
       }
 
-      const response = await fetch(`${BASE_URL}/api/Organization`, {
+      const response = await fetch(`${BASE_URL}/Organization`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -454,7 +454,7 @@ const apiService = {
       const token = apiService.getToken();
       if (!token) throw new Error("No authentication token found!");
 
-      return await apiService.getDataWithAuth("api/Sponsor/me", token);
+      return await apiService.getDataWithAuth("Sponsor/me", token);
     } catch (error) {
       console.error("Failed to get sponsor info", error);
       throw error;
@@ -464,7 +464,7 @@ const apiService = {
     try {
       const token = apiService.getToken();
       if (!token) throw new Error("No authentication token found!");
-      return await apiService.getDataWithAuth(`api/Sponsor/organization/${orgId}`, token);
+      return await apiService.getDataWithAuth(`Sponsor/organization/${orgId}`, token);
     } catch (error) {
       console.error("Failed to get sponsors by organization", error);
       throw error;
@@ -472,12 +472,12 @@ const apiService = {
   },
 
   // Organization-specific API calls
-  getOrganization: async (orgId) => {
+  getOrganizationById: async (orgId) => {
     try {
       const token = apiService.getToken();
       if (!token) throw new Error("No authentication token found!");
 
-      return await apiService.getDataWithAuth(`api/Organization/${orgId}`, token);
+      return await apiService.getDataWithAuth(`Organization/${orgId}`, token);
     } catch (error) {
       console.error("Failed to get organization info", error);
       throw error;
@@ -489,7 +489,7 @@ const apiService = {
     try {
       const token = apiService.getToken();
       if (!token) throw new Error("No authentication token found!");
-      return await apiService.getDataWithAuth(`api/Catalog/${orgId}`, token);
+      return await apiService.getDataWithAuth(`Catalog/${orgId}`, token);
     } catch (error) {
       console.error("Failed to get sponsor catalog", error);
       throw error;
@@ -502,7 +502,7 @@ const apiService = {
       if (!token) throw new Error("No authentication token found!");
 
       const response = await apiService.postDataWithAuth(
-        `api/Catalog/${orgId}`,
+        `Catalog/${orgId}`,
         JSON.stringify(request),
         token
       );
@@ -519,7 +519,7 @@ const apiService = {
       if (!token) throw new Error("No authentication token found!");
 
       const response = await fetch(
-        `${BASE_URL}/api/Catalog/${orgId}/${catalogItemId}`,
+        `${BASE_URL}/Catalog/${orgId}/${catalogItemId}`,
         {
           method: "PUT",
           headers: {
@@ -541,7 +541,7 @@ const apiService = {
       const token = apiService.getToken();
       if (!token) throw new Error("No authentication token found!");
       const response = await fetch(
-        `${BASE_URL}/api/Catalog/${orgId}/${catalogItemId}`,
+        `${BASE_URL}/Catalog/${orgId}/${catalogItemId}`,
         {
           method: "DELETE",
           headers: {
@@ -557,7 +557,7 @@ const apiService = {
   },
 
   // Ebay-specific API calls
-  searchEbayProducts: async (keyword, limit = 24) => {
+  searchEbayProducts: async (keyword, limit = 12) => {
     try {
       const token = apiService.getToken();
       if (!token) throw new Error("No authentication token found!");
