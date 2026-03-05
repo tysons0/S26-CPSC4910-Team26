@@ -62,7 +62,14 @@ public class ApplicationController : ControllerBase
     [HttpPost("{orgId:int}/apply")]
     public async Task<ActionResult> CreateApplication(int orgId, [FromBody] string message)
     {
-        bool creationResult = await _applicationService.CreateApplication(orgId, message);
+        int userId = _contextService.GetUserId(HttpContext);
+        Driver? driver = await _driverService.GetDriverByUserId(userId);
+        if (driver == null)
+        {
+            return BadRequest("Could not identify driver from request");
+        }
+
+        bool creationResult = await _applicationService.CreateApplication(driver.DriverId, orgId, message);
 
         if (creationResult)
         {

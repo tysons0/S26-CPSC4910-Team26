@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net;
+﻿using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Text;
 using Class4910Api;
 using Class4910Api.Configuration;
 using Class4910Api.Models;
@@ -13,7 +10,7 @@ using Microsoft.Extensions.Options;
 
 using static Class4910Api.ConstantValues;
 
-namespace Class4910Tests.Integration.AuthController;
+namespace Class4910Tests.Integration;
 
 public class AuthControllerTests : IClassFixture<Class4910ApiFactory>
 {
@@ -213,10 +210,10 @@ public class AuthControllerTests : IClassFixture<Class4910ApiFactory>
             UserName = username,
             Password = currentPassword
         };
-        UserRequest afterChangeLoginRequest = new() 
-        { 
+        UserRequest afterChangeLoginRequest = new()
+        {
             UserName = username,
-            Password = newPassword 
+            Password = newPassword
         };
         PasswordChangeRequest passwordChangeRequest = new()
         {
@@ -224,8 +221,8 @@ public class AuthControllerTests : IClassFixture<Class4910ApiFactory>
             CurrentPassword = currentPassword,
             NewPassword = newPassword,
         };
-        PasswordChangeRequest passwordChangeBackRequest = new() 
-        { 
+        PasswordChangeRequest passwordChangeBackRequest = new()
+        {
             UserName = username,
             CurrentPassword = newPassword,
             NewPassword = currentPassword

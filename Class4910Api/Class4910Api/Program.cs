@@ -34,7 +34,14 @@ try
 
     // Add all services to make sure all can be initialized
     IEbayService ebayService = scope.ServiceProvider.GetRequiredService<IEbayService>();
+    ICatalogService catalogService = scope.ServiceProvider.GetRequiredService<ICatalogService>();
     IContextService contextService = scope.ServiceProvider.GetRequiredService<IContextService>();
+    IApplicationService applicationService = scope.ServiceProvider.GetRequiredService<IApplicationService>();
+    IEmailService emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
+    INotificationService notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
+    IUserService userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+
+
 
     // Services needed for seeding
     IAuthService authService = scope.ServiceProvider.GetRequiredService<IAuthService>();

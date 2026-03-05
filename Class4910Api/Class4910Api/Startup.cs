@@ -1,13 +1,11 @@
 ﻿using System.Text;
 using Class4910Api.Configuration;
 using Class4910Api.Models;
-using Class4910Api.Models.Requests;
 using Class4910Api.Services;
 using Class4910Api.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using MySql.Data.MySqlClient;
 using Scalar.AspNetCore;
@@ -128,6 +126,7 @@ public static class Startup
         builder.Services.AddScoped<IUserService, UserService>();
         builder.Services.AddScoped<IAdminService, AdminService>();
         builder.Services.AddScoped<IDriverService, DriverService>();
+        builder.Services.AddScoped<IApplicationService, ApplicationService>();
         builder.Services.AddScoped<ISponsorService, SponsorService>();
         builder.Services.AddScoped<IOrganizationService, OrganizationService>();
         builder.Services.AddScoped<INotificationService, NotificationService>();
