@@ -40,6 +40,15 @@ function SponsorDashboard() {
         where you can view your catalog and manage products.
       </p>
       <h2>Manage Sponsor Orgs and other Sponsors</h2>
+
+      <div style={{ marginBottom: "1rem" }}>
+        <Link to="/SponsorApplications">
+          <button className="submit" style={{ marginRight: "1rem" }}>
+            Manage Applications
+          </button>
+        </Link>
+      </div>
+
       <p>
         Register a Sponsor <Link to="/SponsorSignUp">Create one Here</Link>
       </p>

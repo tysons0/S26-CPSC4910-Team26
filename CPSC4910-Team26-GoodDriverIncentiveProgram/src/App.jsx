@@ -16,6 +16,7 @@ import DriverProfile from "./pages/driver/DriverProfile";
 import SponsorProfile from "./pages/sponsor/SponsorProfile";
 import AdminProfile from "./pages/admin/AdminProfile";
 import OrganizationCreate from "./pages/organization/OrganizationCreate";
+import SponsorApplications from "./pages/sponsor/SponsorApplications";
 
 function App() {
   return (
@@ -40,6 +41,7 @@ function App() {
         <Route path="/AdminProfile" element={<AdminProfile />} />
         <Route path="/CreateOrganization" element={<OrganizationCreate />} />
         <Route path="/Organizations" element={<Organizations />} />
+        <Route path="/SponsorApplications" element={<SponsorApplications />} />
       </Routes>
     </>
   );

@@ -1,3 +1,5 @@
+import { ApplicationLoadBalancedServiceRecordType } from "aws-cdk-lib/aws-ecs-patterns";
+
 const BASE_URL = "https://team26api.cpsc4911.com";
 
 const handleResponse = async (response) => {
@@ -386,7 +388,7 @@ const apiService = {
     }
   },
 
-  applyToOrganization: async (orgId) => {
+  applyToOrganization: async (orgId, message = "") => {
     try {
       const token = apiService.getToken();
       if (!token) {
@@ -399,6 +401,7 @@ const apiService = {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
+        body: JSON.stringify(message),
       });
 
       if (!response.ok) {
@@ -409,6 +412,73 @@ const apiService = {
       return await response.json();
     } catch (error) {
       console.error("Apply to Organization error", error);
+      throw error;
+    }
+  },
+
+  getApplications: async () => {
+    try {
+      const token = apiService.getToken();
+      if (!token) {
+        throw new Error("No authentication token found. Please log in.");
+      }
+
+      const response = await fetch(`${BASE_URL}/Application`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      return await handleResponse(response);
+    } catch (error) {
+      console.error("Failed to get Applications.", error);
+      throw error;
+    }
+  },
+
+  updateApplicationStatus: async (
+    applicationId,
+    newStatus,
+    changeReason = "",
+  ) => {
+    try {
+      const token = apiService.getToken();
+      if (!token) {
+        throw new Error("No authentication token found. Please log in.");
+      }
+
+      const response = await fetch(
+        `${BASE_URL}/Application/${applicationId}/status?${params}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      return await handleResponse(response);
+    } catch (error) {
+      console.error("Failed to update application status", error);
+      throw error;
+    }
+  },
+
+  getMyApplications: async () => {
+    try {
+      const token = apiService.getToken();
+      if (!token) {
+        throw new Error("No authentication token found. Please log in.");
+      }
+
+      const allApplications = await apiService.getApplications();
+      const currentUser = apiService.getCurrentUser();
+
+      return allApplications.filter((app) => app.driverId === currentUser.id);
+    } catch (error) {
+      console.error("Failed to get Applications", error);
       throw error;
     }
   },
@@ -444,6 +514,51 @@ const apiService = {
       return response;
     } catch (error) {
       console.error("Failed to get notifications", error);
+      throw error;
+    }
+  },
+
+  getDriverAddress: async (driverId) => {
+    try {
+      const token = apiService.getToken();
+      if (!token) {
+        throw new Error("No authentication token found. Please log in.");
+      }
+
+      const response = await fetch(`${BASE_URL}/Driver/${driverId}/address`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      return await handleResponse(response);
+    } catch (error) {
+      console.error("Unable to Get Driver Address.");
+      throw error;
+    }
+  },
+
+  addDriverAddress: async (driverId) => {
+    try {
+      const token = apiService.getToken();
+      if (!token) {
+        throw new Error("No authentication token found. Please log in.");
+      }
+
+      const response = await fetch(`${BASE_URL}/Driver/${driverId}/address`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(addressData),
+      });
+
+      return handleResponse(response);
+    } catch (error) {
+      console.error("Failed to add Driver Address.");
       throw error;
     }
   },
