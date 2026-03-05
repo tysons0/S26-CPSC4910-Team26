@@ -321,13 +321,76 @@ public class DriverService : IDriverService
         }
     }
 
-    public async Task<bool> UpdateAddress(int driverId, int addressId, AddressRequest addressRequest)
+    public async Task<bool> UpdateAddress(int driverId, int addressId, AddressRequest req)
     {
-        throw new NotImplementedException();
+        try
+        {
+            await using MySqlConnection conn = new(_dbConnection);
+            conn.Open();
+            MySqlCommand command = conn.CreateCommand();
+
+            command.CommandText =
+                @$"UPDATE {DriverAddressesTable.Name}
+                   SET {DriverAddressCityField.SelectName} = @City,
+                       {DriverAddressZipCodeField.SelectName} = @ZipCode,
+                       {DriverAddressStateField.SelectName} = @State,
+                       {DriverAddressLine1Field.SelectName} = @Line1,
+                       {DriverAddressLine2Field.SelectName} = @Line2,
+                       {DriverAddressAliasField.SelectName} = @Alias,
+                       {DriverAddressPrimaryField.SelectName} = @Primary
+                   WHERE {DriverIdField.SelectName} = @DriverId AND
+                   {DriverAddressIdField.SelectName} = @AddressId
+                ";
+
+            command.Parameters.Add(DriverIdField.GenerateParameter("@DriverId", driverId));
+            command.Parameters.Add(DriverAddressIdField.GenerateParameter("@AddressId", addressId));
+
+            command.Parameters.Add(DriverAddressCityField.GenerateParameter("@City", req.City));
+            command.Parameters.Add(DriverAddressZipCodeField.GenerateParameter("@ZipCode", req.ZipCode));
+            command.Parameters.Add(DriverAddressStateField.GenerateParameter("@State", req.State));
+            command.Parameters.Add(DriverAddressLine1Field.GenerateParameter("@Line1", req.AddressLine1));
+            command.Parameters.Add(DriverAddressLine2Field.GenerateParameter("@Line2", req.AddressLine2));
+            command.Parameters.Add(DriverAddressAliasField.GenerateParameter("@Alias", req.AddressAlias));
+            command.Parameters.Add(DriverAddressPrimaryField.GenerateParameter("@Primary", req.Primary));
+
+
+            await command.ExecuteNonQueryAsync();
+
+            _logger.LogInformation("Updated Address[{Id}] for Driver[{Id}].", addressId, driverId);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating Address[{Id}] for Driver[{Id}] to [{Request}]", addressId, driverId, req);
+            return false;
+        }
     }
 
     public async Task<bool> DeleteDriverAddress(int driverId, int addressId)
     {
-        throw new NotImplementedException();
+        try
+        {
+            await using MySqlConnection conn = new(_dbConnection);
+            conn.Open();
+            MySqlCommand command = conn.CreateCommand();
+
+            command.CommandText =
+                @$"DELETE FROM {DriverAddressesTable.Name}
+                   WHERE {DriverIdField.SelectName} = @DriverId AND
+                   {DriverAddressIdField.SelectName} = @AddressId
+                ";
+            command.Parameters.Add(DriverIdField.GenerateParameter("@DriverId", driverId));
+            command.Parameters.Add(DriverAddressIdField.GenerateParameter("@AddressId", addressId));
+
+            await command.ExecuteNonQueryAsync();
+
+            _logger.LogInformation("Deleted Address[{Id}] for Driver[{Id}]", addressId, driverId);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting Address[{Id}] for Driver[{Id}]", addressId, driverId);
+            return false;
+        }
     }
 }
