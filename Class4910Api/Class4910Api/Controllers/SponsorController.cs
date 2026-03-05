@@ -34,16 +34,6 @@ public class SponsorController : ControllerBase
 
 		return Ok(sponsor);
 	}
-    private readonly ISponsorService _sponsorService;
-    private readonly IContextService _contextService;
-
-    public SponsorController(
-        ISponsorService sponsorService,
-        IContextService contextService )
-    {
-        _sponsorService = sponsorService;
-        _contextService = contextService;
-    }
 
     [Authorize(Roles = $"{ADMIN},{SPONSOR}")]
     [HttpGet("me")]

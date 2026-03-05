@@ -6,6 +6,7 @@ import apiService from "../../services/api";
 import "../../css/Dashboard.css";
 
 function SponsorDashboard() {
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [sponsorOrgId, setSponsorOrgId] = useState(null);
   const [catalogItems, setCatalogItems] = useState([]);
