@@ -29,10 +29,11 @@ function SponsorDashboard() {
         const sponsorData = await apiService.getSponsor();
         setSponsor(sponsorData);
 
-        const orgData = await apiService.getOrganization(sponsorData.orgId);
+        const orgId = sponsorData?.organizationId || sponsorData?.OrganizationId || sponsorData?.orgId;
+        const orgData = await apiService.getOrganizationById(orgId);
         setOrganization(orgData);
 
-        const catalogData = await apiService.getSponsorCatalog(sponsorData.orgId);
+        const catalogData = await apiService.getSponsorCatalog(orgId);
         setCatalog(catalogData);
       } catch (error) {
         console.error("Error loading sponsor dashboard data:", error);
@@ -49,7 +50,8 @@ function SponsorDashboard() {
   const refreshCatalog = async () => {
     try {
       setLoading(true);
-      const catalogData = await apiService.getSponsorCatalog(sponsor.orgId);
+      const orgId = sponsor?.organizationId || sponsor?.OrganizationId || sponsor?.orgId;
+      const catalogData = await apiService.getSponsorCatalog(orgId);
       setCatalog(catalogData);
     } catch (error) {
       console.error("Error refreshing catalog:", error);
@@ -65,6 +67,7 @@ function SponsorDashboard() {
     try {
       const response = await apiService.searchEbayProducts(searchTerm);
       setSearchResults(response.products || []);
+      console.log(response.products);
     } catch (error) {
       console.error("Error searching products:", error);
     }
@@ -72,15 +75,16 @@ function SponsorDashboard() {
 
   // Add Item to Catalog
   const handleAddProduct = async (product) => {
-    const suggestedPoints = Math.ceil( product.price / (organization.pointWorth || 1) );
+    const suggestedPoints = Math.ceil(product.price / (organization.pointWorth || 1));
     const userPoints = prompt(
-      'Suggesteed Points: ${suggestedPoints}\nEnter point value:',
+      `Suggested Points: ${suggestedPoints}\nEnter point value:`,
       suggestedPoints
     );
     if (!userPoints) return;
 
     try {
-      await apiService.addCatalogItem(sponsor.orgId, {
+      const orgId = sponsor?.organizationId || sponsor?.OrganizationId || sponsor?.orgId;
+      await apiService.addCatalogItem(orgId, {
         ebayItemId: product.itemId,
         points: parseInt(userPoints)
       });
@@ -97,7 +101,8 @@ function SponsorDashboard() {
     if (!newPoints) return;
 
     try {
-      await apiService.updateCatalogItem(sponsor.orgId, item.catalogItemId, {
+      const orgId = sponsor?.organizationId || sponsor?.OrganizationId || sponsor?.orgId;
+      await apiService.updateCatalogItem(orgId, item.catalogItemId, {
         points: parseInt(newPoints)
       });
       refreshCatalog();
@@ -110,7 +115,8 @@ function SponsorDashboard() {
   const handleRemoveItem = async (item) => {
     if (!window.confirm(`Are you sure you want to remove ${item.Name} from the catalog?`)) return;
     try{
-      await apiService.removeCatalogItem(sponsor.orgId, item.catalogItemId);
+      const orgId = sponsor?.organizationId || sponsor?.OrganizationId || sponsor?.orgId;
+      await apiService.removeCatalogItem(orgId, item.catalogItemId);
       refreshCatalog();
     } catch (error) {
       console.error("Error removing catalog item:", error);
@@ -172,7 +178,7 @@ function SponsorDashboard() {
           {/* Search and Add Products Section */}
 
           <h2>Search eBay to Add Products</h2>
-          <div>
+          <div className="search-bar">
             <input
               type="text"
               placeholder="Search for products to add to your catalog"
@@ -187,8 +193,8 @@ function SponsorDashboard() {
               {searchResults.map((product) => (
                 <ProductCard 
                   key={product.itemId}
-                  title={product.title}
-                  imageUrl={product.imageUrl}
+                  title={product.name}
+                  imageUrl={product.image}
                   price={product.price}
                   currency={product.currency}
                   condition={product.condition}
