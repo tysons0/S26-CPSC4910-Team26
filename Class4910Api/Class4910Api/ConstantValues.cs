@@ -291,6 +291,7 @@ public static class ConstantValues
             DriverIdField,
             OrgIdField,
             ApplicationStatusField,
+            ApplicationDriverMessageField,
             ApplicationChangeReasonField,
             ApplicationCreatedAtUtcField,
             ApplicationLastModifiedUtcField
