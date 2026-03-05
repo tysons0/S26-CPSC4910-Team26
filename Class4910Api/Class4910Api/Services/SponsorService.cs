@@ -153,4 +153,39 @@ public class SponsorService : ISponsorService
             UserData = userData.ToReadFormat()
         };
     }
+
+    public async Task<List<Sponsor>?> GetSponsorsByOrganizationId(int orgId)
+    {
+        try
+        {
+            await using MySqlConnection conn = new(_dbConnection);
+            await conn.OpenAsync();
+            MySqlCommand command = conn.CreateCommand();
+
+            command.CommandText =
+                @$"SELECT {UsersTable.GetFields(userAlias)} , {SponsorsTable.GetFields(sponsorAlias)} 
+                   FROM {UsersTable.Name} {userAlias}
+                   JOIN {SponsorsTable.Name} {sponsorAlias} 
+                        ON {userAlias}.{UserIdField.SelectName} = {sponsorAlias}.{UserIdField.SelectName}
+                   WHERE {sponsorAlias}.{OrgIdField.SelectName} = @OrgId";
+            command.Parameters.Add(OrgIdField.GenerateParameter("@OrgId", orgId));
+
+            List<Sponsor> sponsors = new();
+            await using DbDataReader reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                Sponsor sponsorFromName = await GetSponsorFromReader(reader, userAlias, sponsorAlias);
+                sponsors.Add(sponsorFromName);
+            }
+
+            _logger.LogInformation("Retrieved [{Count}] Sponsors for organizationId[{Id}]", sponsors.Count, orgId);
+            return sponsors;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving Sponsors for organizationId[{Id}]", orgId);
+            return null;
+        }
+    }
 }

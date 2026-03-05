@@ -8,7 +8,7 @@ using static Class4910Api.ConstantValues;
 namespace Class4910Api.Controllers;
 
 [ApiController]
-[Route("api/catalog")]
+[Route("[controller]")]
 public class CatalogController : ControllerBase
 {
     private readonly ICatalogService _catalogService;

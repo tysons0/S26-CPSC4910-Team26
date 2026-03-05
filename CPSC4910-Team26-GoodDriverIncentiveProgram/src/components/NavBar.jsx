@@ -62,16 +62,18 @@ function NavBar() {
       <h2 className="project-title">Good Driver Incentive Program</h2>
 
       <Link to="/"> About </Link>
-      <Link to="/Organizations"> Organizations </Link>
 
       {!isAuthenticated && <Link to="/DriverSignUp"> Sign Up </Link>}
       {isAuthenticated && <Link to={getDashboardLink()}> Dashboard </Link>}
       {isAuthenticated && <Link to={getProfileLink()}> Profile </Link>}
+      {isAuthenticated && userRole?.toLowerCase() === "driver" && (
+        <Link to="/Organizations"> Organizations </Link>
+      )}
 
       {isAuthenticated && <NotificationBell />}
 
       <ThemeToggle />
-      
+
       {isAuthenticated ? (
         <button onClick={handleLogout} className="nav-link-button">
           Logout

@@ -3,7 +3,7 @@ import "./css/App.css";
 import About from "./pages/About";
 import Login from "./pages/Login";
 import NavBar from "./components/NavBar";
-import Organizations from "./pages/Organizations";
+import Organizations from "./pages/organization/Organizations";
 import Profile from "./pages/Profile";
 import SignUp from "./pages/auth/DriverSignUp";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -16,6 +16,7 @@ import DriverProfile from "./pages/driver/DriverProfile";
 import SponsorProfile from "./pages/sponsor/SponsorProfile";
 import AdminProfile from "./pages/admin/AdminProfile";
 import OrganizationCreate from "./pages/organization/OrganizationCreate";
+import SponsorApplications from "./pages/sponsor/SponsorApplications";
 
 function App() {
   return (
@@ -39,6 +40,8 @@ function App() {
         <Route path="/SponsorProfile" element={<SponsorProfile />} />
         <Route path="/AdminProfile" element={<AdminProfile />} />
         <Route path="/CreateOrganization" element={<OrganizationCreate />} />
+        <Route path="/Organizations" element={<Organizations />} />
+        <Route path="/SponsorApplications" element={<SponsorApplications />} />
       </Routes>
     </>
   );

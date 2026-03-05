@@ -84,7 +84,7 @@ public class EbayService : IEbayService
                     {
                         Name = item.Title ?? "Unknown Product",
                         Points = (int)Math.Round(decimal.Parse(item.Price?.Value ?? "0") * 10),
-                        Image = item.Image?.ImageUrl ?? item.ThumbnailImages?[0]?.ImageUrl ?? "",
+                        Image = ConvertToHttps(item.Image?.ImageUrl ?? item.ThumbnailImages?[0]?.ImageUrl ?? ""),
                         Description = item.ShortDescription ?? "",
                         Price = decimal.Parse(item.Price?.Value ?? "0"),
                         Currency = item.Price?.Currency ?? "USD",
@@ -92,6 +92,8 @@ public class EbayService : IEbayService
                         ItemWebUrl = item.ItemWebUrl ?? "",
                         Condition = item.Condition ?? ""
                     });
+
+                    
                 }
             }
 
@@ -108,6 +110,19 @@ public class EbayService : IEbayService
             _logger.LogError(ex, "eBay product search failed for keyword: {Keyword}", keyword);
             throw new Exception($"eBay product search failed: {ex.Message}");
         }
+    }
+
+    private static string ConvertToHttps(string url)
+    {
+    if (string.IsNullOrEmpty(url))
+        return "";
+    
+    if (url.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
+    {
+        return "https://" + url.Substring(7);
+    }
+    
+    return url;
     }
 
     public async Task<EbayProduct?> GetProductByIDAsync(string itemID)
