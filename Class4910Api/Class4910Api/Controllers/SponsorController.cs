@@ -35,19 +35,6 @@ public class SponsorController : ControllerBase
 		return Ok(sponsor);
 	}
 
-    [Authorize(Roles = $"{ADMIN},{SPONSOR}")]
-    [HttpGet("me")]
-    public async Task<ActionResult<Sponsor>> GetMySponsor()
-    {
-        int userId = _contextService.GetUserId(HttpContext);
-        Sponsor? sponsor = await _sponsorService.GetSponsorByUserId(userId);
-
-        if (sponsor == null)
-            return NotFound("Sponsor profile not found for the current user");
-
-        return Ok(sponsor);
-    }
-
     [Authorize(Roles = $"{ADMIN}")]
     [HttpGet("organization/{orgId}")]
     public async Task<ActionResult<List<Sponsor>>> GetSponsorsByOrganization(int orgId)
