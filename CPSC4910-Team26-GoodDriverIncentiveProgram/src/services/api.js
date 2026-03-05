@@ -372,7 +372,7 @@ const apiService = {
         throw new Error("No authentication token found!");
       }
 
-      const response = await fetch(`${BASE_URL}/Organization`, {
+      const response = await fetch(`${BASE_URL}/api/Organization`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -447,6 +447,148 @@ const apiService = {
       throw error;
     }
   },
+
+  // Sponsor-specific API calls
+  getSponsor: async () => {
+    try {
+      const token = apiService.getToken();
+      if (!token) throw new Error("No authentication token found!");
+
+      return await apiService.getDataWithAuth("Sponsor/me", token);
+    } catch (error) {
+      console.error("Failed to get sponsor info", error);
+      throw error;
+    }
+  },
+  getSponsorsByOrg: async (orgId) => {
+    try {
+      const token = apiService.getToken();
+      if (!token) throw new Error("No authentication token found!");
+      return await apiService.getDataWithAuth(`Sponsor/organization/${orgId}`, token);
+    } catch (error) {
+      console.error("Failed to get sponsors by organization", error);
+      throw error;
+    }
+  },
+
+  // Organization-specific API calls
+  getOrganization: async (orgId) => {
+    try {
+      const token = apiService.getToken();
+      if (!token) throw new Error("No authentication token found!");
+
+      return await apiService.getDataWithAuth(`api/Organization/${orgId}`, token);
+    } catch (error) {
+      console.error("Failed to get organization info", error);
+      throw error;
+    }
+  },
+
+  // Catalog-specific API calls
+  getSponsorCatalog : async (orgId) => {
+    try {
+      const token = apiService.getToken();
+      if (!token) throw new Error("No authentication token found!");
+      return await apiService.getDataWithAuth(`api/Catalog/${orgId}`, token);
+    } catch (error) {
+      console.error("Failed to get sponsor catalog", error);
+      throw error;
+    }
+  },
+
+  addCatalogItem: async(orgId, request) => {
+    try {
+      const token = apiService.getToken();
+      if (!token) throw new Error("No authentication token found!");
+
+      const response = await apiService.postDataWithAuth(
+        `api/Catalog/${orgId}`,
+        JSON.stringify(request),
+        token
+      );
+      return response;
+    } catch (error) {
+      console.error("Failed to add catalog item", error);
+      throw error;
+    }
+  },
+
+  updateCatalogItem: async(orgId, catalogItemId, request) => {
+    try {
+      const token = apiService.getToken();
+      if (!token) throw new Error("No authentication token found!");
+
+      const response = await fetch(
+        `${BASE_URL}/api/Catalog/${orgId}/${catalogItemId}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(request),
+        }
+      );
+      return await handleResponse(response);
+    } catch (error) {
+      console.error("Failed to update catalog item", error);
+      throw error;
+    }
+  },
+
+  removeCatalogItem: async(orgId, catalogItemId) => {
+    try {
+      const token = apiService.getToken();
+      if (!token) throw new Error("No authentication token found!");
+      const response = await fetch(
+        `${BASE_URL}/api/Catalog/${orgId}/${catalogItemId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return await handleResponse(response);
+    } catch (error) {
+      console.error("Failed to remove catalog item", error);
+      throw error;
+    }
+  },
+
+  // Ebay-specific API calls
+  searchEbayProducts: async (keyword, limit = 24) => {
+    try {
+      const token = apiService.getToken();
+      if (!token) throw new Error("No authentication token found!");
+      const params = new URLSearchParams({
+        keyword: keyword,
+        limit: limit.toString(),
+      });
+      const response = await fetch(`${BASE_URL}/api/Ebay/products?${params}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return await handleResponse(response);
+    } catch (error) {
+      console.error("Failed to search eBay products", error);
+      throw error;
+    }
+  },
+
+  getEbayProductById: async (itemId) => {
+    try {
+      const token = apiService.getToken();
+      if (!token) throw new Error("No authentication token found!");
+      return await apiService.getDataWithAuth(`api/Ebay/products/${itemId}`, token);
+    } catch (error) {
+      console.error("Failed to get eBay product by ID", error);
+      throw error;
+    }
+  }
+
 };
 
 export default apiService;
