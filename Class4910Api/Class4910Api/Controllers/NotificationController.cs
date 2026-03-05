@@ -75,8 +75,22 @@ public class NotificationController : ControllerBase
             return BadRequest("Could not identify user from request");
         }
 
-        await _notificationService.MarkNotificationAsSeen(notificationId);
+        List<Notification>? userNotifications =
+            await _notificationService.GetNotificationsForUser(userId);
 
-        return Ok($"Marked notification[{notificationId}] as seen");
+        if (userNotifications is null)
+        {
+            return StatusCode(500, "Could not find notifications for user.");
+        }
+
+        if (userNotifications.Any(n => n.NotificationId == notificationId))
+        {
+            await _notificationService.MarkNotificationAsSeen(notificationId);
+            return Ok($"Marked notification[{notificationId}] as seen");
+        }
+        else
+        {
+            return BadRequest($"[{User}] does not have notification[{notificationId}]");
+        }
     }
 }
