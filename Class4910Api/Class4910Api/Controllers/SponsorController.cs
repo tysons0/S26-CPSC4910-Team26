@@ -8,7 +8,7 @@ namespace Class4910Api.Controllers;
 
 [Authorize]
 [ApiController]
-[Route("api/[controller]")]
+[Route("[controller]")]
 public class SponsorController : ControllerBase
 {
     private readonly ISponsorService _sponsorService;

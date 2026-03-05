@@ -1,4 +1,4 @@
-function ProductCard({ 
+function ProductCard({
   title,
   imageUrl,
   price,
@@ -6,23 +6,37 @@ function ProductCard({
   points,
   condition,
   children
- }) {
+}) {
   return (
     <div className="product-card">
+
       <div className="product-image">
         <img src={imageUrl} alt={title} />
       </div>
+
       <div className="product-info">
         <h3>{title}</h3>
+
         {price && (
           <p>
-            ${price} {currency}
+            Price: {currency} {price}
           </p>
         )}
-        
-        {points !== undefined && <p>Points: {points}</p>}
-        {condition && <p>Condition: {condition}</p>}
-        {children}
+        {points && (
+          <p>
+            Points: {points}
+          </p>
+        )}
+        {condition && (
+          <p>
+            Condition: {condition}
+          </p>
+        )}
+
+        <div className="product-actions">
+          {children}
+        </div>
+
       </div>
     </div>
   );
