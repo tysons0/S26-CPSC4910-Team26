@@ -217,13 +217,11 @@ public class AuthControllerTests : IClassFixture<Class4910ApiFactory>
         };
         PasswordChangeRequest passwordChangeRequest = new()
         {
-            UserName = username,
             CurrentPassword = currentPassword,
             NewPassword = newPassword,
         };
         PasswordChangeRequest passwordChangeBackRequest = new()
         {
-            UserName = username,
             CurrentPassword = newPassword,
             NewPassword = currentPassword
         };
