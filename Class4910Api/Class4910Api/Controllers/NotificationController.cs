@@ -1,5 +1,4 @@
 ﻿using Class4910Api.Models;
-using Class4910Api.Services;
 using Class4910Api.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,17 +12,20 @@ public class NotificationController : ControllerBase
 {
 
     private readonly ILogger<NotificationController> _logger;
+    private readonly IUserService _userService;
     private readonly IContextService _contextService;
     private readonly INotificationService _notificationService;
     private readonly IAuthService _authService;
 
-    public NotificationController(ILogger<NotificationController> logger, IContextService contextService,
+    public NotificationController(ILogger<NotificationController> logger,
+        IContextService contextService, IUserService userService,
         INotificationService notificationService, IAuthService authService)
     {
         _logger = logger;
         _contextService = contextService;
         _notificationService = notificationService;
         _authService = authService;
+        _userService = userService;
     }
 
     [HttpGet("{userId:int}")]
@@ -37,9 +39,9 @@ public class NotificationController : ControllerBase
             _logger.LogWarning("User[{Id}] is retrieving notifications for themselves but not using right endpoint",
                 userId);
         }
-        else if (await _authService.UserCanSeeUser(contextUserId, userId) == false) 
+        else if (userRole != UserRole.Admin)
         {
-            _logger.LogWarning("User[{Id}] tried to view User[{Id}] notifications but was forbidden.", 
+            _logger.LogWarning("User[{Id}] tried to view User[{Id}] notifications but was forbidden.",
                 contextUserId, userId);
             return Forbid();
         }
@@ -62,5 +64,19 @@ public class NotificationController : ControllerBase
         return Ok(notifications ?? []);
     }
 
+    [HttpPatch]
+    public async Task<ActionResult> MarkNotificationAsSeen([FromQuery] int notificationId)
+    {
+        int userId = _contextService.GetUserId(HttpContext);
+        User? user = await _userService.FindUserById(userId);
 
+        if (user is null)
+        {
+            return BadRequest("Could not identify user from request");
+        }
+
+        await _notificationService.MarkNotificationAsSeen(notificationId);
+
+        return Ok($"Marked notification[{notificationId}] as seen");
+    }
 }
