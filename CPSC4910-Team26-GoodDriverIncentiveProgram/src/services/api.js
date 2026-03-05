@@ -423,7 +423,7 @@ const apiService = {
         throw new Error("No authentication token found. Please log in.");
       }
 
-      const response = await fetch(`${BASE_URL}/api/catalog/${orgId}`, {
+      const response = await fetch(`${BASE_URL}/Catalog/${orgId}`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -445,7 +445,7 @@ const apiService = {
         throw new Error("No authentication token found. Please log in.");
       }
 
-      const response = await fetch(`${BASE_URL}/api/catalog/${orgId}/items`, {
+      const response = await fetch(`${BASE_URL}/Catalog/${orgId}/items`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
