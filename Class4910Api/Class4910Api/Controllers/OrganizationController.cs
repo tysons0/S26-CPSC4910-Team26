@@ -10,7 +10,7 @@ namespace Class4910Api.Controllers;
 
 [Authorize]
 [ApiController]
-[Route("[controller]")]
+[Route("api/[controller]")]
 public class OrganizationController : ControllerBase
 {
     private readonly ILogger<AuthController> _logger;
@@ -60,6 +60,7 @@ public class OrganizationController : ControllerBase
     }
 
     [Authorize(Roles = $"{ADMIN},{SPONSOR}")]
+    [HttpGet("drivers")]
     public async Task<ActionResult<List<Driver>>> GetDriversFromOrganization([FromQuery] int? orgId = null)
     {
         int contextUserId = _contextService.GetUserId(HttpContext);
