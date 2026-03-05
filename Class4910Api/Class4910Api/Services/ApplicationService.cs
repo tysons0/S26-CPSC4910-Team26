@@ -72,8 +72,7 @@ public class ApplicationService : IApplicationService
             MySqlCommand command = conn.CreateCommand();
 
             command.CommandText = 
-                @$"SELECT {DriverApplicationsTable.GenerateSelect()}
-                   FROM {DriverApplicationsTable.Name}";
+                @$"{DriverApplicationsTable.GenerateSelect()}";
 
             await using DbDataReader reader = await command.ExecuteReaderAsync();
 
@@ -103,8 +102,7 @@ public class ApplicationService : IApplicationService
             MySqlCommand command = conn.CreateCommand();
 
             command.CommandText = 
-                @$"SELECT {DriverApplicationsTable.GenerateSelect()}
-                   FROM {DriverApplicationsTable.Name}
+                @$"{DriverApplicationsTable.GenerateSelect()}
                    WHERE {DriverIdField.Name} = @DriverId";
             command.Parameters.Add(DriverIdField.GenerateParameter("@DriverId", driverId));
 
@@ -122,7 +120,7 @@ public class ApplicationService : IApplicationService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting applications");
+            _logger.LogError(ex, "Error getting applications for driver[{Id}]", driverId);
             return null;
         }
     }
@@ -137,8 +135,7 @@ public class ApplicationService : IApplicationService
             MySqlCommand command = conn.CreateCommand();
 
             command.CommandText =
-                @$"SELECT {DriverApplicationsTable.GenerateSelect()}
-                   FROM {DriverApplicationsTable.Name}
+                @$"{DriverApplicationsTable.GenerateSelect()}
                    WHERE {OrgIdField.Name} = @OrgId";
             command.Parameters.Add(OrgIdField.GenerateParameter("@OrgId", orgId));
 
@@ -156,7 +153,7 @@ public class ApplicationService : IApplicationService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting applications");
+            _logger.LogError(ex, "Error getting applications for org[{Id}]", orgId);
             return null;
         }
     }
@@ -164,8 +161,6 @@ public class ApplicationService : IApplicationService
     public async Task<bool> UpdateApplicationStatus(int applicationId, string newStatus, string reason, int editorUserId)
     {
         _logger.LogInformation("");
-
-
 
         try
         {
