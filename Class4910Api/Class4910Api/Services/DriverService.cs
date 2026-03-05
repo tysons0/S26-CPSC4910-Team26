@@ -264,9 +264,9 @@ public class DriverService : IDriverService
 
             command.CommandText =
                 @$"INSERT INTO {DriverAddressesTable.Name}
-                   ({DriverIdField.Name}, {DriverAddressAliasField.Name}, 
-                    {DriverAddressStateField.Name}, {DriverAddressCityField.Name}, {DriverAddressZipCodeField.Name},
-                    {DriverAddressLine1Field.Name}, {DriverAddressLine2Field.Name}, {DriverAddressPrimaryField.Name})
+                   ({DriverIdField.SelectName}, {DriverAddressAliasField.SelectName}, 
+                    {DriverAddressStateField.SelectName}, {DriverAddressCityField.SelectName}, {DriverAddressZipCodeField.SelectName},
+                    {DriverAddressLine1Field.SelectName}, {DriverAddressLine2Field.SelectName}, {DriverAddressPrimaryField.SelectName})
                    VALUES
                    (@DriverId, @Alias,
                     @State, @City, @ZipCode,
@@ -287,7 +287,7 @@ public class DriverService : IDriverService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrieving Driver addresses for driver[{Id}]", driverId);
+            _logger.LogError(ex, "Error adding Driver address for driver[{Id}]", driverId);
             return false;
         }
     }
@@ -302,9 +302,9 @@ public class DriverService : IDriverService
 
             command.CommandText =
                 @$"UPDATE {DriverAddressesTable.Name}
-                   SET {DriverAddressPrimaryField.Name} = 1
-                   WHERE {DriverIdField.Name} = @DriverId AND
-                   {DriverAddressIdField.Name} = @AddressId
+                   SET {DriverAddressPrimaryField.SelectName} = 1
+                   WHERE {DriverIdField.SelectName} = @DriverId AND
+                   {DriverAddressIdField.SelectName} = @AddressId
                 ";
             command.Parameters.Add(DriverIdField.GenerateParameter("@DriverId", driverId));
             command.Parameters.Add(DriverAddressIdField.GenerateParameter("@AddressId", addressId));
