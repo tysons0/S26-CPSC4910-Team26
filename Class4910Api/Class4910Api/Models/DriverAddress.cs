@@ -2,6 +2,7 @@
 
 public class DriverAddress
 {
+    public required int AddressId { get; init; }
     public required int DriverId { get; init; }
     public required string City { get; init; }
 

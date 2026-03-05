@@ -42,6 +42,11 @@ public class User
             LastLoginUtc = LastLoginUtc
         };
     }
+
+    public string GetDescribers()
+    {
+        return $"{Role}-User[{Username}({Id})]";
+    }
 }
 
 public enum UserRole
