@@ -7,23 +7,36 @@ import "../../css/Organizations.css";
 
 function Organizations() {
   const [organizations, setOrganizations] = useState([]);
+  const [userApplications, setUserApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const fetchOrganizations = async () => {
+    const fetchData = async () => {
       try {
-        const orgs = await apiService.getOrganizations();
+        if (!apiService.isAuthenticated()) {
+          setError("Please log in to view organizations.");
+          setLoading(false);
+          return;
+        }
+
+        // Fetch both organizations and user's applications
+        const [orgs, applications] = await Promise.all([
+          apiService.getOrganizations(),
+          apiService.getMyApplications(),
+        ]);
+
         setOrganizations(orgs);
+        setUserApplications(applications);
       } catch (error) {
-        console.error("Failed to retreive Organizations.", error);
-        setError("Failed to load Organizations. Please try again.");
+        console.error("Error fetching data:", error);
+        setError("Failed to load organizations. Please try again later.");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchOrganizations();
+    fetchData();
   }, []);
 
   if (loading) {
@@ -48,6 +61,54 @@ function Organizations() {
         View our Organizations and check out the exclusive products they supply!
       </p>
 
+      {/* Show user's active application status */}
+      {userApplications.length > 0 && (
+        <div
+          style={{
+            backgroundColor: "#e7f3ff",
+            padding: "1rem",
+            borderRadius: "8px",
+            marginBottom: "2rem",
+            borderLeft: "4px solid #0066cc",
+          }}
+        >
+          <h3 style={{ marginTop: 0 }}>Your Applications:</h3>
+          {userApplications.map((app) => (
+            <div key={app.applicationId} style={{ marginBottom: "0.5rem" }}>
+              <strong>
+                {organizations.find((o) => o.orgId === app.orgId)?.name ||
+                  "Organization"}
+              </strong>
+              {" - "}
+              <span
+                style={{
+                  color:
+                    app.status === "Accepted"
+                      ? "#28a745"
+                      : app.status === "Rejected"
+                        ? "#dc3545"
+                        : "#ffc107",
+                  fontWeight: "600",
+                }}
+              >
+                {app.status}
+              </span>
+              {app.changeReason && (
+                <div
+                  style={{
+                    fontSize: "0.9rem",
+                    color: "#666",
+                    marginTop: "0.25rem",
+                  }}
+                >
+                  Reason: {app.changeReason}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
       {error && (
         <div
           style={{
@@ -69,7 +130,11 @@ function Organizations() {
           <h2>Apply to Join an Organization</h2>
           <div className="sponsor-grid">
             {organizations.map((org) => (
-              <OrganizationCard organization={org} key={org.orgId || org.id} />
+              <OrganizationCard
+                organization={org}
+                userApplications={userApplications}
+                key={org.orgId}
+              />
             ))}
           </div>
         </>

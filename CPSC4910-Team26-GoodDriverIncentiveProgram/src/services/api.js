@@ -1,3 +1,5 @@
+import { ApplicationLoadBalancedServiceRecordType } from "aws-cdk-lib/aws-ecs-patterns";
+
 const BASE_URL = "https://team26api.cpsc4911.com";
 
 const handleResponse = async (response) => {
@@ -386,7 +388,83 @@ const apiService = {
     }
   },
 
-  applyToOrganization: async (orgId) => {
+  getDriverByUserId: async (userId) => {
+    try {
+      const token = apiService.getToken();
+      if (!token) {
+        throw new Error("No authentication token found. Please log in.");
+      }
+
+      return await apiService.getDataWithAuth(`Driver/${userId}`, token);
+    } catch (error) {
+      console.error("Failed to get driver profile", error);
+      throw error;
+    }
+  },
+
+  getMySponsorInfo: async () => {
+    try {
+      const token = apiService.getToken();
+      if (!token) {
+        throw new Error("No authentication token found. Please log in.");
+      }
+
+      return await apiService.getDataWithAuth("Sponsor/me", token);
+    } catch (error) {
+      console.error("Failed to get sponsor info", error);
+      throw error;
+    }
+  },
+
+  getCatalog: async (orgId) => {
+    try {
+      const token = apiService.getToken();
+      if (!token) {
+        throw new Error("No authentication token found. Please log in.");
+      }
+
+      const response = await fetch(`${BASE_URL}/api/catalog/${orgId}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      return await handleResponse(response);
+    } catch (error) {
+      console.error("Failed to get catalog", error);
+      throw error;
+    }
+  },
+
+  addCatalogItem: async (orgId, itemData) => {
+    try {
+      const token = apiService.getToken();
+      if (!token) {
+        throw new Error("No authentication token found. Please log in.");
+      }
+
+      const response = await fetch(`${BASE_URL}/api/catalog/${orgId}/items`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ebayItemId: itemData.ebayItemId,
+          points: Number(itemData.points),
+        }),
+      });
+
+      return await handleResponse(response);
+    } catch (error) {
+      console.error("Failed to add catalog item", error);
+      throw error;
+    }
+  },
+
+  applyToOrganization: async (orgId, message = "") => {
     try {
       const token = apiService.getToken();
       if (!token) {
@@ -399,6 +477,7 @@ const apiService = {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
+        body: JSON.stringify(message),
       });
 
       if (!response.ok) {
@@ -406,9 +485,82 @@ const apiService = {
         throw new Error("Failed to apply to organization." || error);
       }
 
-      return await response.json();
+      const text = await response.text();
+      return text ? JSON.parse(text) : { success: true };
     } catch (error) {
       console.error("Apply to Organization error", error);
+      throw error;
+    }
+  },
+
+  getApplications: async () => {
+    try {
+      const token = apiService.getToken();
+      if (!token) {
+        throw new Error("No authentication token found. Please log in.");
+      }
+
+      const response = await fetch(`${BASE_URL}/Application`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      return await handleResponse(response);
+    } catch (error) {
+      console.error("Failed to get Applications.", error);
+      throw error;
+    }
+  },
+
+  updateApplicationStatus: async (
+    applicationId,
+    newStatus,
+    changeReason = "",
+  ) => {
+    try {
+      const token = apiService.getToken();
+      if (!token) {
+        throw new Error("No authentication token found. Please log in.");
+      }
+
+      const params = new URLSearchParams({
+        newStatus: newStatus,
+        changeReason: changeReason,
+      });
+
+      const response = await fetch(
+        `${BASE_URL}/Application/${applicationId}/status?${params}`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      return await handleResponse(response);
+    } catch (error) {
+      console.error("Failed to update application status", error);
+      throw error;
+    }
+  },
+
+  getMyApplications: async () => {
+    try {
+      const token = apiService.getToken();
+      if (!token) {
+        throw new Error("No authentication token found. Please log in.");
+      }
+
+      const allApplications = await apiService.getApplications();
+      const currentUser = apiService.getCurrentUser();
+
+      return allApplications.filter((app) => app.driverId === currentUser.id);
+    } catch (error) {
+      console.error("Failed to get Applications", error);
       throw error;
     }
   },
@@ -444,6 +596,51 @@ const apiService = {
       return response;
     } catch (error) {
       console.error("Failed to get notifications", error);
+      throw error;
+    }
+  },
+
+  getDriverAddresses: async (driverId) => {
+    try {
+      const token = apiService.getToken();
+      if (!token) {
+        throw new Error("No authentication token found. Please log in.");
+      }
+
+      const response = await fetch(`${BASE_URL}/Driver/${driverId}/address`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      return await handleResponse(response);
+    } catch (error) {
+      console.error("Unable to Get Driver Address.");
+      throw error;
+    }
+  },
+
+  addDriverAddress: async (driverId, addressData) => {
+    try {
+      const token = apiService.getToken();
+      if (!token) {
+        throw new Error("No authentication token found. Please log in.");
+      }
+
+      const response = await fetch(`${BASE_URL}/Driver/${driverId}/address`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(addressData),
+      });
+
+      return await handleResponse(response);
+    } catch (error) {
+      console.error("Failed to add Driver Address.");
       throw error;
     }
   },

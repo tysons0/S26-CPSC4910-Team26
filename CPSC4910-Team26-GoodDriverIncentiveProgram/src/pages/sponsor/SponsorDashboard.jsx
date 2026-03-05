@@ -2,215 +2,228 @@ import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import PageTitle from "../../components/PageTitle";
-import ProductCard from "../../components/Product";
 import apiService from "../../services/api";
 import "../../css/Dashboard.css";
 
 function SponsorDashboard() {
   const [user, setUser] = useState(null);
-  const [sponsor, setSponsor] = useState(null);
-  const [organization, setOrganization] = useState(null);
-  const [catalog, setCatalog] = useState([]);
-  const [searchResults, setSearchResults] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [sponsorOrgId, setSponsorOrgId] = useState(null);
+  const [catalogItems, setCatalogItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [catalogLoading, setCatalogLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const navigate = useNavigate();
+  const [successMessage, setSuccessMessage] = useState("");
+  const [formData, setFormData] = useState({
+    ebayItemId: "",
+    points: "",
+  });
+
+  const loadCatalog = async (orgId) => {
+    setCatalogLoading(true);
+    try {
+      const items = await apiService.getCatalog(orgId);
+      setCatalogItems(Array.isArray(items) ? items : []);
+    } catch (catalogError) {
+      console.error("Error loading catalog:", catalogError);
+      setError(catalogError.message || "Failed to load catalog items.");
+    } finally {
+      setCatalogLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const loadData = async () => {
+    const fetchDashboardData = async () => {
       try {
+        if (!apiService.isAuthenticated()) {
+          navigate("/Login");
+          return;
+        }
+
         const userData = await apiService.getUserInfo();
         if (userData) {
           setUser(userData);
           localStorage.setItem("user", JSON.stringify(userData));
         }
 
-        const sponsorData = await apiService.getSponsor();
-        setSponsor(sponsorData);
+        const sponsorData = await apiService.getMySponsorInfo();
+        const orgId = sponsorData?.organizationId;
 
-        const orgId = sponsorData?.organizationId || sponsorData?.OrganizationId || sponsorData?.orgId;
-        const orgData = await apiService.getOrganizationById(orgId);
-        setOrganization(orgData);
+        if (!orgId) {
+          throw new Error("Unable to determine your sponsor organization.");
+        }
 
-        const catalogData = await apiService.getSponsorCatalog(orgId);
-        setCatalog(catalogData);
+        setSponsorOrgId(orgId);
+        await loadCatalog(orgId);
       } catch (error) {
-        console.error("Error loading sponsor dashboard data:", error);
-        setError("Failed to load sponsor dashboard. Please try again.");
+        console.error("Error loading dashboard data:", error);
+        setError(error.message || "Failed to load sponsor dashboard data.");
       } finally {
         setLoading(false);
       }
     };
+    fetchDashboardData();
+  }, [navigate]);
 
-    loadData();
-  }, []);
+  const handleFormChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
-  // Refresh catalog data
-  const refreshCatalog = async () => {
+  const handleAddProduct = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccessMessage("");
+
+    const ebayItemId = formData.ebayItemId.trim();
+    const points = Number(formData.points);
+
+    if (!ebayItemId) {
+      setError("eBay item ID is required.");
+      return;
+    }
+
+    if (!Number.isFinite(points) || points <= 0) {
+      setError("Points must be a positive number.");
+      return;
+    }
+
+    if (!sponsorOrgId) {
+      setError("Sponsor organization is not available.");
+      return;
+    }
+
+    setSubmitting(true);
+
     try {
-      setLoading(true);
-      const orgId = sponsor?.organizationId || sponsor?.OrganizationId || sponsor?.orgId;
-      const catalogData = await apiService.getSponsorCatalog(orgId);
-      setCatalog(catalogData);
-    } catch (error) {
-      console.error("Error refreshing catalog:", error);
+      await apiService.addCatalogItem(sponsorOrgId, { ebayItemId, points });
+      setSuccessMessage("Product added to your organization catalog.");
+      setFormData({ ebayItemId: "", points: "" });
+      await loadCatalog(sponsorOrgId);
+    } catch (submitError) {
+      console.error("Error adding catalog product:", submitError);
+      setError(submitError.message || "Failed to add product to catalog.");
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
-  // Search eBay for products to add to catalog
-  const handleSearch = async (e) => {
-    if (!searchTerm.trim()) return;
-
-    try {
-      const response = await apiService.searchEbayProducts(searchTerm);
-      setSearchResults(response.products || []);
-      console.log(response.products);
-    } catch (error) {
-      console.error("Error searching products:", error);
-    }
+  const handleLogout = () => {
+    apiService.logout();
+    window.dispatchEvent(new Event("authChange"));
+    navigate("/Login");
   };
 
-  // Add Item to Catalog
-  const handleAddProduct = async (product) => {
-    const suggestedPoints = Math.ceil(product.price / (organization.pointWorth || 1));
-    const userPoints = prompt(
-      `Suggested Points: ${suggestedPoints}\nEnter point value:`,
-      suggestedPoints
+  if (loading) {
+    return (
+      <div style={{ padding: "2rem" }}>
+        <PageTitle title="Product Dashboard" />
+        <h1>Loading...</h1>
+      </div>
     );
-    if (!userPoints) return;
-
-    try {
-      const orgId = sponsor?.organizationId || sponsor?.OrganizationId || sponsor?.orgId;
-      await apiService.addCatalogItem(orgId, {
-        ebayItemId: product.itemId,
-        points: parseInt(userPoints)
-      });
-      
-      refreshCatalog();
-    } catch (error) {
-      console.error("Error adding product to catalog:", error);
-    }
-  };
-
-  // Update points for an existing catalog item
-  const handleUpdatePoints = async (item) => {
-    const newPoints = prompt("Enter new point amount:", item.points);
-    if (!newPoints) return;
-
-    try {
-      const orgId = sponsor?.organizationId || sponsor?.OrganizationId || sponsor?.orgId;
-      await apiService.updateCatalogItem(orgId, item.catalogItemId, {
-        points: parseInt(newPoints)
-      });
-      refreshCatalog();
-    } catch (error) {
-      console.error("Error updating catalog item:", error);
-    }
-  };
-
-  //Remove item from catalog
-  const handleRemoveItem = async (item) => {
-    if (!window.confirm(`Are you sure you want to remove ${item.Name} from the catalog?`)) return;
-    try{
-      const orgId = sponsor?.organizationId || sponsor?.OrganizationId || sponsor?.orgId;
-      await apiService.removeCatalogItem(orgId, item.catalogItemId);
-      refreshCatalog();
-    } catch (error) {
-      console.error("Error removing catalog item:", error);
-    }
-  };
+  }
 
   return (
     <div style={{ padding: "2rem" }}>
       <PageTitle title="Product Dashboard" />
-      
-      {loading && <p>Loading dashboard...</p>}
-      
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      
-      {!loading && !error && (
-        <>
-          <h1>Sponsor Dashboard</h1>
-          <Link to="/Login">
-            <button className="submit"> Logout </button>
-          </Link>
-          <p>
-            Welcome back <strong> {user?.username || "Sponsor"}!</strong> This is
-            where you can view your catalog and manage products.
-          </p>
+      <h1>Sponsor Dashboard</h1>
+      <button className="submit" onClick={handleLogout}>
+        Logout
+      </button>
+      <p>
+        Welcome back <strong> {user?.username || "Sponsor"}!</strong> This is
+        where you can view your catalog and manage products.
+      </p>
+      <p>
+        <strong>Organization ID:</strong> {sponsorOrgId ?? "N/A"}
+      </p>
 
-          <p>
-            Organization: <strong>{organization?.name}</strong>
-          </p>
-          <p>
-            Point Value: <strong>${organization?.pointWorth || "N/A"} per point</strong>
-          </p>
+      {error && (
+        <p style={{ color: "#e74c3c", fontWeight: 600, marginTop: "1rem" }}>
+          {error}
+        </p>
+      )}
+      {successMessage && (
+        <p style={{ color: "#27ae60", fontWeight: 600, marginTop: "1rem" }}>
+          {successMessage}
+        </p>
+      )}
 
-          {/* Catalog Section */}
-          <h2>Your Catalog</h2>
-          {catalog.length === 0 ? (
-            <p>Your catalog is currently empty. Use the search below to add products!</p>
-          ) : (
-            <div className="catalog-grid">
-              {catalog.map((item) => (
-                <ProductCard 
-                  key={item.catalogItemId}
-                  title={item.title}
-                  imageUrl={item.imageUrl}
-                  price={item.price}
-                  currency={item.currency}
-                  points={item.points}
-                  condition={item.condition}
-                  >
-                    <button onClick={() => handleUpdatePoints(item)}>Update Points
-                    </button>
-                    <button onClick={() => handleRemoveItem(item)}>Remove Item
-                    </button>
-                  </ProductCard>
-              ))}
-            </div>
-          )}
-
-          <hr style={{margin: "3rem 0"}} />
-          {/* Search and Add Products Section */}
-
-          <h2>Search eBay to Add Products</h2>
-          <div className="search-bar">
+      <div style={{ marginTop: "2rem", marginBottom: "2rem" }}>
+        <h2>Add Product to Catalog</h2>
+        <form onSubmit={handleAddProduct} style={{ maxWidth: "420px" }}>
+          <div style={{ marginBottom: "1rem" }}>
+            <label htmlFor="ebayItemId">eBay Item ID</label>
             <input
+              id="ebayItemId"
+              name="ebayItemId"
               type="text"
-              placeholder="Search for products to add to your catalog"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              value={formData.ebayItemId}
+              onChange={handleFormChange}
+              placeholder="v1|1234567890|0"
+              required
+              style={{ width: "100%", padding: "0.5rem", marginTop: "0.35rem" }}
             />
-            <button onClick={handleSearch}>Search</button>
           </div>
 
-          {searchResults.length > 0 && (
-            <div className="search-results-grid">
-              {searchResults.map((product) => (
-                <ProductCard 
-                  key={product.itemId}
-                  title={product.name}
-                  imageUrl={product.image}
-                  price={product.price}
-                  currency={product.currency}
-                  condition={product.condition}
-                  >
-                    <button onClick={() => handleAddProduct(product)}>Add to Catalog</button>
-                  </ProductCard>
-              ))}
-            </div>
-          )}
+          <div style={{ marginBottom: "1rem" }}>
+            <label htmlFor="points">Points Cost</label>
+            <input
+              id="points"
+              name="points"
+              type="number"
+              min="1"
+              value={formData.points}
+              onChange={handleFormChange}
+              placeholder="100"
+              required
+              style={{ width: "100%", padding: "0.5rem", marginTop: "0.35rem" }}
+            />
+          </div>
 
-          <h2>Manage Sponsor Orgs and other Sponsors</h2>
-          <p>
-            Register a Sponsor <Link to="/SponsorSignUp">Create one Here</Link>
-          </p>
-        </>
-      )}
+          <button
+            type="submit"
+            className="submit"
+            disabled={submitting || !sponsorOrgId}
+          >
+            {submitting ? "Adding Product..." : "Add Product"}
+          </button>
+        </form>
+      </div>
+
+      <div style={{ marginBottom: "2rem" }}>
+        <h2>Current Catalog</h2>
+        {catalogLoading ? (
+          <p>Loading catalog...</p>
+        ) : catalogItems.length === 0 ? (
+          <p>No catalog products found for this organization.</p>
+        ) : (
+          <ul style={{ paddingLeft: "1.25rem" }}>
+            {catalogItems.map((item) => (
+              <li
+                key={item.catalogItemID ?? item.catalogItemId ?? item.ebayItemId}
+                style={{ marginBottom: "0.65rem" }}
+              >
+                <strong>{item.title || item.name || "Catalog Item"}</strong> - {item.points} points
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <h2>Manage Sponsor Orgs and other Sponsors</h2>
+
+      <div style={{ marginBottom: "1rem" }}>
+        <Link to="/SponsorApplications">
+          <button className="submit" style={{ marginRight: "1rem" }}>
+            Manage Applications
+          </button>
+        </Link>
+      </div>
+
+      <p>
+        Register a Sponsor <Link to="/SponsorSignUp">Create one Here</Link>
+      </p>
     </div>
   );
 }

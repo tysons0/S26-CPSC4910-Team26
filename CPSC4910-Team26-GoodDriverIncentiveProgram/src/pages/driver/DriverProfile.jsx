@@ -18,6 +18,21 @@ function DriverProfile() {
     newPassword: "",
     confirmPassword: "",
   });
+
+  //Address States
+  const [addresses, setAddresses] = useState([]);
+  const [addingAddress, setAddingAddress] = useState(false);
+  const [addressFormData, setAddressFormData] = useState({
+    addressAllias: "",
+    addressLine1: "",
+    addressLine2: "",
+    city: "",
+    state: "",
+    zipCode: "",
+    primary: false,
+  });
+
+  //Password States
   const [passwordError, setPasswordError] = useState("");
   const [passwordSuccess, setPasswordSuccess] = useState("");
 
@@ -50,6 +65,17 @@ function DriverProfile() {
             timeZone: userData.timeZone || "",
             country: userData.country || "",
           });
+
+          //fetch address
+          try {
+            const userAddresses = await apiService.getDriverAddresses(
+              userData.id,
+            );
+            setAddresses(userAddresses || []);
+          } catch (addressError) {
+            console.error("Error fetching addresses:", addressError);
+            // Don't show error to user, just leave addresses empty
+          }
         }
       } catch (error) {
         console.error("Error fetching user data", error);
@@ -107,6 +133,59 @@ function DriverProfile() {
     setSuccessMessage("");
   };
 
+  //Address Handlers
+  const handleAddressChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setAddressFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+
+  const handleAddressSubmit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    setError("");
+
+    try {
+      const newAddress = await apiService.addDriverAddress(
+        user.id,
+        addressFormData,
+      );
+      setAddresses((prev) => [...prev, newAddress]);
+      setAddingAddress(false);
+      setAddressFormData({
+        addressAlias: "",
+        addressLine1: "",
+        addressLine2: "",
+        city: "",
+        state: "",
+        zipCode: "",
+        primary: false,
+      });
+      setSuccessMessage("Address added successfully!");
+    } catch (error) {
+      console.error("Error adding address:", error);
+      setError(error.message || "Failed to add address");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancelAddress = () => {
+    setAddingAddress(false);
+    setAddressFormData({
+      addressAlias: "",
+      addressLine1: "",
+      addressLine2: "",
+      city: "",
+      state: "",
+      zipCode: "",
+      primary: false,
+    });
+  };
+
+  //Password Handlers
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
     setPasswordData((prev) => ({ ...prev, [name]: value }));
@@ -402,6 +481,197 @@ function DriverProfile() {
                 type="button"
                 className="btn btn-secondary"
                 onClick={handleCancel}
+                disabled={saving}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+
+      {/* Address Management Card */}
+      <div className="profile-card" style={{ marginTop: "2rem" }}>
+        <h2 style={{ marginBottom: "1.5rem", fontSize: "1.25rem" }}>
+          Addresses
+        </h2>
+
+        {addresses.length === 0 ? (
+          <p style={{ color: "#666", marginBottom: "1rem" }}>
+            No addresses added yet.
+          </p>
+        ) : (
+          <div style={{ marginBottom: "1.5rem" }}>
+            {addresses.map((address, index) => (
+              <div
+                key={index}
+                style={{
+                  backgroundColor: "#f8f9fa",
+                  padding: "1rem",
+                  borderRadius: "8px",
+                  marginBottom: "1rem",
+                  borderLeft: address.primary ? "4px solid #667eea" : "none",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "start",
+                  }}
+                >
+                  <div>
+                    <strong>{address.addressAlias}</strong>
+                    {address.primary && (
+                      <span
+                        style={{
+                          marginLeft: "0.5rem",
+                          padding: "0.25rem 0.5rem",
+                          backgroundColor: "#667eea",
+                          color: "white",
+                          borderRadius: "4px",
+                          fontSize: "0.75rem",
+                        }}
+                      >
+                        Primary
+                      </span>
+                    )}
+                    <div style={{ marginTop: "0.5rem", color: "#666" }}>
+                      <div>{address.addressLine1}</div>
+                      {address.addressLine2 && (
+                        <div>{address.addressLine2}</div>
+                      )}
+                      <div>
+                        {address.city}, {address.state} {address.zipCode}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!addingAddress ? (
+          <button
+            className="btn btn-secondary"
+            onClick={() => setAddingAddress(true)}
+          >
+            Add New Address
+          </button>
+        ) : (
+          <form onSubmit={handleAddressSubmit} className="profile-form">
+            <div className="form-grid">
+              <div className="form-group full-width">
+                <label>Address Alias (e.g., Home, Work)</label>
+                <input
+                  type="text"
+                  name="addressAlias"
+                  value={addressFormData.addressAlias}
+                  onChange={handleAddressChange}
+                  className="form-input"
+                  placeholder="Home"
+                  required
+                />
+              </div>
+
+              <div className="form-group full-width">
+                <label>Address Line 1</label>
+                <input
+                  type="text"
+                  name="addressLine1"
+                  value={addressFormData.addressLine1}
+                  onChange={handleAddressChange}
+                  className="form-input"
+                  placeholder="123 Main St"
+                  required
+                />
+              </div>
+
+              <div className="form-group full-width">
+                <label>Address Line 2 (Optional)</label>
+                <input
+                  type="text"
+                  name="addressLine2"
+                  value={addressFormData.addressLine2}
+                  onChange={handleAddressChange}
+                  className="form-input"
+                  placeholder="Apt 4B"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>City</label>
+                <input
+                  type="text"
+                  name="city"
+                  value={addressFormData.city}
+                  onChange={handleAddressChange}
+                  className="form-input"
+                  placeholder="New York"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>State</label>
+                <input
+                  type="text"
+                  name="state"
+                  value={addressFormData.state}
+                  onChange={handleAddressChange}
+                  className="form-input"
+                  placeholder="NY"
+                  required
+                  maxLength={2}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>ZIP Code</label>
+                <input
+                  type="text"
+                  name="zipCode"
+                  value={addressFormData.zipCode}
+                  onChange={handleAddressChange}
+                  className="form-input"
+                  placeholder="10001"
+                  required
+                />
+              </div>
+
+              <div className="form-group full-width">
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    cursor: "pointer",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    name="primary"
+                    checked={addressFormData.primary}
+                    onChange={handleAddressChange}
+                    style={{ marginRight: "0.5rem" }}
+                  />
+                  Set as primary address
+                </label>
+              </div>
+            </div>
+
+            <div className="form-actions">
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={saving}
+              >
+                {saving ? "Adding..." : "Add Address"}
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={handleCancelAddress}
                 disabled={saving}
               >
                 Cancel

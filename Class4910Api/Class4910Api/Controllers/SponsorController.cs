@@ -11,6 +11,29 @@ namespace Class4910Api.Controllers;
 [Route("[controller]")]
 public class SponsorController : ControllerBase
 {
+	private readonly ISponsorService _sponsorService;
+	private readonly IContextService _contextService;
+
+	public SponsorController(ISponsorService sponsorService, IContextService contextService)
+	{
+		_sponsorService = sponsorService;
+		_contextService = contextService;
+	}
+
+	[Authorize(Roles = SPONSOR)]
+	[HttpGet("me")]
+	public async Task<ActionResult<Sponsor>> GetCurrentSponsor()
+	{
+		int userId = _contextService.GetUserId(HttpContext);
+		Sponsor? sponsor = await _sponsorService.GetSponsorByUserId(userId);
+
+		if (sponsor is null)
+		{
+			return NotFound("Sponsor profile not found.");
+		}
+
+		return Ok(sponsor);
+	}
     private readonly ISponsorService _sponsorService;
     private readonly IContextService _contextService;
 
