@@ -454,7 +454,7 @@ const apiService = {
       const token = apiService.getToken();
       if (!token) throw new Error("No authentication token found!");
 
-      return await apiService.getDataWithAuth("Sponsor/me", token);
+      return await apiService.getDataWithAuth("api/Sponsor/me", token);
     } catch (error) {
       console.error("Failed to get sponsor info", error);
       throw error;
@@ -464,7 +464,7 @@ const apiService = {
     try {
       const token = apiService.getToken();
       if (!token) throw new Error("No authentication token found!");
-      return await apiService.getDataWithAuth(`Sponsor/organization/${orgId}`, token);
+      return await apiService.getDataWithAuth(`api/Sponsor/organization/${orgId}`, token);
     } catch (error) {
       console.error("Failed to get sponsors by organization", error);
       throw error;
