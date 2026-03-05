@@ -174,6 +174,11 @@ public class ApplicationService : IApplicationService
                 sponsorId = sponsor.SponsorId;
             }
 
+            if (newStatus.Contains("Approve", StringComparison.OrdinalIgnoreCase))
+                newStatus = "Approved";
+            if (newStatus.Contains("Reject", StringComparison.OrdinalIgnoreCase))
+                newStatus = "Rejected";
+
             await using MySqlConnection conn = new(_dbConnection);
             conn.Open();
             MySqlCommand command = conn.CreateCommand();
