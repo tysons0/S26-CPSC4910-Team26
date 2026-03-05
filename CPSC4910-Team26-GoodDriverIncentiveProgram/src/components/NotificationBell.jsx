@@ -23,7 +23,7 @@ function NotificationBell() {
       try {
         const tokenData = await apiService.getTokenInfo();
         console.log("Token info:", tokenData);
-        
+
         setTokenInfo(tokenData ?? []);
       } catch (err) {
         console.error("Failed to load token info", err);
@@ -51,11 +51,7 @@ function NotificationBell() {
         </button>
       </div>
 
-      <div
-        className={`notification-drawer ${
-          isDrawerOpen ? "open" : ""
-        }`}
-      >
+      <div className={`notification-drawer ${isDrawerOpen ? "open" : ""}`}>
         <div className="drawer-header">
           <h3>Notifications</h3>
           <button
@@ -67,22 +63,39 @@ function NotificationBell() {
         </div>
 
         <div className="drawer-content">
-          {(
-            notifications.map((note) => (
-              <div key={note.notificationId} className="notification-item">
-                <strong>{note.type}</strong>
-                <div>{note.message}</div>
-                <small>
-                  {new Date(note.createdAtUtc).toLocaleString()}
-                </small>
-              </div>
-            ))
-          )}
+          {notifications.map((note) => (
+            <div key={note.notificationId} className="notification-item">
+              <button
+                className="notification-close"
+                onClick={async () => {
+                  try {
+                    await apiService.markNotificationAsRead(
+                      note.notificationId,
+                    );
+
+                    setNotifications((prev) =>
+                      prev.filter(
+                        (n) => n.notificationId !== note.notificationId,
+                      ),
+                    );
+                  } catch (err) {
+                    console.error("Failed to mark notification as read", err);
+                  }
+                }}
+              >
+                ✕
+              </button>
+
+              <strong>{note.type}</strong>
+              <div>{note.message}</div>
+              <small>{new Date(note.createdAtUtc).toLocaleString()}</small>
+            </div>
+          ))}
         </div>
       </div>
 
       <div
-        className={`drawer-overlay ${isDrawerOpen ? "show" : "" }`}
+        className={`drawer-overlay ${isDrawerOpen ? "show" : ""}`}
         onClick={() => setIsDrawerOpen(false)}
       />
     </>

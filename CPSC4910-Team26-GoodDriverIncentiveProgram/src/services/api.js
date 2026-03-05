@@ -82,6 +82,24 @@ const apiService = {
     }
   },
 
+  patchDataWithAuth: async (endpoint, jsonData, token) => {
+    try {
+      const response = await fetch(`${BASE_URL}/${endpoint}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: jsonData ? JSON.stringify(jsonData) : null,
+      });
+
+      return await handleResponse(response);
+    } catch (error) {
+      console.error("API PATCH Error:", error);
+      throw error;
+    }
+  },
+
   getTeamInfo: async () => {
     try {
       return await apiService.getData("ApiInfo/TeamInfo");
@@ -596,6 +614,26 @@ const apiService = {
       return response;
     } catch (error) {
       console.error("Failed to get notifications", error);
+      throw error;
+    }
+  },
+
+  markNotificationAsRead: async (notificationId) => {
+    try {
+      const token = apiService.getToken();
+      if (!token) {
+        throw new Error("No authentication token found!");
+      }
+
+      const response = await apiService.patchDataWithAuth(
+        `Notification/${notificationId}/seen`,
+        null,
+        token
+      );
+
+      return response;
+    } catch (error) {
+      console.error("Failed to mark notification as read", error);
       throw error;
     }
   },

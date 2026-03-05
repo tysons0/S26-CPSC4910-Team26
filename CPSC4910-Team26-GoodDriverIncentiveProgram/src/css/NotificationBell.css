@@ -39,6 +39,7 @@
     flex-direction: column;
     border-radius: 20px 0 0 20px;
     z-index: 1001;
+    background-color: var(--bg);
 }
 
 .notification-drawer.open {
@@ -58,8 +59,20 @@
 }
 
 .notification-item {
+    position: relative;
     padding: 10px;
     border-bottom: 1px solid #eee;
+}
+
+.notification-close {
+  position: absolute;
+  top: 5px;
+  right: 8px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: var(--text);
 }
 
 /* Overlay */

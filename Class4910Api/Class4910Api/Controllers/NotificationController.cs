@@ -64,8 +64,8 @@ public class NotificationController : ControllerBase
         return Ok(notifications ?? []);
     }
 
-    [HttpPatch]
-    public async Task<ActionResult> MarkNotificationAsSeen([FromQuery] int notificationId)
+    [HttpPatch("{notificationId:int}/seen")]
+    public async Task<ActionResult> MarkNotificationAsSeen(int notificationId)
     {
         int userId = _contextService.GetUserId(HttpContext);
         User? user = await _userService.FindUserById(userId);
