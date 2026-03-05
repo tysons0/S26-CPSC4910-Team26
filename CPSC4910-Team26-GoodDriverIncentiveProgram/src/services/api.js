@@ -356,6 +356,21 @@ const apiService = {
       throw error;
     }
   },
+
+  forgotPassword: async (email) => {
+    return await apiService.postData(
+      "Email/forgot-password",
+      JSON.stringify({ email })
+    );
+  },
+
+  resetPassword: async (token, newPassword) => {
+    return await apiService.postData(
+      "Email/reset-password",
+      JSON.stringify({ token, newPassword })
+    );
+  },
+
 };
 
 export default apiService;

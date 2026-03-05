@@ -89,12 +89,12 @@ function Login() {
 
           {error && <p className="login-error">{error}</p>}
         </form>
-
         <div className="back-link">
           <p>
             Don't have an account? <Link to="/DriverSignUp">Sign Up Here</Link>
           </p>
           <p>
+            <Link to="/ForgotPassword" style={{ marginRight: "2rem" }}>Forgot Password? </Link>
             <Link to="/">Back to About Page</Link>
           </p>
         </div>

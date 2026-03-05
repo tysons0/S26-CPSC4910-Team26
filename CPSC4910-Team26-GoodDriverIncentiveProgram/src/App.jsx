@@ -16,6 +16,8 @@ import DriverProfile from "./pages/driver/DriverProfile";
 import SponsorProfile from "./pages/sponsor/SponsorProfile";
 import AdminProfile from "./pages/admin/AdminProfile";
 import OrganizationCreate from "./pages/organization/OrganizationCreate";
+import ForgotPassword from "./pages/email/ForgotPassword";
+import ResetPassword from "./pages/email/ResetPassword";
 
 function App() {
   return (
@@ -39,6 +41,8 @@ function App() {
         <Route path="/SponsorProfile" element={<SponsorProfile />} />
         <Route path="/AdminProfile" element={<AdminProfile />} />
         <Route path="/CreateOrganization" element={<OrganizationCreate />} />
+        <Route path="/ForgotPassword" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
       </Routes>
     </>
   );
