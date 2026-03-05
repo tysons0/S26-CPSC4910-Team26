@@ -24,8 +24,6 @@ function OrganizationCard({ organization, userApplications = [] }) {
     // If user clicks cancel, don't apply
     if (message === null) return;
 
-    if (!confirmed) return;
-
     setApplying(true);
     setError("");
 

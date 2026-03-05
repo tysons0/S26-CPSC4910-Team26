@@ -23,8 +23,13 @@ function SponsorApplications() {
 
         const apps = await apiService.getApplications();
 
-        // TODO: Filter to only applications for sponsor's organization
-        // For now, showing all applications
+        const currentUser = apiService.getCurrentUser();
+
+        //const sponsorOrgId = currentUser.orgId || currentUser.organizationId;
+
+        // Filter to only applications for sponsor's organization
+        //const filteredApps = apps.filter((app) => app.orgId === sponsorOrgId);
+
         setApplications(apps);
       } catch (error) {
         console.error("Error fetching applications:", error);
@@ -80,12 +85,19 @@ function SponsorApplications() {
     );
   }
 
-  const pendingApplications = applications.filter(
-    (app) => app.status === "Pending",
-  );
-  const processedApplications = applications.filter(
-    (app) => app.status !== "Pending",
-  );
+  const pendingApplications = applications.filter((app) => {
+    const status = app.status?.toLowerCase();
+    return (
+      status === "pending" || status === "waiting" || status === "submitted"
+    );
+  });
+
+  const processedApplications = applications.filter((app) => {
+    const status = app.status?.toLowerCase();
+    return (
+      status === "accepted" || status === "rejected" || status === "denied"
+    );
+  });
 
   return (
     <div style={{ padding: "2rem" }}>

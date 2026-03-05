@@ -409,7 +409,8 @@ const apiService = {
         throw new Error("Failed to apply to organization." || error);
       }
 
-      return await response.json();
+      const text = await response.text();
+      return text ? JSON.parse(text) : { success: true };
     } catch (error) {
       console.error("Apply to Organization error", error);
       throw error;
@@ -448,10 +449,15 @@ const apiService = {
         throw new Error("No authentication token found. Please log in.");
       }
 
+      const params = new URLSearchParams({
+        newStatus: newStatus,
+        changeReason: changeReason,
+      });
+
       const response = await fetch(
         `${BASE_URL}/Application/${applicationId}/status?${params}`,
         {
-          method: "PUT",
+          method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
@@ -518,7 +524,7 @@ const apiService = {
     }
   },
 
-  getDriverAddress: async (driverId) => {
+  getDriverAddresses: async (driverId) => {
     try {
       const token = apiService.getToken();
       if (!token) {
@@ -540,7 +546,7 @@ const apiService = {
     }
   },
 
-  addDriverAddress: async (driverId) => {
+  addDriverAddress: async (driverId, addressData) => {
     try {
       const token = apiService.getToken();
       if (!token) {
@@ -556,7 +562,7 @@ const apiService = {
         body: JSON.stringify(addressData),
       });
 
-      return handleResponse(response);
+      return await handleResponse(response);
     } catch (error) {
       console.error("Failed to add Driver Address.");
       throw error;

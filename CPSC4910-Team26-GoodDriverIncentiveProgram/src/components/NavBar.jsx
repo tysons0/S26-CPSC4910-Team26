@@ -66,7 +66,9 @@ function NavBar() {
       {!isAuthenticated && <Link to="/DriverSignUp"> Sign Up </Link>}
       {isAuthenticated && <Link to={getDashboardLink()}> Dashboard </Link>}
       {isAuthenticated && <Link to={getProfileLink()}> Profile </Link>}
-      {isAuthenticated && <Link to="/Organizations"> Organizations </Link>}
+      {isAuthenticated && userRole?.toLowerCase() === "driver" && (
+        <Link to="/Organizations"> Organizations </Link>
+      )}
 
       {isAuthenticated && <NotificationBell />}
 
