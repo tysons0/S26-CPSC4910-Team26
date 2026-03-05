@@ -182,7 +182,7 @@ public class ApplicationService : IApplicationService
                 @$"UPDATE {DriverApplicationsTable.Name}
                    SET {ApplicationStatusField.SelectName} = @NewStatus, 
                        {SponsorIdField.SelectName} = @SponsorId,
-                       {ApplicationChangeReasonField.SelectName} = @Reason, {ApplicationLastModifiedUtcField} = UTC_TIMESTAMP()
+                       {ApplicationChangeReasonField.SelectName} = @Reason, {ApplicationLastModifiedUtcField.SelectName} = UTC_TIMESTAMP()
                    WHERE {ApplicationIdField.SelectName} = @ApplicationId";
 
             command.Parameters.Add(ApplicationStatusField.GenerateParameter("@NewStatus", newStatus));
