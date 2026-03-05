@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import PageTitle from "../../components/PageTitle";
 import ProductCard from "../../components/Product";
 import apiService from "../../services/api";
-import ebayService from "../../services/ebayAPI";
 import "../../css/Dashboard.css";
 
 function DriverDashboard() {
