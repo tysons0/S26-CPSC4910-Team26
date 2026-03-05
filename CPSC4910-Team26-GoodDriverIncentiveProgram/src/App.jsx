@@ -3,7 +3,7 @@ import "./css/App.css";
 import About from "./pages/About";
 import Login from "./pages/Login";
 import NavBar from "./components/NavBar";
-import Organizations from "./pages/Organizations";
+import Organizations from "./pages/organization/Organizations";
 import Profile from "./pages/Profile";
 import SignUp from "./pages/auth/DriverSignUp";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -18,6 +18,7 @@ import AdminProfile from "./pages/admin/AdminProfile";
 import OrganizationCreate from "./pages/organization/OrganizationCreate";
 import ForgotPassword from "./pages/email/ForgotPassword";
 import ResetPassword from "./pages/email/ResetPassword";
+import SponsorApplications from "./pages/sponsor/SponsorApplications";
 
 function App() {
   return (
@@ -43,6 +44,8 @@ function App() {
         <Route path="/CreateOrganization" element={<OrganizationCreate />} />
         <Route path="/ForgotPassword" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/Organizations" element={<Organizations />} />
+        <Route path="/SponsorApplications" element={<SponsorApplications />} />
       </Routes>
     </>
   );

@@ -1,13 +1,11 @@
 ﻿using System.Text;
 using Class4910Api.Configuration;
 using Class4910Api.Models;
-using Class4910Api.Models.Requests;
 using Class4910Api.Services;
 using Class4910Api.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using MySql.Data.MySqlClient;
 using Scalar.AspNetCore;
@@ -26,13 +24,9 @@ public static class Startup
         try
         {
             builder = AddServices(builder);
+            builder = AddLifetimeServices(builder);
 
-            DatabaseConnection dbConn =
-                builder.Configuration.GetRequiredSection("DatabaseConnection").Get<DatabaseConnection>()!;
-
-            AddLogging(builder, dbConn);
-
-            BuildDatabase(dbConn.Connection);
+            builder = AddLogging(builder);
 
             return builder;
         }
@@ -44,8 +38,10 @@ public static class Startup
         }
     }
 
-    public static WebApplicationBuilder AddLogging(WebApplicationBuilder builder, DatabaseConnection dbConn)
+    public static WebApplicationBuilder AddLogging(WebApplicationBuilder builder)
     {
+        DatabaseConnection dbConnectionInfo =
+                builder.Configuration.GetRequiredSection("DatabaseConnection").Get<DatabaseConnection>()!;
 
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Information()
@@ -54,7 +50,7 @@ public static class Startup
             .MinimumLevel.Override("System", Serilog.Events.LogEventLevel.Error)
             .WriteTo.Console()
             .WriteTo.MySQL(
-                connectionString: dbConn.Connection,
+                connectionString: dbConnectionInfo.Connection,
                 tableName: ConstantValues.ApiLoggingTable.Name
             )
             .CreateLogger();
@@ -111,8 +107,6 @@ public static class Startup
             });
         });
 
-        builder = AddLifetimeServices(builder);
-
         return builder;
     }
 
@@ -122,7 +116,7 @@ public static class Startup
         builder.Services.Configure<AppSettings>(builder.Configuration.GetRequiredSection("AppSettings"));
         builder.Services.Configure<DatabaseConnection>(builder.Configuration.GetRequiredSection("DatabaseConnection"));
         builder.Services.Configure<EbayConfig>(builder.Configuration.GetRequiredSection("EbayConfig"));
-        
+        builder.Services.Configure<SendGridConfig>(builder.Configuration.GetRequiredSection("SendGridConfig"));
 
         builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
@@ -132,10 +126,12 @@ public static class Startup
         builder.Services.AddScoped<IUserService, UserService>();
         builder.Services.AddScoped<IAdminService, AdminService>();
         builder.Services.AddScoped<IDriverService, DriverService>();
+        builder.Services.AddScoped<IApplicationService, ApplicationService>();
         builder.Services.AddScoped<ISponsorService, SponsorService>();
         builder.Services.AddScoped<IOrganizationService, OrganizationService>();
         builder.Services.AddScoped<INotificationService, NotificationService>();
-        builder.Services.AddScoped<EmailService>();
+        builder.Services.AddScoped<ICatalogService, CatalogService>();
+        builder.Services.AddScoped<IEmailService, EmailService>();
 
         builder.Services.AddHttpClient<IEbayService, EbayService>();
 
@@ -173,54 +169,6 @@ public static class Startup
         }));
 
         app.MapControllers();
-        try
-        {
-            using (IServiceScope scope = app.Services.CreateScope())
-            {
-                var tokenSettings = scope.ServiceProvider.GetRequiredService<IOptions<JwtSettings>>();
-                JwtSettings jwtSettings = tokenSettings.Value;
-
-                // Add all services to make sure all can be initialized
-                IEbayService ebayService = scope.ServiceProvider.GetRequiredService<IEbayService>();
-                IContextService contextService = scope.ServiceProvider.GetRequiredService<IContextService>();
-
-                // Services needed for seeding
-                IAuthService authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
-                IOrganizationService orgService = scope.ServiceProvider.GetRequiredService<IOrganizationService>();
-                IAdminService adminService = scope.ServiceProvider.GetRequiredService<IAdminService>();
-                IDriverService driverService = scope.ServiceProvider.GetRequiredService<IDriverService>();
-                ISponsorService sponsorService = scope.ServiceProvider.GetRequiredService<ISponsorService>();
-
-                RequestData requestData = new()
-                {
-                    ClientIP = System.Net.IPAddress.Loopback,
-                    UserAgent = "SEED SCOPE"
-                };
-
-                Admin? seedAdmin = await adminService.GetAdminByName(ConstantValues.seedAdminRequest.UserName);
-                seedAdmin ??= await authService.RegisterAdminUser(ConstantValues.seedAdminRequest, requestData);
-
-                if (seedAdmin is null)
-                    throw new("Failed to create Seed Admin");
-
-                Organization? seedOrg = await orgService.GetOrganizationByName(ConstantValues.seedOrgName);
-                seedOrg ??= await orgService.CreateOrganization(seedOrgRequest, seedAdmin.UserData.Id);
-
-                if (seedOrg is null)
-                    throw new("Failed to create Seed Org");
-
-                Driver? seedDriver = await driverService.GetDriverByName(ConstantValues.seedDriverRequest.UserName);
-                Sponsor? seedSponsor = await sponsorService.GetSponsorByName(ConstantValues.seedSponsorRequest.UserName);
-
-                seedDriver ??= await authService.RegisterDriverUser(ConstantValues.seedDriverRequest, requestData);
-                seedSponsor ??= await authService.RegisterSponsorUser(ConstantValues.seedSponsorRequest, seedOrg.OrgId, seedAdmin.UserData.Id, requestData);
-            }
-        }
-        catch (Exception ex)
-        {
-            Log.Fatal(ex, "An error occurred while seeding the database");
-            throw;
-        }
 
         return app;
     }
@@ -386,6 +334,7 @@ public static class Startup
 
 	            {NotificationSeenField.SelectName} BOOLEAN DEFAULT 0 NOT NULL,
 	            {NotificationMessageField.SelectName} TEXT NULL,
+                {NotificationCreatedAtUtcField.SelectName} DATETIME(6) NOT NULL,  
 	            {NotificationTypeField.SelectName} varchar(50) NOT NULL,
 
 	            CONSTRAINT Notifications_PK Primary Key ({NotificationIdField.SelectName}),
@@ -403,7 +352,8 @@ public static class Startup
 	            {OrgIdField.SelectName} int NOT NULL,
 
 	            {ApplicationStatusField.SelectName} varchar(50) DEFAULT 'Waiting' NOT NULL,
-	            {ApplicationReasonField.SelectName} TEXT NULL,
+                {ApplicationDriverMessageField.SelectName} varchar(1000) NOT NULL,
+	            {ApplicationChangeReasonField.SelectName} varchar(1000) NULL,
 
 	            {ApplicationCreatedAtUtcField.SelectName} DATETIME(6) NOT NULL,
 	            {ApplicationLastModifiedUtcField.SelectName} DATETIME(6) NOT NULL,
@@ -448,6 +398,21 @@ public static class Startup
 	            CONSTRAINT LoginAttempts_CheckStatusValid CHECK({LoginAttemptStatusField.SelectName} IN ('Failure', 'Success'))
             )
             ";
+            command.ExecuteNonQuery();
+
+            // ApiLogging Create
+            command.CommandText = $@"
+            CREATE TABLE IF NOT EXISTS `ApiLogging` (
+              `id` int NOT NULL AUTO_INCREMENT,
+              `Timestamp` varchar(100) DEFAULT NULL,
+              `Level` varchar(15) DEFAULT NULL,
+              `Template` text,
+              `Message` text,
+              `Exception` text,
+              `Properties` text,
+              `_ts` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+              PRIMARY KEY (`id`)
+            )";
             command.ExecuteNonQuery();
 
             // SqlLogging Create

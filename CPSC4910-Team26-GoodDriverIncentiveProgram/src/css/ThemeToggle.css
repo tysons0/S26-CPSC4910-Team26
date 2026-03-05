@@ -1,0 +1,23 @@
+.theme-toggle {
+  background: transparent;
+  cursor: pointer;
+  font-size: 1.4rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-toggle .icon {
+  display: inline-block;
+  transition:
+    transform 0.5s cubic-bezier(.4,0,.2,1),
+    opacity 0.3s ease;
+}
+
+body.dark .theme-toggle{
+    background: var(--bg);
+}
+
+/* Rotate + subtle scale */
+body.dark .theme-toggle .icon {
+  transform: rotate(360deg) scale(1.15);
+}

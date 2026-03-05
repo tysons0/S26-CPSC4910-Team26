@@ -25,8 +25,10 @@ public class AuthService : IAuthService
     private readonly string _dbConnection;
     private readonly AppSettings _appSettings;
     private readonly ISponsorService _sponserService;
+    private readonly IDriverService _driverService;
 
-    public AuthService(IContextService contextService, IUserService userService, ISponsorService sponsorService,
+    public AuthService(IContextService contextService, IUserService userService,
+        ISponsorService sponsorService, IDriverService driverService,
         IOptions<JwtSettings> jwtOptions, ILogger<AuthService> logger, IPasswordHasher<User> passwordHasher,
         IOptions<DatabaseConnection> databaseConnection, IOptions<AppSettings> appSettings)
     {
@@ -38,6 +40,7 @@ public class AuthService : IAuthService
         _appSettings = appSettings.Value;
         _dbConnection = databaseConnection.Value.Connection;
         _sponserService = sponsorService;
+        _driverService = driverService;
     }
 
 
@@ -94,61 +97,88 @@ public class AuthService : IAuthService
         }
     }
 
-    public async Task<bool> UserHasAccessToEditOrg(int userId, UserRole role, int orgId)
+    public async Task<OrgAccess> RetrieveUserOrgAccess(int userId, int? orgId)
     {
         User? user = await _userService.FindUserById(userId);
 
-        if (user is null || user.Role != role)
+        if (user is null)
         {
-            _logger.LogWarning("UserId {UserId} with role {UserRole} was denied access to edit Organization[{OrgId}].",
-                userId, role, orgId);
-            return false;
+            _logger.LogWarning("UserId {UserId} was denied access to Organization[{OrgId}].",
+                userId, orgId);
+            return OrgAccess.NoAccess;
         }
 
-        if (role == UserRole.Admin)
+        if (user.Role == UserRole.Admin)
         {
             _logger.LogInformation("Admin UserId {UserId} was granted access to edit Organization[{OrgId}].",
                 userId, orgId);
-            return true;
+            return OrgAccess.ReadWrite;
         }
-        else if (role == UserRole.Sponsor)
+        else if (user.Role == UserRole.Sponsor)
         {
             Sponsor? sponsor = await _sponserService.GetSponsorByUserId(userId);
-            bool hasAccess = (sponsor is not null && orgId == sponsor.SponsorId);
+            bool hasAccess = (sponsor is not null && orgId == sponsor.OrganizationId);
             if (hasAccess)
             {
                 _logger.LogInformation("Sponsor UserId {UserId} was granted access to edit Organization[{OrgId}].",
                     userId, orgId);
+                return OrgAccess.ReadWrite;
             }
             else
             {
                 _logger.LogWarning("Sponsor UserId {UserId} was denied access to edit Organization[{OrgId}] because they are not a sponsor of the organization.",
                     userId, orgId);
+                return OrgAccess.NoAccess;
             }
-            return hasAccess;
+        }
+        else if (user.Role == UserRole.Driver)
+        {
+            Driver? driver = await _driverService.GetDriverByUserId(userId);
+            bool hasAccess = (driver is not null && orgId == driver.OrganizationId);
+            if (hasAccess)
+            {
+                _logger.LogInformation("Driver UserId {UserId} was granted access to read Organization[{OrgId}].",
+                    userId, orgId);
+                return OrgAccess.Read;
+            }
+            else
+            {
+                _logger.LogWarning("Driver UserId {UserId} was denied access to read Organization[{OrgId}] because they are not a driver of the organization.",
+                    userId, orgId);
+                return OrgAccess.NoAccess;
+            }
         }
         else
         {
-            _logger.LogWarning("User: {UserData} was denied access to edit Organization[{OrgId}]", user, orgId);
-            return false;
+            _logger.LogWarning("User: {UserData} was denied access to Organization[{OrgId}]", user, orgId);
+            return OrgAccess.NoAccess;
         }
     }
 
-    public Task<bool> UserCanSeeUser(int viewerUser, int userBeingViewed)
-    {
-        throw new NotImplementedException();
-    }
-
-    public async Task<bool> UpdateUserPassword(PasswordChangeRequest changeRequest)
+    public async Task<bool> UpdateUserPassword(string password, string? userName = null, int? userId = null)
     {
         try
         {
-            _logger.LogInformation("Updating user {UserName} password.", changeRequest.UserName);
+            User? updateUser = null;
 
-            User updateUser = await _userService.FindUserByName(changeRequest.UserName)
-                ?? throw new("Failed to retrieve update user");
+            if (userName is not null)
+            {
+                _logger.LogInformation("Updating user {UserName} password.", userName);
+                updateUser = await _userService.FindUserByName(userName)
+                    ?? throw new("Failed to retrieve update user");
+            }
+            else if (userId is not null && userId != default)
+            {
+                _logger.LogInformation("Updating user[{Id}] password.", userId);
+                updateUser = await _userService.FindUserById((int)userId)
+                    ?? throw new("Failed to retrieve update user");
+            }
+            else
+            {
+                throw new("Received request to update user password but both username and userId were null");
+            }
 
-            string hashedPassword = HashPassword(updateUser, changeRequest.NewPassword);
+            string hashedPassword = HashPassword(updateUser, password);
 
             await using MySqlConnection conn = new(_dbConnection);
             conn.Open();
@@ -168,15 +198,14 @@ public class AuthService : IAuthService
 
             if (updateCount != 1)
             {
-                _logger.LogError("Failed to update password for user {UserName}", changeRequest.UserName);
+                _logger.LogError("Failed to update password for user {UserName}", updateUser.Username);
                 return false;
             }
             return true;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error updating password for user {UserName}: {ErrorMessage}",
-                changeRequest.UserName, ex.Message);
+            _logger.LogError(ex, "Error updating password for user: {ErrorMessage}", ex.Message);
             return false;
         }
     }
@@ -365,7 +394,9 @@ public class AuthService : IAuthService
                 new(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new(ClaimTypes.Name, user.Username),
                 new(ClaimTypes.Email, user.Email ?? ""),
-                new(ClaimTypes.Role, user.Role.ToString())
+                new(ClaimTypes.Role, user.Role.ToString()),
+                // Iat stands for Issued At
+                new(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString())
             ];
             SymmetricSecurityKey key = new(Encoding.UTF8.GetBytes(jwtSettings.JwtKey));
 

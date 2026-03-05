@@ -13,9 +13,7 @@ public interface IAuthService
 
     Task<Sponsor?> RegisterSponsorUser(UserRequest request, int orgId, int creatorUserId, RequestData registerData);
 
-    Task<bool> UserHasAccessToEditOrg(int userId, UserRole role, int orgId);
+    Task<OrgAccess> RetrieveUserOrgAccess(int userId, int? orgId);
 
-    Task<bool> UserCanSeeUser(int viewerUser, int userBeingViewed);
-
-    Task<bool> UpdateUserPassword(PasswordChangeRequest changeRequest);
+    Task<bool> UpdateUserPassword(string password, string? userName = null, int? userId = null);
 }

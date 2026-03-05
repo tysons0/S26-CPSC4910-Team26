@@ -8,7 +8,7 @@ using static Class4910Api.ConstantValues;
 namespace Class4910Api.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route(Routes.Auth.Base)]
 public class AuthController : ControllerBase
 {
     private readonly ILogger<AuthController> _logger;
@@ -28,7 +28,7 @@ public class AuthController : ControllerBase
     }
 
     [Authorize]
-    [HttpGet("me")]
+    [HttpGet(Routes.Auth.Me)]
     public async Task<ActionResult<UserRead>> GetCurrentUser()
     {
         UserRead? userData = await _contextService.GetUserFromRequest(HttpContext);
@@ -43,7 +43,21 @@ public class AuthController : ControllerBase
         return userData;
     }
 
-    [HttpPost("login")]
+    [Authorize]
+    [HttpGet(Routes.Auth.MeTokenInfo)]
+    public async Task<ActionResult<TokenInfo>> GetTokenInfo()
+    {
+        TokenInfo? tokenInfo = _contextService.GetTokenInfoFromRequest(HttpContext);
+        if (tokenInfo is null)
+        {
+            string error = $"Failed to retrieve token information from request";
+            _logger.LogError("{Error}", error);
+            return BadRequest(error);
+        }
+        return tokenInfo;
+    }
+
+    [HttpPost(Routes.Auth.Login)]
     public async Task<ActionResult<LoginResult>> Login([FromBody] UserRequest loginRequest)
     {
         RequestData? requestData = _contextService.GetRequestData(HttpContext);
@@ -67,23 +81,33 @@ public class AuthController : ControllerBase
     }
 
     [Authorize]
-    [HttpPost("password-change")]
+    [HttpPost(Routes.Auth.PasswordChange)]
     public async Task<ActionResult> ChangePassword([FromBody] PasswordChangeRequest changeRequest)
     {
-        _logger.LogInformation("Password change attempt for user {User}", changeRequest.UserName);
+        int userId = _contextService.GetUserId(HttpContext);
+        User? user = await _userService.FindUserById(userId);
+
+        if (user is null)
+        {
+            string message = $"Cannot change password of User[{userId}]. They do not exist.";
+            _logger.LogWarning("{Error}", message);
+            return BadRequest();
+        }
+
+        _logger.LogInformation("Password change attempt for user {User}", user.Username);
 
         RequestData? requestData = _contextService.GetRequestData(HttpContext);
 
         if (requestData is null)
         {
-            string error = $"Could not retrieve Request Data for password change attempt on {changeRequest.UserName}";
+            string error = $"Could not retrieve Request Data for password change attempt on {user.Username}";
             _logger.LogWarning("{Error}", error);
             return BadRequest(error);
         }
 
         UserRequest userRequest = new()
         {
-            UserName = changeRequest.UserName,
+            UserName = user.Username,
             Password = changeRequest.CurrentPassword
         };
 
@@ -94,14 +118,26 @@ public class AuthController : ControllerBase
             return BadRequest("Current password is incorrect.");
         }
 
-        bool changeResult = await _authService.UpdateUserPassword(changeRequest);
+        bool changeResult = await _authService.UpdateUserPassword(changeRequest.NewPassword, userName: user.Username);
 
-        _logger.LogInformation("Password change {Result} for user {User}", changeResult ? "succeeded" : "failed", changeRequest.UserName);
+        _logger.LogInformation("Password change {Result} for user {User}", changeResult ? "succeeded" : "failed", user.Username);
         return Ok(changeResult);
     }
 
     [Authorize(Roles = ADMIN)]
-    [HttpPost("register/admin")]
+    [HttpPost(Routes.Auth.ForcePasswordChange)]
+    public async Task<ActionResult> ForceChangePassword([FromBody] ForcePasswordChangeRequest changeRequest)
+    {
+        _logger.LogInformation("Password change attempt for user[{Id}]", changeRequest.UserId);
+
+        bool changeResult = await _authService.UpdateUserPassword(changeRequest.NewPassword, userId: changeRequest.UserId);
+
+        _logger.LogInformation("Password change {Result} for user[{Id}]", changeResult ? "succeeded" : "failed", changeRequest.UserId);
+        return Ok(changeResult);
+    }
+
+    [Authorize(Roles = ADMIN)]
+    [HttpPost(Routes.Auth.RegisterAdmin)]
     public async Task<ActionResult<Admin>> RegisterAdmin([FromBody] UserRequest request)
     {
         RequestData? requestData = _contextService.GetRequestData(HttpContext);
@@ -134,7 +170,7 @@ public class AuthController : ControllerBase
         return Created(string.Empty, admin);
     }
 
-    [HttpPost("register/driver")]
+    [HttpPost(Routes.Auth.RegisterDriver)]
     public async Task<ActionResult<Driver>> RegisterDriver([FromBody] UserRequest request)
     {
         RequestData? requestData = _contextService.GetRequestData(HttpContext);
@@ -167,16 +203,15 @@ public class AuthController : ControllerBase
     }
 
     [Authorize(Roles = $"{ADMIN},{SPONSOR}")]
-    [HttpPost("register/sponsor")]
+    [HttpPost(Routes.Auth.RegisterSponsor)]
     public async Task<ActionResult<Sponsor>> RegisterSponsor([FromBody] UserRequest request, [FromQuery] int orgId)
     {
         RequestData? requestData = _contextService.GetRequestData(HttpContext);
         int creatorId = _contextService.GetUserId(HttpContext);
-        UserRole role = _contextService.GetUserRole(HttpContext);
 
-        bool orgEditAccess = await _authService.UserHasAccessToEditOrg(creatorId, role, orgId);
+        OrgAccess orgAccess = await _authService.RetrieveUserOrgAccess(creatorId, orgId);
 
-        if (orgEditAccess == false)
+        if (orgAccess != OrgAccess.ReadWrite)
         {
             string error = $"User {creatorId} does not have permission to create sponsors for org {orgId}";
             _logger.LogWarning("{Error}", error);

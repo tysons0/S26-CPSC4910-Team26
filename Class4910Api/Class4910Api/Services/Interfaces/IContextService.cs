@@ -11,4 +11,6 @@ public interface IContextService
     UserRole GetUserRole(HttpContext context);
 
     Task<UserRead?> GetUserFromRequest(HttpContext requestContext);
+
+    TokenInfo? GetTokenInfoFromRequest(HttpContext requestContext);
 }

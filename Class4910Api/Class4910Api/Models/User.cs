@@ -19,6 +19,8 @@ public class User
 
     public required UserRole Role { get; set; }
 
+    public List<int> AssociatedOrgIds { get; set; } = [];
+
     public override string ToString()
     {
         return this.ToReadFormat().ToString() ?? "";
@@ -39,8 +41,14 @@ public class User
             PhoneNumber = PhoneNumber,
             TimeZone = TimeZone,
             Country = Country,
-            LastLoginUtc = LastLoginUtc
+            LastLoginUtc = LastLoginUtc,
+            AssociatedOrgIds = AssociatedOrgIds,
         };
+    }
+
+    public string GetDescribers()
+    {
+        return $"{Role}-User[{Username}({Id})]";
     }
 }
 

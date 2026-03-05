@@ -21,6 +21,8 @@ public class UserRead
 
     public required string Role { get; set; }
 
+    public List<int> AssociatedOrgIds { get; set; } = [];
+
     public override string ToString()
     {
 
@@ -30,7 +32,8 @@ public class UserRead
             $"PhoneNumber: {FormatNullable(PhoneNumber)}, TimeZone: {FormatNullable(TimeZone)}, " +
             $"Country: {FormatNullable(Country)}, Role: {Role}, " +
             $"CreatedAtUtc: {FormatDate(CreatedAtUtc)}, " +
-            $"LastLoginUtc: {FormatDate(LastLoginUtc)}]";
+            $"LastLoginUtc: {FormatDate(LastLoginUtc)}, " +
+            $"Associated With Orgs [{string.Join(", ", AssociatedOrgIds)}] ]";
     }
 }
 
