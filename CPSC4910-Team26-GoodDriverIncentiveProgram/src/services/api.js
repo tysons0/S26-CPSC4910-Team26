@@ -388,6 +388,82 @@ const apiService = {
     }
   },
 
+  getDriverByUserId: async (userId) => {
+    try {
+      const token = apiService.getToken();
+      if (!token) {
+        throw new Error("No authentication token found. Please log in.");
+      }
+
+      return await apiService.getDataWithAuth(`Driver/${userId}`, token);
+    } catch (error) {
+      console.error("Failed to get driver profile", error);
+      throw error;
+    }
+  },
+
+  getMySponsorInfo: async () => {
+    try {
+      const token = apiService.getToken();
+      if (!token) {
+        throw new Error("No authentication token found. Please log in.");
+      }
+
+      return await apiService.getDataWithAuth("Sponsor/me", token);
+    } catch (error) {
+      console.error("Failed to get sponsor info", error);
+      throw error;
+    }
+  },
+
+  getCatalog: async (orgId) => {
+    try {
+      const token = apiService.getToken();
+      if (!token) {
+        throw new Error("No authentication token found. Please log in.");
+      }
+
+      const response = await fetch(`${BASE_URL}/api/catalog/${orgId}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      return await handleResponse(response);
+    } catch (error) {
+      console.error("Failed to get catalog", error);
+      throw error;
+    }
+  },
+
+  addCatalogItem: async (orgId, itemData) => {
+    try {
+      const token = apiService.getToken();
+      if (!token) {
+        throw new Error("No authentication token found. Please log in.");
+      }
+
+      const response = await fetch(`${BASE_URL}/api/catalog/${orgId}/items`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ebayItemId: itemData.ebayItemId,
+          points: Number(itemData.points),
+        }),
+      });
+
+      return await handleResponse(response);
+    } catch (error) {
+      console.error("Failed to add catalog item", error);
+      throw error;
+    }
+  },
+
   applyToOrganization: async (orgId, message = "") => {
     try {
       const token = apiService.getToken();
