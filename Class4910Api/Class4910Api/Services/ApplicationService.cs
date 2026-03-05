@@ -1,11 +1,11 @@
-﻿using System.Data;
-using System.Data.Common;
-using Class4910Api.Configuration;
+﻿using Class4910Api.Configuration;
 using Class4910Api.Models;
 using Class4910Api.Services.Interfaces;
+using Google.Protobuf;
 using Microsoft.Extensions.Options;
 using MySql.Data.MySqlClient;
-
+using System.Data;
+using System.Data.Common;
 using static Class4910Api.ConstantValues;
 
 namespace Class4910Api.Services;
@@ -14,11 +14,14 @@ public class ApplicationService : IApplicationService
 {
     private readonly ILogger<ApplicationService> _logger;
     private readonly string _dbConnection;
+    private readonly ISponsorService _sponsorService;
 
-    public ApplicationService(ILogger<ApplicationService> logger, IOptions<DatabaseConnection> databaseConnection)
+    public ApplicationService(ILogger<ApplicationService> logger, ISponsorService sponsorService,
+                              IOptions<DatabaseConnection> databaseConnection)
     {
         _logger = logger;
         _dbConnection = databaseConnection.Value.Connection;
+        _sponsorService = sponsorService;
     }
 
 
@@ -68,7 +71,9 @@ public class ApplicationService : IApplicationService
             conn.Open();
             MySqlCommand command = conn.CreateCommand();
 
-            command.CommandText = $"SELECT {DriverApplicationsTable.GenerateSelect()}";
+            command.CommandText = 
+                @$"SELECT {DriverApplicationsTable.GenerateSelect()}
+                   FROM {DriverApplicationsTable.Name}";
 
             await using DbDataReader reader = await command.ExecuteReaderAsync();
 
@@ -90,17 +95,117 @@ public class ApplicationService : IApplicationService
 
     public async Task<List<DriverApplication>?> GetDriverApplicationsByDriver(int driverId)
     {
-        throw new NotImplementedException();
+        _logger.LogInformation("Get driver[{Id}] applications", driverId);
+        try
+        {
+            await using MySqlConnection conn = new(_dbConnection);
+            conn.Open();
+            MySqlCommand command = conn.CreateCommand();
+
+            command.CommandText = 
+                @$"SELECT {DriverApplicationsTable.GenerateSelect()}
+                   FROM {DriverApplicationsTable.Name}
+                   WHERE {DriverIdField.Name} = @DriverId";
+            command.Parameters.Add(DriverIdField.GenerateParameter("@DriverId", driverId));
+
+            await using DbDataReader reader = await command.ExecuteReaderAsync();
+
+            List<DriverApplication> applications = [];
+            while (await reader.ReadAsync())
+            {
+                applications.Add(await GetDriverApplicationFromReader(reader));
+            }
+
+            _logger.LogInformation("Found {Count} applications for driver[{Id}]", 
+                applications.Count, driverId);
+            return applications;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting applications");
+            return null;
+        }
     }
 
     public async Task<List<DriverApplication>?> GetDriverApplicationsByOrg(int orgId)
     {
-        throw new NotImplementedException();
+        _logger.LogInformation("Get Org[{Id}] applications", orgId);
+        try
+        {
+            await using MySqlConnection conn = new(_dbConnection);
+            conn.Open();
+            MySqlCommand command = conn.CreateCommand();
+
+            command.CommandText =
+                @$"SELECT {DriverApplicationsTable.GenerateSelect()}
+                   FROM {DriverApplicationsTable.Name}
+                   WHERE {OrgIdField.Name} = @OrgId";
+            command.Parameters.Add(OrgIdField.GenerateParameter("@OrgId", orgId));
+
+            await using DbDataReader reader = await command.ExecuteReaderAsync();
+
+            List<DriverApplication> applications = [];
+            while (await reader.ReadAsync())
+            {
+                applications.Add(await GetDriverApplicationFromReader(reader));
+            }
+
+            _logger.LogInformation("Found {Count} applications for Org[{Id}]",
+                applications.Count, orgId);
+            return applications;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting applications");
+            return null;
+        }
     }
 
     public async Task<bool> UpdateApplicationStatus(int applicationId, string newStatus, string reason, int editorUserId)
     {
-        throw new NotImplementedException();
+        _logger.LogInformation("");
+
+
+
+        try
+        {
+            // Get Sponsor if they exist
+            int? sponsorId = null;
+            Sponsor? sponsor = await _sponsorService.GetSponsorByUserId(editorUserId);
+            if (sponsor is not null)
+            {
+                _logger.LogInformation("[{Sponsor}] is updating application[{Id}] to status[{NewStatus}]", 
+                    sponsor, applicationId, newStatus);
+                sponsorId = sponsor.SponsorId;
+            }
+
+            await using MySqlConnection conn = new(_dbConnection);
+            conn.Open();
+            MySqlCommand command = conn.CreateCommand();
+
+            command.CommandText =
+                @$"UPDATE {DriverApplicationsTable.Name}
+                   SET {ApplicationStatusField.SelectName} = @NewStatus, 
+                       {SponsorIdField.SelectName} = @SponsorId,
+                       {ApplicationChangeReasonField.SelectName} = @Reason, {ApplicationLastModifiedUtcField} = UTC_TIMESTAMP()
+                   WHERE {ApplicationIdField.SelectName} = @ApplicationId";
+
+            command.Parameters.Add(ApplicationStatusField.GenerateParameter("@NewStatus", newStatus));
+            command.Parameters.Add(ApplicationChangeReasonField.GenerateParameter("@Reason", reason));
+            command.Parameters.Add(ApplicationIdField.GenerateParameter("@ApplicationId", applicationId));
+            command.Parameters.Add(SponsorIdField.GenerateParameter("@SponsorId", sponsorId));
+
+            await command.ExecuteNonQueryAsync();
+
+            _logger.LogInformation("Updated application[{Id}] to status[{NewStatus}]", applicationId, newStatus);
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to update application[{Id}] to status[{NewStatus}]", applicationId, newStatus);
+            return false;
+        }
     }
 
     private async Task<DriverApplication> GetDriverApplicationFromReader(DbDataReader reader, string? readPrefix = null)
