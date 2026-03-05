@@ -60,8 +60,7 @@ public class OrganizationController : ControllerBase
     }
 
     [Authorize(Roles = $"{ADMIN},{SPONSOR}")]
-    [HttpGet("drivers")]
-    public async Task<ActionResult<List<Driver>>> GetDriversFromOrganization([FromQuery] int? orgId = null)
+    public async Task<ActionResult<List<Driver>>> GetDriversFromOrganization([FromQuery] int orgId)
     {
         int contextUserId = _contextService.GetUserId(HttpContext);
         User? user = await _userService.FindUserById(contextUserId);
@@ -70,34 +69,21 @@ public class OrganizationController : ControllerBase
             return BadRequest();
         }
 
-        int requestingOrgId;
-        if ((orgId is null || orgId == 0) && user.Role == UserRole.Sponsor)
+        OrgAccess orgAccess = await _authService.RetrieveUserOrgAccess(user.Id, orgId);
+
+        if (orgAccess is OrgAccess.NoAccess)
         {
-            Sponsor? sponsor = await _sponsorService.GetSponsorByUserId(contextUserId);
-            if (sponsor is null)
-            {
-                return BadRequest();
-            }
-            requestingOrgId = sponsor.OrganizationId;
+            return Unauthorized();
         }
-        else
+
+        if (orgId == default)
         {
             return BadRequest();
         }
 
-        if (requestingOrgId == 0)
-        {
-            return BadRequest();
-        }
+        List<Driver>? driverList = await _driverService.GetDriversByOrgId(orgId);
 
-        List<Driver>? driverList = await _driverService.GetDriversByOrgId(requestingOrgId);
-
-        if (driverList is null)
-        {
-            return BadRequest();
-        }
-
-        return Ok(driverList);
+        return Ok(driverList ?? []);
     }
     [Authorize(Roles = $"{ADMIN},{SPONSOR}, {DRIVER}")]
     [HttpGet("{orgId:int}")]

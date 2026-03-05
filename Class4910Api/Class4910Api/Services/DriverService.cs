@@ -2,9 +2,11 @@
 using System.Data.Common;
 using Class4910Api.Configuration;
 using Class4910Api.Models;
+using Class4910Api.Models.Requests;
 using Class4910Api.Services.Interfaces;
 using Microsoft.Extensions.Options;
 using MySql.Data.MySqlClient;
+using Org.BouncyCastle.Ocsp;
 using static Class4910Api.ConstantValues;
 
 namespace Class4910Api.Services;
@@ -188,5 +190,144 @@ public class DriverService : IDriverService
             OrganizationId = orgId,
             UserData = userData.ToReadFormat()
         };
+    }
+
+    private async Task<DriverAddress> GetDriverAddressFromReader(DbDataReader reader)
+    {
+
+        int driverId = reader.GetInt32(DriverIdField.Name);
+        int addressId = reader.GetInt32(DriverAddressIdField.Name);
+
+        string city = reader.GetString(DriverAddressCityField.Name);
+        string state = reader.GetString(DriverAddressStateField.Name);
+        string zipCode = reader.GetString(DriverAddressZipCodeField.Name);
+
+        string addressAlias = reader.GetString(DriverAddressAliasField.Name);
+        string addressLine1 = reader.GetString(DriverAddressLine1Field.Name);
+        string addressLine2 = reader.GetString(DriverAddressLine2Field.Name);
+
+        bool primary = reader.GetBoolean(DriverAddressPrimaryField.Name);
+
+        return new DriverAddress()
+        {
+            AddressId = addressId,
+            DriverId = driverId,
+            City = city,
+            State = state,
+            ZipCode = zipCode,
+            AddressAlias = addressAlias,
+            AddressLine1 = addressLine1,
+            AddressLine2 = addressLine2,
+            Primary = primary
+        };
+    }
+
+    public async Task<List<DriverAddress>?> GetDriverAddresses(int driverId)
+    {
+        try
+        {
+            await using MySqlConnection conn = new(_dbConnection);
+            conn.Open();
+            MySqlCommand command = conn.CreateCommand();
+
+            command.CommandText =
+                @$"SELECT {DriverAddressesTable.GetFields()}
+                   FROM {DriverAddressesTable.Name}
+                   WHERE {DriverIdField.SelectName} = @DriverId";
+            command.Parameters.Add(DriverIdField.GenerateParameter("@DriverId", driverId));
+
+            await using DbDataReader reader = await command.ExecuteReaderAsync();
+
+            List<DriverAddress> addresses = [];
+            while (await reader.ReadAsync())
+            {
+                addresses.Add(await GetDriverAddressFromReader(reader));
+            }
+
+            _logger.LogInformation("Found {Count} address for driver[{Id}]", addresses.Count, driverId);
+            return addresses;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving Driver addresses for driver[{Id}]", driverId);
+            return null;
+        }
+    }
+
+    public async Task<bool> AddDriverAddress(int driverId, AddressRequest req)
+    {
+        try
+        {
+            await using MySqlConnection conn = new(_dbConnection);
+            conn.Open();
+            MySqlCommand command = conn.CreateCommand();
+
+            command.CommandText =
+                @$"INSERT INTO {DriverAddressesTable.Name}
+                   ({DriverIdField.Name}, {DriverAddressAliasField.Name}, 
+                    {DriverAddressStateField.Name}, {DriverAddressCityField.Name}, {DriverAddressZipCodeField.Name},
+                    {DriverAddressLine1Field.Name}, {DriverAddressLine2Field.Name}, {DriverAddressPrimaryField.Name})
+                   VALUES
+                   (@DriverId, @Alias,
+                    @State, @City, @ZipCode,
+                    @Line1, @Line2, @Primary)";
+            command.Parameters.Add(DriverIdField.GenerateParameter("@DriverId", driverId));
+            command.Parameters.Add(DriverAddressAliasField.GenerateParameter("@Alias", req.AddressAlias));
+            command.Parameters.Add(DriverAddressStateField.GenerateParameter("@State", req.State));
+            command.Parameters.Add(DriverAddressCityField.GenerateParameter("@City", req.City));
+            command.Parameters.Add(DriverAddressZipCodeField.GenerateParameter("@ZipCode", req.ZipCode));
+            command.Parameters.Add(DriverAddressLine1Field.GenerateParameter("@Line1", req.AddressLine1));
+            command.Parameters.Add(DriverAddressLine2Field.GenerateParameter("@Line2", req.AddressLine2));
+            command.Parameters.Add(DriverAddressPrimaryField.GenerateParameter("@Primary", req.Primary));
+
+            await command.ExecuteNonQueryAsync();
+
+            _logger.LogInformation("Created Address [{Request}] for Driver[{Id}]", req, driverId);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving Driver addresses for driver[{Id}]", driverId);
+            return false;
+        }
+    }
+
+    public async Task<bool> SetPrimaryAddress(int driverId, int addressId)
+    {
+        try
+        {
+            await using MySqlConnection conn = new(_dbConnection);
+            conn.Open();
+            MySqlCommand command = conn.CreateCommand();
+
+            command.CommandText =
+                @$"UPDATE {DriverAddressesTable.Name}
+                   SET {DriverAddressPrimaryField.Name} = 1
+                   WHERE {DriverIdField.Name} = @DriverId AND
+                   {DriverAddressIdField.Name} = @AddressId
+                ";
+            command.Parameters.Add(DriverIdField.GenerateParameter("@DriverId", driverId));
+            command.Parameters.Add(DriverAddressIdField.GenerateParameter("@AddressId", addressId));
+
+            await command.ExecuteNonQueryAsync();
+
+            _logger.LogInformation("Updated Address[{Id}] for Driver[{Id}] to primary", addressId, driverId);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating Address[{Id}] for Driver[{Id}] to primary", addressId, driverId);
+            return false;
+        }
+    }
+
+    public async Task<bool> UpdateAddress(int driverId, int addressId, AddressRequest addressRequest)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task<bool> DeleteDriverAddress(int driverId, int addressId)
+    {
+        throw new NotImplementedException();
     }
 }

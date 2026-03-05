@@ -52,13 +52,13 @@ namespace Class4910Api.Models
     {
         public string? ItemId { get; set; }
         public string? Title { get; set; }
-        public EbayPrice? Price{ get; set; }
-        public EbayImage? Image{ get; set; }
-        public string? Description { get; set; } 
-        public string? ImageWebUrl { get; set;}
+        public EbayPrice? Price { get; set; }
+        public EbayImage? Image { get; set; }
+        public string? Description { get; set; }
+        public string? ImageWebUrl { get; set; }
         public string? Condition { get; set; }
         public EbayAvailability? Availability { get; set; }
-       
+
     }
     internal class EbayAvailability
     {

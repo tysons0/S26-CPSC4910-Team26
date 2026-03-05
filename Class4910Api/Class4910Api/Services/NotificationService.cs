@@ -1,11 +1,10 @@
-﻿using Class4910Api.Configuration;
+﻿using System.Data;
+using System.Data.Common;
+using Class4910Api.Configuration;
 using Class4910Api.Models;
 using Class4910Api.Services.Interfaces;
 using Microsoft.Extensions.Options;
 using MySql.Data.MySqlClient;
-using System.Data;
-using System.Data.Common;
-
 using static Class4910Api.ConstantValues;
 
 namespace Class4910Api.Services;
@@ -21,7 +20,7 @@ public class NotificationService : INotificationService
         _dbConnection = databaseConnection.Value.Connection;
     }
 
-    public async Task<bool> CreateNotification(int userId, string message, string type = "")
+    public async Task<bool> CreateNotification(int userId, string message, NotificationType type)
     {
         try
         {
@@ -40,7 +39,7 @@ public class NotificationService : INotificationService
                    (@UserId, @Message, @Type, @CreatedAtUtc)";
             command.Parameters.Add(UserIdField.GenerateParameter("@UserId", userId));
             command.Parameters.Add(NotificationMessageField.GenerateParameter("@Message", message));
-            command.Parameters.Add(NotificationTypeField.GenerateParameter("@Type", type));
+            command.Parameters.Add(NotificationTypeField.GenerateParameter("@Type", type.ToString()));
             command.Parameters.Add(NotificationCreatedAtUtcField.GenerateParameter("@CreatedAtUtc", DateTime.UtcNow));
 
             await command.ExecuteNonQueryAsync();
@@ -49,7 +48,7 @@ public class NotificationService : INotificationService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating notification[{Type}:{Message}] for User[{Id}].", 
+            _logger.LogError(ex, "Error creating notification[{Type}:{Message}] for User[{Id}].",
                 type, message, userId);
             return false;
         }
@@ -78,7 +77,7 @@ public class NotificationService : INotificationService
                 notifications.Add(GetNotificationFromReader(reader));
             }
 
-            _logger.LogInformation("Found {Count} notifications for User[{Id}]", 
+            _logger.LogInformation("Found {Count} notifications for User[{Id}]",
                 notifications.Count, userId);
 
             return notifications;

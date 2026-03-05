@@ -47,7 +47,7 @@ public class OrganizationService : IOrganizationService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating organization with request[{Request}] for User[{Id}]", 
+            _logger.LogError(ex, "Error creating organization with request[{Request}] for User[{Id}]",
                 creationRequest, creatorUserId);
             return null;
         }
