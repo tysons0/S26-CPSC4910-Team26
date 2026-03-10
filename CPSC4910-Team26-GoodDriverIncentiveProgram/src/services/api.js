@@ -549,18 +549,28 @@ const apiService = {
         changeReason: changeReason,
       });
 
-      const response = await fetch(
-        `${BASE_URL}/Application/${applicationId}/status?${params}`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        },
-      );
+      const url = `${BASE_URL}/Application/${applicationId}/status?${params}`;
 
-      return await handleResponse(response);
+      console.log("Full URL:", url); // DEBUG - see the exact URL being called
+      console.log("Parameters:", { newStatus, changeReason }); // DEBUG
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      console.log("Response status:", response.status); // DEBUG
+      const responseText = await response.text();
+      console.log("Response text:", responseText); // DEBUG
+
+      if (!response.ok) {
+        throw new Error(responseText || "Failed to update application status");
+      }
+
+      return responseText ? JSON.parse(responseText) : { success: true };
     } catch (error) {
       console.error("Failed to update application status", error);
       throw error;
@@ -570,21 +580,34 @@ const apiService = {
   getMyApplications: async () => {
     try {
       const token = apiService.getToken();
-      if (!token)
+      if (!token) {
         throw new Error("No authentication token found. Please log in.");
+      }
 
       const allApplications = await apiService.getApplications();
       const currentUser = apiService.getCurrentUser();
 
-      const myId = currentUser?.id ?? currentUser?.userId;
-      if (!myId) throw new Error("Could not determine current user id.");
+      // Get driver info using user ID
+      const driverInfo = await apiService.getDriverByUserId(currentUser.id);
+      const driverId = driverInfo.driverId;
 
-      return (Array.isArray(allApplications) ? allApplications : []).filter(
-        (app) => String(app.driverId) === String(myId),
-      );
+      console.log("User ID:", currentUser.id);
+      console.log("Driver ID:", driverId);
+
+      if (!driverId) {
+        console.error("Could not determine driver ID");
+        return [];
+      }
+
+      const filtered = (
+        Array.isArray(allApplications) ? allApplications : []
+      ).filter((app) => String(app.driverId) === String(driverId));
+
+      console.log("Filtered applications:", filtered);
+      return filtered;
     } catch (error) {
-      console.error("Failed to get Applications", error);
-      throw error;
+      console.error("Failed to get my applications:", error);
+      return [];
     }
   },
 

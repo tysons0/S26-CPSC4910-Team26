@@ -27,6 +27,8 @@ function Organizations() {
 
   useEffect(() => {
     const fetchData = async () => {
+      const userInfo = await apiService.getUserInfo();
+      console.log("Full user info:", userInfo); // Check if this has driverId
       try {
         if (!apiService.isAuthenticated()) {
           setError("Please log in to view organizations.");

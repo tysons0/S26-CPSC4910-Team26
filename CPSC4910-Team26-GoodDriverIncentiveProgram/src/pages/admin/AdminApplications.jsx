@@ -62,8 +62,8 @@ function AdminApplications() {
     <div style={{ padding: "2rem" }}>
       <PageTitle title="Manage Applications | Team 26" />
 
-      <h1>View Applications</h1>
-      <p>Review and manage driver applications to your organization.</p>
+      <h1>Applications</h1>
+      <p>Pending and Processed Applications</p>
 
       {error && (
         <div
