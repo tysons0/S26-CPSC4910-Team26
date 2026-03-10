@@ -71,7 +71,7 @@ public class ApplicationService : IApplicationService
             conn.Open();
             MySqlCommand command = conn.CreateCommand();
 
-            command.CommandText = 
+            command.CommandText =
                 @$"{DriverApplicationsTable.GenerateSelect()}";
 
             await using DbDataReader reader = await command.ExecuteReaderAsync();
@@ -101,7 +101,7 @@ public class ApplicationService : IApplicationService
             conn.Open();
             MySqlCommand command = conn.CreateCommand();
 
-            command.CommandText = 
+            command.CommandText =
                 @$"{DriverApplicationsTable.GenerateSelect()}
                    WHERE {DriverIdField.Name} = @DriverId";
             command.Parameters.Add(DriverIdField.GenerateParameter("@DriverId", driverId));
@@ -114,7 +114,7 @@ public class ApplicationService : IApplicationService
                 applications.Add(await GetDriverApplicationFromReader(reader));
             }
 
-            _logger.LogInformation("Found {Count} applications for driver[{Id}]", 
+            _logger.LogInformation("Found {Count} applications for driver[{Id}]",
                 applications.Count, driverId);
             return applications;
         }
@@ -160,7 +160,8 @@ public class ApplicationService : IApplicationService
 
     public async Task<bool> UpdateApplicationStatus(int applicationId, string newStatus, string reason, int editorUserId)
     {
-        _logger.LogInformation("");
+        _logger.LogInformation("Update application[{Id}] status to [{Status}] made by User[{}]",
+            applicationId, newStatus, editorUserId);
 
         try
         {
@@ -169,7 +170,7 @@ public class ApplicationService : IApplicationService
             Sponsor? sponsor = await _sponsorService.GetSponsorByUserId(editorUserId);
             if (sponsor is not null)
             {
-                _logger.LogInformation("[{Sponsor}] is updating application[{Id}] to status[{NewStatus}]", 
+                _logger.LogInformation("[{Sponsor}] is updating application[{Id}] to status[{NewStatus}]",
                     sponsor, applicationId, newStatus);
                 sponsorId = sponsor.SponsorId;
             }
@@ -195,11 +196,18 @@ public class ApplicationService : IApplicationService
             command.Parameters.Add(ApplicationIdField.GenerateParameter("@ApplicationId", applicationId));
             command.Parameters.Add(SponsorIdField.GenerateParameter("@SponsorId", sponsorId));
 
-            await command.ExecuteNonQueryAsync();
+            int result = await command.ExecuteNonQueryAsync();
 
-            _logger.LogInformation("Updated application[{Id}] to status[{NewStatus}]", applicationId, newStatus);
-
-            return true;
+            if (result == 1)
+            {
+                _logger.LogInformation("Updated application[{Id}] to status[{NewStatus}]", applicationId, newStatus);
+            }
+            else
+            {
+                _logger.LogWarning("Tried to update application[{Id}] to status[{NewStatus}] but no rows were affected",
+                    applicationId, newStatus);
+            }
+                return true;
         }
         catch (Exception ex)
         {
