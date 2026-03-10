@@ -67,7 +67,8 @@ public class NotificationService : INotificationService
             command.CommandText =
                 @$"SELECT {NotificationsTable.GetFields()} 
                    FROM {NotificationsTable.Name}
-                   WHERE {UserIdField.SelectName} = @UserId";
+                   WHERE {UserIdField.SelectName} = @UserId
+                   AND {NotificationSeenField.SelectName} = 0";
             command.Parameters.Add(UserIdField.GenerateParameter("@UserId", userId));
 
             await using DbDataReader reader = await command.ExecuteReaderAsync();
@@ -93,6 +94,8 @@ public class NotificationService : INotificationService
     {
         try
         {
+            _logger.LogInformation("Marking Notification[{Id}] as seen", notificationId);
+
             await using MySqlConnection conn = new(_dbConnection);
             conn.Open();
             MySqlCommand command = conn.CreateCommand();

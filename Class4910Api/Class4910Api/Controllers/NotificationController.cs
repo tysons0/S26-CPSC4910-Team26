@@ -72,8 +72,12 @@ public class NotificationController : ControllerBase
 
         if (user is null)
         {
+            _logger.LogWarning("Received bad request marking notification[{Id}] as seen", notificationId);
             return BadRequest("Could not identify user from request");
         }
+
+        _logger.LogInformation("Received request from {user} to mark notification[{Id}] as seen", 
+            user.Username, notificationId);
 
         List<Notification>? userNotifications =
             await _notificationService.GetNotificationsForUser(userId);

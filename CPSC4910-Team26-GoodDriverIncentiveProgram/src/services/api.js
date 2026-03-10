@@ -653,12 +653,15 @@ const apiService = {
       if (!token) {
         throw new Error("No authentication token found!");
       }
+      console.log("Marking notification as read:", notificationId);
 
       const response = await apiService.patchDataWithAuth(
         `Notification/${notificationId}/seen`,
         null,
         token,
       );
+
+      console.log("Notification marked as read response:", response);
 
       return response;
     } catch (error) {
