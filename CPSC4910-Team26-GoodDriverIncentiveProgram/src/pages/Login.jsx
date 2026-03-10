@@ -19,9 +19,13 @@ const getRateLimitState = () => {
     const parsedState = JSON.parse(savedState);
     return {
       attemptTimestamps: Array.isArray(parsedState.attemptTimestamps)
-        ? parsedState.attemptTimestamps.filter((timestamp) => Number.isFinite(timestamp))
+        ? parsedState.attemptTimestamps.filter((timestamp) =>
+            Number.isFinite(timestamp),
+          )
         : [],
-      lockUntil: Number.isFinite(parsedState.lockUntil) ? parsedState.lockUntil : 0,
+      lockUntil: Number.isFinite(parsedState.lockUntil)
+        ? parsedState.lockUntil
+        : 0,
     };
   } catch {
     return { attemptTimestamps: [], lockUntil: 0 };
@@ -147,7 +151,6 @@ function Login() {
         navigate("/About");
       }
     } catch (err) {
-      
       setError(err.message || "Login failed");
     } finally {
       setLoading(false);
@@ -189,13 +192,18 @@ function Login() {
                 type="button"
                 className="toggle-password"
                 onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? "Hide" : "Show"}
               </button>
             </div>
           </div>
 
-          <button type="submit" className="login-submit" disabled={loading || isLocked}>
+          <button
+            type="submit"
+            className="login-submit"
+            disabled={loading || isLocked}
+          >
             {loading
               ? "Logging in..."
               : isLocked

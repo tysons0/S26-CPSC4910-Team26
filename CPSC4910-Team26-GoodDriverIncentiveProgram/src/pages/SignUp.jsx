@@ -24,11 +24,14 @@ function SignUp() {
       setErrors((prev) => ({ ...prev, [name]: null }));
     }
   };
+
   const validateForm = () => {
     const newErrors = {};
+
     if (!formData.firstName.trim()) {
       newErrors.firstName = "First name is required";
     }
+
     if (!formData.lastName.trim()) {
       newErrors.lastName = "Last name is required";
     }
@@ -36,14 +39,17 @@ function SignUp() {
     if (!formData.userName.trim()) {
       newErrors.userName = "Username is required";
     }
+
     if (!formData.password) {
       newErrors.password = "Password is required";
     } else if (formData.password.length < 6) {
       newErrors.password = "Password must be at least 6 characters";
     }
+
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = "Passwords do not match";
     }
+
     if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = "Invalid email address";
     }
@@ -54,15 +60,19 @@ function SignUp() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!validateForm()) {
       return;
     }
+
     setLoading(true);
+
     try {
       const response = await apiService.registerDriver({
         userName: formData.userName,
         password: formData.password,
       });
+
       console.log("Registration successful:", response);
       alert("Successfully registered! You can now log in.");
       navigate("/Login");
@@ -97,11 +107,14 @@ function SignUp() {
                 value={formData.firstName}
                 onChange={handleChange}
                 className={errors.firstName ? "error" : ""}
+                aria-invalid={!!errors.firstName}
+                required
               />
               {errors.firstName && (
                 <span className="error-message">{errors.firstName}</span>
               )}
             </div>
+
             <div className="form-group">
               <label>Last Name</label>
               <input
@@ -111,6 +124,8 @@ function SignUp() {
                 value={formData.lastName}
                 onChange={handleChange}
                 className={errors.lastName ? "error" : ""}
+                aria-invalid={!!errors.lastName}
+                required
               />
               {errors.lastName && (
                 <span className="error-message">{errors.lastName}</span>
@@ -127,6 +142,8 @@ function SignUp() {
               value={formData.userName}
               onChange={handleChange}
               className={errors.userName ? "error" : ""}
+              aria-invalid={!!errors.userName}
+              required
             />
             {errors.userName && (
               <span className="error-message">{errors.userName}</span>
@@ -144,6 +161,7 @@ function SignUp() {
               value={formData.email}
               onChange={handleChange}
               className={errors.email ? "error" : ""}
+              aria-invalid={!!errors.email}
             />
             {errors.email && (
               <span className="error-message">{errors.email}</span>
@@ -159,6 +177,8 @@ function SignUp() {
               value={formData.password}
               onChange={handleChange}
               className={errors.password ? "error" : ""}
+              aria-invalid={!!errors.password}
+              required
             />
             {errors.password && (
               <span className="error-message">{errors.password}</span>
@@ -174,6 +194,8 @@ function SignUp() {
               value={formData.confirmPassword}
               onChange={handleChange}
               className={errors.confirmPassword ? "error" : ""}
+              aria-invalid={!!errors.confirmPassword}
+              required
             />
             {errors.confirmPassword && (
               <span className="error-message">{errors.confirmPassword}</span>
