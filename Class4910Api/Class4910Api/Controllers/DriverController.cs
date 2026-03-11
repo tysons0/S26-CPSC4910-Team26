@@ -224,11 +224,10 @@ public class DriverController : ControllerBase
         }
     }
 
-    [HttpGet("{driverId:int}/points")]
+    [HttpGet("{driverId:int}/pointhistory")]
     public async Task<ActionResult<List<PointHistoryRecord>>> GetDriverPointHistory(int driverId)
     {
         int contextUserId = _contextService.GetUserId(HttpContext);
-        Sponsor? sponsor = await _sponsorService.GetSponsorByUserId(contextUserId);
         Driver? driver = await _driverService.GetDriverByDriverId(driverId);
 
         if (driver is null)
