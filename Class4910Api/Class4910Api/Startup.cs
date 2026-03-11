@@ -183,6 +183,7 @@ public static class Startup
 
             CreateTables(conn);
             CheckTables(conn);
+            CreateTriggers(conn);
 
             return true;
         }
@@ -470,6 +471,182 @@ public static class Startup
             {
                 throw new($"Failed to query {table.Name}. Error: {ex.Message}", ex);
             }
+        }
+    }
+
+    private static void CreateTriggers(MySqlConnection conn)
+    {
+        MySqlCommand command = conn.CreateCommand();
+
+        try
+        {
+            // Driver Applications After Update 
+            command.CommandText = "DROP TRIGGER IF EXISTS Driver_Applications_After_Update;";
+            command.ExecuteNonQuery();
+
+            command.CommandText = @"
+            CREATE TRIGGER Driver_Applications_After_Update
+            AFTER UPDATE ON DriverApplications
+            FOR EACH ROW
+            BEGIN
+                DECLARE notificationMsg TEXT;
+                DECLARE notificationUserId INT;
+
+                IF OLD.ApplicationStatus <> NEW.ApplicationStatus THEN
+
+                    SET notificationMsg = CONCAT(
+                        'Your driver application status changed from ',
+                        OLD.ApplicationStatus,
+                        ' to ',
+                        NEW.ApplicationStatus,
+                        '.'
+                    );
+
+                    SELECT UserId
+                    INTO notificationUserId
+                    FROM Drivers
+                    WHERE DriverId = NEW.DriverId
+                    LIMIT 1;
+
+                    INSERT INTO SqlLogging
+                    (`LogMessage`, `LogSource`, `LogType`)
+                    VALUES
+                    (
+                        CONCAT(
+                            'DriverApplication status changed for DriverId[',
+                            NEW.DriverId,
+                            '] from [',
+                            OLD.ApplicationStatus,
+                            '] to [',
+                            NEW.ApplicationStatus,
+                            ']'
+                        ),
+                        'Driver_Applications_After_Update',
+                        'AfterUpdateTrigger'
+                    );
+
+                    INSERT INTO Notifications
+                    (CreatedAtUtc, NotificationMessage, NotificationSeen, NotificationType, UserId)
+                    VALUES
+                    (UTC_TIMESTAMP(), notificationMsg, 0, 'ApplicationStatusChanged', notificationUserId);
+
+                END IF;
+            END;";
+            command.ExecuteNonQuery();
+
+
+            // Password Change After Insert 
+            command.CommandText = "DROP TRIGGER IF EXISTS Password_Changes_AFTER_INSERT;";
+            command.ExecuteNonQuery();
+
+            command.CommandText = @"
+            CREATE TRIGGER Password_Changes_AFTER_INSERT
+            AFTER INSERT ON PasswordChanges
+            FOR EACH ROW
+            BEGIN
+                DECLARE logMsg TEXT;
+
+                SET logMsg = CONCAT('Generate Password change notification for User[', NEW.UserId, ']');
+
+                INSERT INTO SqlLogging
+                (`LogMessage`, `LogSource`, `LogType`)
+                VALUES
+                (logMsg, 'Password_Changes_AFTER_INSERT', 'AfterInsertTrigger');
+
+                INSERT INTO Notifications 
+                (UserId, NotificationMessage, NotificationType, CreatedAtUtc) 
+                VALUES 
+                (NEW.UserId, 'Your Password has changed.', 'PasswordChange', CURRENT_TIMESTAMP);
+            END;";
+            command.ExecuteNonQuery();
+
+
+            // Login Attempts After Insert
+            command.CommandText = "DROP TRIGGER IF EXISTS Login_Attempts_AFTER_INSERT;";
+            command.ExecuteNonQuery();
+
+            command.CommandText = @"
+            CREATE TRIGGER Login_Attempts_AFTER_INSERT
+            AFTER INSERT ON LoginAttempts
+            FOR EACH ROW
+            BEGIN
+                DECLARE logMsg TEXT;
+
+                IF NEW.LoginStatus = 'Success' THEN
+
+                    SET logMsg = CONCAT('Set LoginDate for User[', NEW.UserName, '] to ', NEW.LoginDate);
+
+                    INSERT INTO SqlLogging
+                    (`LogMessage`, `LogSource`, `LogType`)
+                    VALUES
+                    (logMsg, 'Login_Attempts_AFTER_INSERT', 'AfterInsertTrigger');
+
+                    UPDATE Users
+                    SET LastLoginUtc = NEW.LoginDate
+                    WHERE UserName = NEW.UserName;
+
+                END IF;
+            END;";
+            command.ExecuteNonQuery();
+
+
+            // Driver Point History After Insert
+            command.CommandText = "DROP TRIGGER IF EXISTS Driver_PointHistory_AFTER_INSERT;";
+            command.ExecuteNonQuery();
+
+            command.CommandText = @"
+            CREATE TRIGGER Driver_PointHistory_AFTER_INSERT
+            AFTER INSERT ON DriverPointHistory
+            FOR EACH ROW
+            BEGIN
+                DECLARE logMsg TEXT;
+                DECLARE driverUserId INT;
+                DECLARE notifyEnabled TINYINT;
+
+                SET logMsg = CONCAT('Processing point change for Driver[', NEW.DriverId, '] Delta[', NEW.PointDelta, ']');
+
+                INSERT INTO SqlLogging
+                (`LogMessage`, `LogSource`, `LogType`)
+                VALUES
+                (logMsg, 'Driver_PointHistory_AFTER_INSERT', 'AfterInsertTrigger');
+
+                UPDATE Drivers
+                SET Points = Points + NEW.PointDelta
+                WHERE DriverId = NEW.DriverId;
+
+                SELECT UserId, NotifyForPointsChanged
+                INTO driverUserId, notifyEnabled
+                FROM Drivers
+                WHERE DriverId = NEW.DriverId
+                LIMIT 1;
+
+                IF notifyEnabled = 1 THEN
+
+                    SET logMsg = CONCAT('Creating point notification for Driver[', NEW.DriverId, ']');
+
+                    INSERT INTO SqlLogging
+                    (`LogMessage`, `LogSource`, `LogType`)
+                    VALUES
+                    (logMsg, 'Driver_PointHistory_AFTER_INSERT', 'AfterInsertTrigger');
+
+                    INSERT INTO Notifications
+                    (UserId, NotificationMessage, NotificationType, CreatedAtUtc)
+                    VALUES
+                    (
+                        driverUserId,
+                        CONCAT('Your points changed by ', NEW.PointDelta, '. Reason: ', NEW.Reason),
+                        'DriverPointsChanged',
+                        UTC_TIMESTAMP()
+                    );
+
+                END IF;
+
+            END;";
+            command.ExecuteNonQuery();
+        }
+        catch (Exception ex)
+        {
+            throw new($"Failed to create triggers. Command Text: {command.CommandText}. Error: {ex.Message}", ex);
         }
     }
 
