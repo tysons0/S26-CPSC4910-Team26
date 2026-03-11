@@ -385,6 +385,22 @@ const apiService = {
     return !!(token && user);
   },
 
+  getTokenInfo: async () => {
+    try {
+      const token = apiService.getToken();
+      if (!token) {
+        throw new Error("No authentication token found!");
+      }
+
+      const response = await apiService.getDataWithAuth("Auth/me", token);
+
+      return response;
+    } catch (error) {
+      console.error("Failed to get token info", error);
+      throw error;
+    }
+  },
+
   getOrganizations: async () => {
     try {
       const token = apiService.getToken();
@@ -430,6 +446,26 @@ const apiService = {
       return await apiService.getDataWithAuth("Sponsor/me", token);
     } catch (error) {
       console.error("Failed to get sponsor info", error);
+      throw error;
+    }
+  },
+
+  getDriverInfo: async () => {
+    try {
+      const token = apiService.getToken();
+      if (!token) {
+        throw new Error("No authentication token found.");
+      }
+
+      const response = await fetch(`${BASE_URL}/Driver/me`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+    } catch (error) {
+      console.error("Failed to get Driver Info", error);
       throw error;
     }
   },
@@ -551,9 +587,6 @@ const apiService = {
 
       const url = `${BASE_URL}/Application/${applicationId}/status?${params}`;
 
-      console.log("Full URL:", url); // DEBUG - see the exact URL being called
-      console.log("Parameters:", { newStatus, changeReason }); // DEBUG
-
       const response = await fetch(url, {
         method: "POST",
         headers: {
@@ -562,15 +595,13 @@ const apiService = {
         },
       });
 
-      console.log("Response status:", response.status); // DEBUG
-      const responseText = await response.text();
-      console.log("Response text:", responseText); // DEBUG
-
       if (!response.ok) {
-        throw new Error(responseText || "Failed to update application status");
+        const errorText = await response.text();
+        throw new Error(errortext || "Failed to update application status");
       }
 
-      return responseText ? JSON.parse(responseText) : { success: true };
+      const text = await response.text();
+      return { success: true, message: text };
     } catch (error) {
       console.error("Failed to update application status", error);
       throw error;
@@ -611,18 +642,23 @@ const apiService = {
     }
   },
 
-  getTokenInfo: async () => {
+  withdrawApplication: async (applicationId) => {
     try {
       const token = apiService.getToken();
       if (!token) {
-        throw new Error("No authentication token found!");
+        throw new Error("No authentication token found.");
       }
 
-      const response = await apiService.getDataWithAuth("Auth/me", token);
-
-      return response;
+      const response = await fetch(`${BASE_URL}/Application/${applicationId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      return await handleResponse(response);
     } catch (error) {
-      console.error("Failed to get token info", error);
+      console.error("Failed to withdraw Application.", error);
       throw error;
     }
   },
@@ -881,6 +917,49 @@ const apiService = {
       );
     } catch (error) {
       console.error("Failed to get eBay product by ID", error);
+      throw error;
+    }
+  },
+
+  //Point API Calls
+  getDriverPoints: async (driverId) => {
+    try {
+      const token = await apiService.getToken();
+      if (!token) {
+        throw new Error("No Authentication token found.");
+      }
+
+      const response = await fetch(`${BASE_URL}/Driver/${driverId}/points`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      return await handleResponse(response);
+    } catch (error) {
+      console.error("Failed to get Drivers Points.", error);
+      throw error;
+    }
+  },
+
+  changeDriverPoints: async (driverId) => {
+    try {
+      const token = await apiService.getToken();
+      if (!token) {
+        throw new Error("No Authentication token found.");
+      }
+
+      const response = await fetch(`${BASE_URL}/Driver/${driverId}/points`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      return await handleResponse(response);
+    } catch (error) {
+      console.error("Failed to change Driver's points.", error);
       throw error;
     }
   },

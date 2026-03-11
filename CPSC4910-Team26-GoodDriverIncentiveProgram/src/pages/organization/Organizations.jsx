@@ -121,6 +121,31 @@ function Organizations() {
     }
   };
 
+  const handleWithdraw = async (applicationId) => {
+    const confirmed = confirm(
+      "Are you sure you want to withdraw this application?",
+    );
+
+    if (!confirmed) return;
+
+    setError("");
+
+    try {
+      await apiService.withdrawApplication(applicationId);
+
+      setUserApplications((prev) =>
+        prev.filter((app) => app.applicationId !== applicationId),
+      );
+
+      alert("Application withdrawn successfully!");
+    } catch (error) {
+      console.error("Error withdrawing application:", error);
+      setError(
+        error.message || "Failed to withdraw application. Please try again.",
+      );
+    }
+  };
+
   if (loading) {
     return (
       <div style={{ padding: "2rem" }}>
@@ -163,11 +188,6 @@ function Organizations() {
             <div style={{ marginTop: "0.5rem", color: "#666" }}>
               Apply to an organization below to get started.
             </div>
-            {userApplications.length > 0 && (
-              <div style={{ marginTop: "0.75rem" }}>
-                <Link to="/Driver/Applications">View all applications</Link>
-              </div>
-            )}
           </div>
         ) : (
           <div
@@ -214,7 +234,20 @@ function Organizations() {
               </div>
 
               <div style={{ textAlign: "right" }}>
-                <Link to="/Driver/Applications">View all</Link>
+                <button
+                  onClick={() => handleWithdraw(activeApp.applicationId)}
+                  style={{
+                    padding: "0.5rem 1rem",
+                    backgroundColor: "#dc3545",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  Withdraw Application
+                </button>
               </div>
             </div>
 
