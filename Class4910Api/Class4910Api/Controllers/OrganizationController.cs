@@ -60,7 +60,6 @@ public class OrganizationController : ControllerBase
     }
 
 
-    [Authorize(Roles = $"{ADMIN},{SPONSOR}")]
     [HttpGet("drivers")]
     public async Task<ActionResult<List<Driver>>> GetDriversFromOrganization([FromQuery] int orgId)
     {
@@ -86,6 +85,22 @@ public class OrganizationController : ControllerBase
         List<Driver>? driverList = await _driverService.GetDriversByOrgId(orgId);
 
         return Ok(driverList ?? []);
+    }
+
+    [HttpGet("sponsors")]
+    public async Task<ActionResult<List<Sponsor>>> GetSponsorsByOrganization([FromQuery] int orgId)
+    {
+        int userId = _contextService.GetUserId(HttpContext);
+        OrgAccess orgAccess = await _authService.RetrieveUserOrgAccess(userId, orgId);
+
+        if (orgAccess == OrgAccess.NoAccess) 
+        {
+            return Unauthorized();
+        }
+
+        List<Sponsor>? sponsors = await _sponsorService.GetSponsorsByOrganizationId(orgId);
+
+        return Ok(sponsors);
     }
 
     [Authorize(Roles = $"{ADMIN},{SPONSOR}, {DRIVER}")]

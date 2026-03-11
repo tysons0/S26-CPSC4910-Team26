@@ -34,14 +34,4 @@ public class SponsorController : ControllerBase
 
 		return Ok(sponsor);
 	}
-
-    [Authorize(Roles = $"{ADMIN}")]
-    [HttpGet("organization/{orgId}")]
-    public async Task<ActionResult<List<Sponsor>>> GetSponsorsByOrganization(int orgId)
-    {
-        List<Sponsor>? sponsors = await _sponsorService.GetSponsorsByOrganizationId(orgId);
-
-        return Ok(sponsors);
-    }
-
 }
