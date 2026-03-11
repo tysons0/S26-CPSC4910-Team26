@@ -73,7 +73,7 @@ public class ApplicationService : IApplicationService
             conn.Open();
             MySqlCommand command = conn.CreateCommand();
 
-            command.CommandText = 
+            command.CommandText =
                 @$"DELETE FROM {DriverApplicationsTable.Name}
                    WHERE {ApplicationIdField.SelectName} = @ApplicationId";
 
@@ -246,10 +246,16 @@ public class ApplicationService : IApplicationService
                 sponsorId = sponsor.SponsorId;
             }
 
+            bool approve = false;
             if (newStatus.Contains("Approve", StringComparison.OrdinalIgnoreCase))
+            {
+                approve = true;
                 newStatus = "Approved";
+            }
             if (newStatus.Contains("Reject", StringComparison.OrdinalIgnoreCase))
+            {
                 newStatus = "Rejected";
+            }
 
             await using MySqlConnection conn = new(_dbConnection);
             conn.Open();
@@ -271,6 +277,21 @@ public class ApplicationService : IApplicationService
 
             if (result == 1)
             {
+                if (approve)
+                {
+                    command.Parameters.Clear();
+
+                    command.CommandText =
+                    @$"UPDATE {DriversTable.Name} d
+                       JOIN {DriverApplicationsTable.Name} a 
+                            ON d.{DriverIdField.SelectName} = a.{DriverIdField.SelectName}
+                       SET d.{OrgIdField.SelectName} = a.{OrgIdField.SelectName}
+                       WHERE a.{ApplicationIdField.SelectName} = @ApplicationId";
+
+                    command.Parameters.Add(ApplicationIdField.GenerateParameter("@ApplicationId", applicationId));
+
+                    await command.ExecuteNonQueryAsync();
+                }
                 _logger.LogInformation("Updated application[{Id}] to status[{NewStatus}]", applicationId, newStatus);
             }
             else
@@ -278,7 +299,7 @@ public class ApplicationService : IApplicationService
                 _logger.LogWarning("Tried to update application[{Id}] to status[{NewStatus}] but no rows were affected",
                     applicationId, newStatus);
             }
-                return true;
+            return true;
         }
         catch (Exception ex)
         {

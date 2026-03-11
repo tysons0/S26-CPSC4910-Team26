@@ -39,7 +39,7 @@ public class ApplicationController : ControllerBase
     [Authorize(Roles = $"{ADMIN},{SPONSOR}")]
     [HttpPost("{applicationId:int}/status")]
     public async Task<ActionResult> ChangeApplicationStatus(int applicationId, [FromQuery] string newStatus,
-                                                            [FromQuery] string changeReason)
+                                                            [FromQuery] string changeReason = "")
     {
         int userId = _contextService.GetUserId(HttpContext);
 
