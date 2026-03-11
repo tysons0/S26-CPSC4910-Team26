@@ -183,4 +183,27 @@ public class DriverController : ControllerBase
             return StatusCode(500, err);
         }
     }
+
+    [HttpGet("{driverId:int}/points")]
+    public async Task<ActionResult<List<PointHistoryRecord>>> GetDriverPointHistory(int driverId)
+    {
+        int contextUserId = _contextService.GetUserId(HttpContext);
+        Sponsor? sponsor = await _sponsorService.GetSponsorByUserId(contextUserId);
+        Driver? driver = await _driverService.GetDriverByDriverId(driverId);
+
+        if (driver is null)
+        {
+            return BadRequest($"Could not find Driver with DriverId[{driverId}]");
+        }
+
+        OrgAccess orgAccess = await _authService.RetrieveUserOrgAccess(contextUserId, driver?.OrganizationId);
+
+        if (orgAccess == OrgAccess.NoAccess)
+        {
+            return Unauthorized();
+        }
+
+        List<PointHistoryRecord> records = await _driverService.GetDriverPointHistory(driverId) ?? [];
+        return records;
+    }
 }
