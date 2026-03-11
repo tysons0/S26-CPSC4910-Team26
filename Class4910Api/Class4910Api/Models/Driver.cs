@@ -4,14 +4,15 @@ public class Driver
 {
     public required int DriverId { get; init; }
     public int? OrganizationId { get; init; } = null;
+    public required int Points { get; init; }
 
-    public List<DriverAddress> Addresses = [];
+    public required List<DriverAddress> Addresses { get; init; }
 
     public required UserRead UserData { get; init; }
 
     override public string ToString()
     {
-        return $"Driver[DriverId: {DriverId}, Address Count: {Addresses.Count}, " +
+        return $"Driver[DriverId: {DriverId}, Points: {Points}, Address Count: {Addresses.Count}, " +
                $"OrganizationId: {OrganizationId?.ToString() ?? "null"}, " +
                $"{UserData}]";
     }

@@ -332,7 +332,9 @@ public class AuthService : IAuthService
             return new Driver
             {
                 DriverId = (int)command.LastInsertedId,
-                UserData = newUser
+                UserData = newUser,
+                Points = 0,
+                Addresses = []
             };
         }
         catch (Exception ex)

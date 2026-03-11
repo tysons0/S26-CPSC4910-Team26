@@ -21,4 +21,8 @@ public interface IDriverService
     Task<bool> UpdateAddress(int driverId, int addressId, AddressRequest addressRequest);
 
     Task<bool> DeleteDriverAddress(int driverId, int addressId);
+
+    Task<bool> AddToDriverPointHistory(int driverId, int sponsorId, PointChangeRequest pointChangeRequest);
+
+    Task<List<PointHistoryRecord>?> GetDriverPointHistory(int driverId);
 }

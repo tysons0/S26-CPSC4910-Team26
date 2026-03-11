@@ -182,13 +182,19 @@ public class DriverService : IDriverService
             orgId = int.Parse(orgIdBeforeParse);
         }
 
+        int points = reader.GetInt32($"{pfx}{DriverPointsField.Name}");
+
+        List<DriverAddress> addresses = await GetDriverAddresses(driverId) ?? [];
+
         User userData = await _userService.GetUserFromReader(reader, userReadPrefix);
 
         return new Driver()
         {
             DriverId = driverId,
             OrganizationId = orgId,
-            UserData = userData.ToReadFormat()
+            UserData = userData.ToReadFormat(),
+            Points = points,
+            Addresses = addresses
         };
     }
 
@@ -219,6 +225,25 @@ public class DriverService : IDriverService
             AddressLine1 = addressLine1,
             AddressLine2 = addressLine2,
             Primary = primary
+        };
+    }
+
+    private async Task<PointHistoryRecord> GetPointHistoryRecordFromReader(DbDataReader reader)
+    {
+        int driverId = reader.GetInt32(DriverIdField.Name);
+        int sponsorId = reader.GetInt32(SponsorIdField.Name);
+
+        int pointChange = reader.GetInt32(PointHistoryDeltaField.Name);
+        string reason = reader.GetString(PointHistoryReasonField.Name);
+        DateTime createdAtUtc = reader.GetDateTime(PointHistoryCreatedAtUtcField.Name);
+
+        return new PointHistoryRecord()
+        {
+            DriverId = driverId,
+            SponsorId = sponsorId,
+            PointChange = pointChange,
+            Reason = reason,
+            CreatedAtUtc = createdAtUtc,
         };
     }
 
@@ -391,6 +416,72 @@ public class DriverService : IDriverService
         {
             _logger.LogError(ex, "Error deleting Address[{Id}] for Driver[{Id}]", addressId, driverId);
             return false;
+        }
+    }
+
+    public async Task<bool> AddToDriverPointHistory(int driverId, int sponsorId, PointChangeRequest pointChangeRequest)
+    {
+        try
+        {
+            await using MySqlConnection conn = new(_dbConnection);
+            conn.Open();
+            MySqlCommand command = conn.CreateCommand();
+
+            command.CommandText =
+                @$"INSERT INTO {DriverPointHistoryTable.Name}
+                   ({DriverIdField.SelectName}, {SponsorIdField.SelectName}, 
+                    {PointHistoryReasonField.SelectName}, {PointHistoryDeltaField.SelectName}, {PointHistoryCreatedAtUtcField.SelectName})
+                   VALUES
+                   (@DriverId, @SponsorId, @Reason, @PointChange, @UtcNow)";
+            command.Parameters.Add(DriverIdField.GenerateParameter("@DriverId", driverId));
+            command.Parameters.Add(SponsorIdField.GenerateParameter("@SponsorId", sponsorId));
+            command.Parameters.Add(PointHistoryReasonField.GenerateParameter("@Reason", pointChangeRequest.ChangeReason));
+            command.Parameters.Add(PointHistoryDeltaField.GenerateParameter("@PointChange", pointChangeRequest.PointChange));
+            command.Parameters.Add(PointHistoryCreatedAtUtcField.GenerateParameter("@UtcNow", DateTime.UtcNow));
+
+            await command.ExecuteNonQueryAsync();
+
+            _logger.LogInformation("Created PointHistory Entry for Driver[{Id}]. PointChange[{Change}]", 
+                driverId, pointChangeRequest.PointChange);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating PointHistory Entry for Driver[{Id}]. PointChange[{Change}]",
+                driverId, pointChangeRequest.PointChange);
+            return false;
+        }
+    }
+
+    public async Task<List<PointHistoryRecord>?> GetDriverPointHistory(int driverId)
+    {
+        try
+        {
+            await using MySqlConnection conn = new(_dbConnection);
+            conn.Open();
+            MySqlCommand command = conn.CreateCommand();
+
+            command.CommandText =
+                @$"SELECT {DriverAddressesTable.GetFields()}
+                   FROM {DriverAddressesTable.Name}
+                   WHERE {DriverIdField.SelectName} = @DriverId";
+            command.Parameters.Add(DriverIdField.GenerateParameter("@DriverId", driverId));
+
+            await using DbDataReader reader = await command.ExecuteReaderAsync();
+
+            List<PointHistoryRecord> historyRecords = [];
+            while (await reader.ReadAsync())
+            {
+                historyRecords.Add(await GetPointHistoryRecordFromReader(reader));
+            }
+
+            _logger.LogInformation("Found {Count} point history records for driver[{Id}]", historyRecords.Count, driverId);
+            return historyRecords;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving Driver point history records for driver[{Id}]", driverId);
+            return null;
         }
     }
 }
