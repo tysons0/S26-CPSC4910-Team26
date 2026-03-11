@@ -62,6 +62,42 @@ public class ApplicationService : IApplicationService
         }
     }
 
+    public async Task<bool> DeleteApplication(int applicationId)
+    {
+        _logger.LogInformation("Delete application[{Id}]", applicationId);
+
+        try
+        {
+
+            await using MySqlConnection conn = new(_dbConnection);
+            conn.Open();
+            MySqlCommand command = conn.CreateCommand();
+
+            command.CommandText = 
+                @$"DELETE FROM {DriverApplicationsTable.Name}
+                   WHERE {ApplicationIdField.SelectName} = @ApplicationId";
+
+            command.Parameters.Add(ApplicationIdField.GenerateParameter("@ApplicationId", applicationId));
+
+            int result = await command.ExecuteNonQueryAsync();
+
+            if (result == 1)
+            {
+                _logger.LogInformation("Deleted application[{Id}]", applicationId);
+            }
+            else
+            {
+                _logger.LogWarning("Tried to delete application[{Id}] but no rows were affected", applicationId);
+            }
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to delete application[{Id}]", applicationId);
+            return false;
+        }
+    }
+
     public async Task<List<DriverApplication>?> GetAllDriverApplications()
     {
         _logger.LogInformation("Get all driver applications");
@@ -88,6 +124,41 @@ public class ApplicationService : IApplicationService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting applications");
+            return null;
+        }
+    }
+
+    public async Task<DriverApplication?> GetApplication(int applicationId)
+    {
+        _logger.LogInformation("Get application[{Id}]", applicationId);
+        try
+        {
+            await using MySqlConnection conn = new(_dbConnection);
+            conn.Open();
+            MySqlCommand command = conn.CreateCommand();
+
+            command.CommandText =
+                @$"{DriverApplicationsTable.GenerateSelect()}
+                   WHERE {ApplicationIdField.Name} = @ApplicationId";
+            command.Parameters.Add(ApplicationIdField.GenerateParameter("@ApplicationId", applicationId));
+
+            await using DbDataReader reader = await command.ExecuteReaderAsync();
+
+            if (await reader.ReadAsync())
+            {
+                DriverApplication application = await GetDriverApplicationFromReader(reader);
+                _logger.LogInformation("Found {Application} searching by [{Id}]", application, applicationId);
+                return application;
+            }
+            else
+            {
+                _logger.LogWarning("Application[{Id}] not found.", applicationId);
+                return null;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting application[{Id}]", applicationId);
             return null;
         }
     }
