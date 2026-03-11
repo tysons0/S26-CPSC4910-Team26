@@ -10,6 +10,7 @@ public interface IDriverService
 
     Task<Driver?> GetDriverByName(string userName);
 
+    Task<List<Driver>?> GetAllDrivers();
     Task<List<Driver>?> GetDriversByOrgId(int orgId);
 
     Task<List<DriverAddress>?> GetDriverAddresses(int driverId);

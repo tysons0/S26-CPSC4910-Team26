@@ -59,7 +59,9 @@ public class OrganizationController : ControllerBase
         return Ok(organization);
     }
 
+
     [Authorize(Roles = $"{ADMIN},{SPONSOR}")]
+    [HttpGet]
     public async Task<ActionResult<List<Driver>>> GetDriversFromOrganization([FromQuery] int orgId)
     {
         int contextUserId = _contextService.GetUserId(HttpContext);

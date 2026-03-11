@@ -96,6 +96,40 @@ public class DriverService : IDriverService
         }
     }
 
+    public async Task<List<Driver>?> GetAllDrivers()
+    {
+        try
+        {
+            await using MySqlConnection conn = new(_dbConnection);
+            conn.Open();
+            MySqlCommand command = conn.CreateCommand();
+
+            command.CommandText =
+                @$"SELECT {UsersTable.GetFields(userAlias)} , {DriversTable.GetFields(driverAlias)} 
+                   FROM {UsersTable.Name} {userAlias}
+                   JOIN {DriversTable.Name} {driverAlias} 
+                        ON {userAlias}.{UserIdField.SelectName} = {driverAlias}.{UserIdField.SelectName}
+                ";
+
+            await using DbDataReader reader = await command.ExecuteReaderAsync();
+
+            List<Driver> driverList = [];
+            while (await reader.ReadAsync())
+            {
+                Driver driverFromUserId = await GetDriverFromReader(reader, userAlias, driverAlias);
+                driverList.Add(driverFromUserId);
+            }
+
+            _logger.LogInformation("Retrieved {Count} drivers", driverList.Count);
+            return driverList;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving All Drivers");
+            return null;
+        }
+    }
+
     public async Task<List<Driver>?> GetDriversByOrgId(int orgId)
     {
         try

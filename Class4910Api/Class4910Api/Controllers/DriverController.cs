@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using static Class4910Api.ConstantValues;
 
+using static Class4910Api.ConstantValues;
+
 namespace Class4910Api.Controllers;
 
 [Authorize]
@@ -28,6 +30,44 @@ public class DriverController : ControllerBase
         _driverService = driverService;
         _sponsorService = sponsorService;
         _authService = authService;
+    }
+
+    [Authorize (Roles = $"{ADMIN},{SPONSOR}")]
+    [HttpGet]
+    public async Task<ActionResult<List<Driver>>> GetAllDrivers()
+    {
+        UserRead? user = await _contextService.GetUserFromRequest(HttpContext);
+        if (user is null)
+        {
+            return BadRequest();
+        }
+
+        UserRole role = Enum.Parse<UserRole>(user.Role);
+
+        if (role == UserRole.Sponsor)
+        {
+            Sponsor? sponsor = await _sponsorService.GetSponsorByUserId(user.Id);
+
+            if (sponsor is null) 
+            {
+
+                return BadRequest();
+            }
+
+            List<Driver>? driverList = await _driverService.GetDriversByOrgId(sponsor.SponsorId);
+
+            return Ok(driverList ?? []);
+        }
+        else if (role == UserRole.Admin)
+        {
+            List<Driver>? driverList = await _driverService.GetAllDrivers();
+
+            return Ok(driverList ?? []);
+        }
+        else
+        {
+            return Unauthorized();
+        }
     }
 
     [Authorize(Roles = DRIVER)]
