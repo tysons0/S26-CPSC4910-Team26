@@ -63,12 +63,13 @@
   border-radius: 6px;
   border: 1px solid #cbd5e0;
   font-size: 0.95rem;
+  box-sizing: border-box;
 }
 
 .filter-divider {
   height: 1px;
   background: #edf2f7;
-  margin: 1rem 0;
+  margin: 1rem;
 }
 
 .catalog-results {
