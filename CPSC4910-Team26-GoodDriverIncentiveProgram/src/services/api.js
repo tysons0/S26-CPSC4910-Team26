@@ -422,31 +422,31 @@ const apiService = {
     }
   },
 
-forgotPassword: async (email) => {
-  try {
-    const response = await apiService.postData(
-      "Email/forgot-password",
-      JSON.stringify({ email })
-    );
-    return response;
-  } catch (error) {
-    console.error("Failed to send forgot password email", error);
-    throw error;
-  }
-},
+  forgotPassword: async (email) => {
+    try {
+      const response = await apiService.postData(
+        "Email/forgot-password",
+        JSON.stringify({ email }),
+      );
+      return response;
+    } catch (error) {
+      console.error("Failed to send forgot password email", error);
+      throw error;
+    }
+  },
 
-resetPassword: async (token, newPassword) => {
-  try {
-    const response = await apiService.postData(
-      "Email/reset-password",
-      JSON.stringify({ token, newPassword })  // ← must match ResetPasswordRequest property names exactly
-    );
-    return response;
-  } catch (error) {
-    console.error("Failed to reset password", error);
-    throw error;
-  }
-},
+  resetPassword: async (token, newPassword) => {
+    try {
+      const response = await apiService.postData(
+        "Email/reset-password",
+        JSON.stringify({ token, newPassword }), // ← must match ResetPasswordRequest property names exactly
+      );
+      return response;
+    } catch (error) {
+      console.error("Failed to reset password", error);
+      throw error;
+    }
+  },
 
   getDriverByUserId: async (userId) => {
     try {

@@ -9,6 +9,19 @@ function SponsorViewDrivers() {
   const [error, setError] = useState("");
   const [orgId, setOrgId] = useState(null);
   const [adjustingDriver, setAdjustingDriver] = useState(null);
+
+  //Editing State
+  const [editingDriver, setEditingDriver] = useState(null);
+  const [editFormData, setEditFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phoneNumber: "",
+    timeZone: "",
+    country: "",
+  });
+  const [saving, setSaving] = useState(false);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -35,6 +48,9 @@ function SponsorViewDrivers() {
 
         const orgDrivers =
           await apiService.getOrganizationDrivers(sponsorOrgId);
+        console.log("Drivers returned from API:", orgDrivers); // DEBUG
+        console.log("Number of drivers:", orgDrivers.length);
+
         setDrivers(orgDrivers);
       } catch (error) {
         console.error("Error fetching drivers:", error);
@@ -104,6 +120,68 @@ function SponsorViewDrivers() {
     }
   };
 
+  const handleEditDriver = (driver) => {
+    setEditingDriver(driver.driverId);
+    setEditFormData({
+      firstName: driver.userData?.firstName || "",
+      lastName: driver.userData?.lastName || "",
+      email: driver.userData?.email || "",
+      phoneNumber: driver.userData?.phoneNumber || "",
+      timeZone: driver.userData?.timeZone || "",
+      country: driver.userData?.country || "",
+    });
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  //Save Driver edits
+  const handleSaveDriver = async (driver) => {
+    setSaving(true);
+
+    try {
+      const userId = driver.userData.id;
+      await apiService.updateUserProfile(userId, editFormData);
+
+      // Update local state
+      setDrivers((prevDrivers) =>
+        prevDrivers.map((d) =>
+          d.driverId === driver.driverId
+            ? {
+                ...d,
+                userData: {
+                  ...d.userData,
+                  ...editFormData,
+                },
+              }
+            : d,
+        ),
+      );
+
+      setEditingDriver(null);
+      alert("Driver information updated successfully!");
+    } catch (error) {
+      console.error("Error updating driver:", error);
+      alert("Failed to update driver: " + (error.message || "Unknown error"));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingDriver(null);
+    setEditFormData({
+      firstName: "",
+      lastName: "",
+      email: "",
+      phoneNumber: "",
+      timeZone: "",
+      country: "",
+    });
+  };
+
   if (loading) {
     return (
       <div style={{ padding: "2rem" }}>
@@ -152,108 +230,323 @@ function SponsorViewDrivers() {
                   border: "1px solid #e0e0e0",
                 }}
               >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "start",
-                  }}
-                >
+                {editingDriver === driver.driverId ? (
+                  // EDITING MODE
                   <div>
-                    <h3 style={{ margin: "0 0 0.5rem 0" }}>
-                      {driver.userData?.firstName && driver.userData?.lastName
-                        ? `${driver.userData.firstName} ${driver.userData.lastName}`
-                        : driver.userData?.username ||
-                          `Driver #${driver.driverId}`}
+                    <h3 style={{ margin: "0 0 1rem 0" }}>
+                      Edit Driver Information
                     </h3>
 
-                    <div style={{ color: "#666", marginBottom: "0.5rem" }}>
-                      <strong>Username:</strong> {driver.userData?.username}
+                    <div
+                      style={{
+                        display: "grid",
+                        gap: "1rem",
+                        gridTemplateColumns: "1fr 1fr",
+                        marginBottom: "1rem",
+                      }}
+                    >
+                      <div>
+                        <label
+                          style={{
+                            display: "block",
+                            marginBottom: "0.25rem",
+                            fontWeight: "500",
+                          }}
+                        >
+                          First Name
+                        </label>
+                        <input
+                          type="text"
+                          name="firstName"
+                          value={editFormData.firstName}
+                          onChange={handleEditChange}
+                          style={{
+                            width: "100%",
+                            padding: "0.5rem",
+                            borderRadius: "4px",
+                            border: "1px solid #ddd",
+                          }}
+                        />
+                      </div>
+
+                      <div>
+                        <label
+                          style={{
+                            display: "block",
+                            marginBottom: "0.25rem",
+                            fontWeight: "500",
+                          }}
+                        >
+                          Last Name
+                        </label>
+                        <input
+                          type="text"
+                          name="lastName"
+                          value={editFormData.lastName}
+                          onChange={handleEditChange}
+                          style={{
+                            width: "100%",
+                            padding: "0.5rem",
+                            borderRadius: "4px",
+                            border: "1px solid #ddd",
+                          }}
+                        />
+                      </div>
+
+                      <div>
+                        <label
+                          style={{
+                            display: "block",
+                            marginBottom: "0.25rem",
+                            fontWeight: "500",
+                          }}
+                        >
+                          Email
+                        </label>
+                        <input
+                          type="email"
+                          name="email"
+                          value={editFormData.email}
+                          onChange={handleEditChange}
+                          style={{
+                            width: "100%",
+                            padding: "0.5rem",
+                            borderRadius: "4px",
+                            border: "1px solid #ddd",
+                          }}
+                        />
+                      </div>
+
+                      <div>
+                        <label
+                          style={{
+                            display: "block",
+                            marginBottom: "0.25rem",
+                            fontWeight: "500",
+                          }}
+                        >
+                          Phone Number
+                        </label>
+                        <input
+                          type="tel"
+                          name="phoneNumber"
+                          value={editFormData.phoneNumber}
+                          onChange={handleEditChange}
+                          style={{
+                            width: "100%",
+                            padding: "0.5rem",
+                            borderRadius: "4px",
+                            border: "1px solid #ddd",
+                          }}
+                        />
+                      </div>
+
+                      <div>
+                        <label
+                          style={{
+                            display: "block",
+                            marginBottom: "0.25rem",
+                            fontWeight: "500",
+                          }}
+                        >
+                          Time Zone
+                        </label>
+                        <input
+                          type="text"
+                          name="timeZone"
+                          value={editFormData.timeZone}
+                          onChange={handleEditChange}
+                          style={{
+                            width: "100%",
+                            padding: "0.5rem",
+                            borderRadius: "4px",
+                            border: "1px solid #ddd",
+                          }}
+                        />
+                      </div>
+
+                      <div>
+                        <label
+                          style={{
+                            display: "block",
+                            marginBottom: "0.25rem",
+                            fontWeight: "500",
+                          }}
+                        >
+                          Country
+                        </label>
+                        <input
+                          type="text"
+                          name="country"
+                          value={editFormData.country}
+                          onChange={handleEditChange}
+                          style={{
+                            width: "100%",
+                            padding: "0.5rem",
+                            borderRadius: "4px",
+                            border: "1px solid #ddd",
+                          }}
+                        />
+                      </div>
                     </div>
 
-                    {driver.userData?.email && (
-                      <div style={{ color: "#666", marginBottom: "0.5rem" }}>
-                        <strong>Email:</strong> {driver.userData.email}
-                      </div>
-                    )}
+                    <div style={{ display: "flex", gap: "0.5rem" }}>
+                      <button
+                        onClick={() => handleSaveDriver(driver)}
+                        disabled={saving}
+                        style={{
+                          padding: "0.5rem 1rem",
+                          backgroundColor: "#28a745",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "4px",
+                          cursor: saving ? "not-allowed" : "pointer",
+                        }}
+                      >
+                        {saving ? "Saving..." : "Save Changes"}
+                      </button>
+                      <button
+                        onClick={handleCancelEdit}
+                        disabled={saving}
+                        style={{
+                          padding: "0.5rem 1rem",
+                          backgroundColor: "#6c757d",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "4px",
+                          cursor: saving ? "not-allowed" : "pointer",
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  // VIEW MODE (existing code)
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "start",
+                    }}
+                  >
+                    <div>
+                      <h3 style={{ margin: "0 0 0.5rem 0" }}>
+                        {driver.userData?.firstName && driver.userData?.lastName
+                          ? `${driver.userData.firstName} ${driver.userData.lastName}`
+                          : driver.userData?.username ||
+                            `Driver #${driver.driverId}`}
+                      </h3>
 
-                    {driver.userData?.phoneNumber && (
                       <div style={{ color: "#666", marginBottom: "0.5rem" }}>
-                        <strong>Phone:</strong> {driver.userData.phoneNumber}
+                        <strong>Username:</strong> {driver.userData?.username}
                       </div>
-                    )}
 
-                    <div style={{ color: "#666", marginBottom: "0.5rem" }}>
-                      <strong>Driver ID:</strong> {driver.driverId}
+                      {driver.userData?.email && (
+                        <div style={{ color: "#666", marginBottom: "0.5rem" }}>
+                          <strong>Email:</strong> {driver.userData.email}
+                        </div>
+                      )}
+
+                      {driver.userData?.phoneNumber && (
+                        <div style={{ color: "#666", marginBottom: "0.5rem" }}>
+                          <strong>Phone:</strong> {driver.userData.phoneNumber}
+                        </div>
+                      )}
+
+                      <div style={{ color: "#666", marginBottom: "0.5rem" }}>
+                        <strong>Driver ID:</strong> {driver.driverId}
+                      </div>
+
+                      <div
+                        style={{
+                          color: "#28a745",
+                          fontWeight: "600",
+                          fontSize: "1.1rem",
+                          marginTop: "0.5rem",
+                        }}
+                      >
+                        <strong>Points:</strong> {driver.points || 0}
+                      </div>
+
+                      {driver.addresses && driver.addresses.length > 0 && (
+                        <div style={{ marginTop: "0.75rem" }}>
+                          <strong>Primary Address:</strong>
+                          {driver.addresses
+                            .filter((addr) => addr.primary)
+                            .map((addr) => (
+                              <div
+                                key={addr.addressId}
+                                style={{
+                                  color: "#666",
+                                  fontSize: "0.9rem",
+                                  marginTop: "0.25rem",
+                                }}
+                              >
+                                {addr.addressLine1}
+                                {addr.addressLine2 && `, ${addr.addressLine2}`}
+                                <br />
+                                {addr.city}, {addr.state} {addr.zipCode}
+                              </div>
+                            ))}
+                        </div>
+                      )}
+
+                      <div
+                        style={{
+                          color: "#999",
+                          fontSize: "0.85rem",
+                          marginTop: "0.75rem",
+                        }}
+                      >
+                        Member since:{" "}
+                        {new Date(
+                          driver.userData?.createdAtUtc,
+                        ).toLocaleDateString()}
+                      </div>
                     </div>
 
                     <div
                       style={{
-                        color: "#28a745",
-                        fontWeight: "600",
-                        fontSize: "1.1rem",
-                        marginTop: "0.5rem",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "0.5rem",
                       }}
                     >
-                      <strong>Points:</strong> {driver.points || 0}
-                    </div>
+                      <button
+                        style={{
+                          padding: "0.5rem 1rem",
+                          backgroundColor: "#667eea",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "4px",
+                          cursor: "pointer",
+                        }}
+                        onClick={() => handleAdjustPoints(driver)}
+                        disabled={adjustingDriver === driver.driverId}
+                      >
+                        {adjustingDriver === driver.driverId
+                          ? "Processing..."
+                          : "Adjust Points"}
+                      </button>
 
-                    {driver.addresses && driver.addresses.length > 0 && (
-                      <div style={{ marginTop: "0.75rem" }}>
-                        <strong>Primary Address:</strong>
-                        {driver.addresses
-                          .filter((addr) => addr.primary)
-                          .map((addr) => (
-                            <div
-                              key={addr.addressId}
-                              style={{
-                                color: "#666",
-                                fontSize: "0.9rem",
-                                marginTop: "0.25rem",
-                              }}
-                            >
-                              {addr.addressLine1}
-                              {addr.addressLine2 && `, ${addr.addressLine2}`}
-                              <br />
-                              {addr.city}, {addr.state} {addr.zipCode}
-                            </div>
-                          ))}
-                      </div>
-                    )}
-
-                    <div
-                      style={{
-                        color: "#999",
-                        fontSize: "0.85rem",
-                        marginTop: "0.75rem",
-                      }}
-                    >
-                      Member since:{" "}
-                      {new Date(
-                        driver.userData?.createdAtUtc,
-                      ).toLocaleDateString()}
+                      {/* NEW: Edit Button */}
+                      <button
+                        style={{
+                          padding: "0.5rem 1rem",
+                          backgroundColor: "#17a2b8",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "4px",
+                          cursor: "pointer",
+                        }}
+                        onClick={() => handleEditDriver(driver)}
+                      >
+                        Edit Info
+                      </button>
                     </div>
                   </div>
-
-                  <div style={{ textAlign: "right" }}>
-                    <button
-                      style={{
-                        padding: "0.5rem 1rem",
-                        backgroundColor: "#667eea",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "4px",
-                        cursor: "pointer",
-                      }}
-                      onClick={() => handleAdjustPoints(driver)}
-                      disabled={adjustingDriver === driver.driverId}
-                    >
-                      {adjustingDriver === driver.driverId
-                        ? "Processing..."
-                        : "Adjust Points"}{" "}
-                    </button>
-                  </div>
-                </div>
+                )}
               </div>
             ))}
           </div>

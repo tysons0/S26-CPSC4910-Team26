@@ -11,6 +11,7 @@ function AdminViewDrivers() {
     const fetchDrivers = async () => {
       try {
         const data = await apiService.getDrivers();
+        console.log("Drivers data:", data); // DEBUG
         setDrivers(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("Error fetching drivers:", err);
@@ -50,24 +51,54 @@ function AdminViewDrivers() {
       {drivers.length === 0 ? (
         <p>No drivers found.</p>
       ) : (
-        <table>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
-            <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Username</th>
+            <tr
+              style={{
+                backgroundColor: "#f8f9fa",
+                borderBottom: "2px solid #dee2e6",
+              }}
+            >
+              <th style={{ padding: "0.75rem", textAlign: "left" }}>
+                Driver ID
+              </th>
+              <th style={{ padding: "0.75rem", textAlign: "left" }}>Name</th>
+              <th style={{ padding: "0.75rem", textAlign: "left" }}>
+                Username
+              </th>
+              <th style={{ padding: "0.75rem", textAlign: "left" }}>Email</th>
+              <th style={{ padding: "0.75rem", textAlign: "left" }}>Points</th>
+              <th style={{ padding: "0.75rem", textAlign: "left" }}>
+                Organization
+              </th>
             </tr>
           </thead>
           <tbody>
-            {drivers.map((driver) => (
-              <tr key={driver.id || driver.driverId}>
-                <td>{driver.id || driver.driverId}</td>
-                <td>
-                  {driver.firstName} {driver.lastName}
+            {drivers.map((driver, index) => (
+              <tr
+                key={driver.driverId || index}
+                style={{ borderBottom: "1px solid #dee2e6" }}
+              >
+                <td style={{ padding: "0.75rem" }}>
+                  {driver.driverId || "N/A"}
                 </td>
-                <td>{driver.email}</td>
-                <td>{driver.userName || driver.username}</td>
+                <td style={{ padding: "0.75rem" }}>
+                  {driver.userData?.firstName && driver.userData?.lastName
+                    ? `${driver.userData.firstName} ${driver.userData.lastName}`
+                    : driver.userData?.username || "N/A"}
+                </td>
+                <td style={{ padding: "0.75rem" }}>
+                  {driver.userData?.username || "N/A"}
+                </td>
+                <td style={{ padding: "0.75rem" }}>
+                  {driver.userData?.email || "N/A"}
+                </td>
+                <td style={{ padding: "0.75rem" }}>{driver.points || 0}</td>
+                <td style={{ padding: "0.75rem" }}>
+                  {driver.organizationId
+                    ? `Org ${driver.organizationId}`
+                    : "None"}
+                </td>
               </tr>
             ))}
           </tbody>
