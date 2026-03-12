@@ -247,10 +247,10 @@ public class ApplicationService : IApplicationService
             }
 
             bool approve = false;
-            if (newStatus.Contains("Approve", StringComparison.OrdinalIgnoreCase))
+            if (newStatus.Contains("Accept", StringComparison.OrdinalIgnoreCase))
             {
                 approve = true;
-                newStatus = "Approved";
+                newStatus = "Accepted";
             }
             if (newStatus.Contains("Reject", StringComparison.OrdinalIgnoreCase))
             {

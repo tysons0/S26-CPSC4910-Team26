@@ -360,7 +360,7 @@ public static class Startup
 	            {ApplicationLastModifiedUtcField.SelectName} DATETIME(6) NOT NULL,
 
 
-	            CONSTRAINT DriverApplications_CheckStatusInList CHECK({ApplicationStatusField.SelectName} IN ('Waiting', 'Approved', 'Rejected')),
+	            CONSTRAINT DriverApplications_CheckStatusInList CHECK({ApplicationStatusField.SelectName} IN ('Waiting', 'Accepted', 'Rejected')),
 	            CONSTRAINT DriverApplications_PK Primary Key ({ApplicationIdField.SelectName}), 
 	            CONSTRAINT DriverApplications_Sponsors_FK FOREIGN KEY ({SponsorIdField.SelectName}) REFERENCES Sponsors({SponsorIdField.SelectName}),
 	            CONSTRAINT DriverApplications_Drivers_FK FOREIGN KEY ({DriverIdField.SelectName}) REFERENCES Drivers({DriverIdField.SelectName}),
