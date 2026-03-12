@@ -9,7 +9,7 @@ namespace Class4910Api.Controllers
 
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     public class EmailController : ControllerBase
     {
         private readonly IEmailService _emailService;
@@ -39,7 +39,7 @@ namespace Class4910Api.Controllers
 
             _resetTokens[token] = (request.Email, expiry);
 
-            string resetLink = $"https://team26api.cpsc4911.com/reset-password?token={token}&username={Uri.EscapeDataString(user.Username)}";
+            string resetLink = $"https://team26api.cpsc4911.com/Email/reset-password?token={token}&username={Uri.EscapeDataString(user.Username)}";
 
             await _emailService.SendEmailAsync(
                 request.Email,
