@@ -113,6 +113,20 @@ function DriverDashboard() {
     navigate("/Login");
   };
 
+  const handleAddToWishlist = async (product) => {
+    try {
+      if (!user || !organizationId) {
+        return;
+      }
+      const driverData = await apiService.getDriverByUserId(user.id);
+      await apiService.addWishlistItem(driverData.id, product.id);
+      alert(`Added "${product.name}" to your wishlist!`);
+    } catch (error) {
+      console.error("Error adding to wishlist:", error);
+      alert("Failed to add product to wishlist. Please try again.");
+    }
+  };
+
   const filteredProducts = useMemo(() => {
     const min = minPoints === "" ? null : Number(minPoints);
     const max = maxPoints === "" ? null : Number(maxPoints);
@@ -178,10 +192,19 @@ function DriverDashboard() {
             <button className="submit">View Point History</button>
           </Link>
         </div>
-
-        <button className="submit" onClick={handleLogout}>
-          Logout
-        </button>
+        <div style={{display: "flex", gap: "10px"}}>
+          <button
+            className="submit"
+            onClick={() => navigate("/DriverWishlist")}
+            >
+            Wishlist
+          </button>
+          <button
+            className="submit" onClick={handleLogout}
+          >
+            Logout
+          </button>
+        </div>
       </header>
 
       <div className="catalog-layout">
@@ -316,13 +339,20 @@ function DriverDashboard() {
                       <strong>{product.availability}</strong>
                     </div>
 
-                    <div className="col action">
+                    <div className="col action" style={{ display: "flex", gap: "10px" }}>
                       <button
                         className="linkish"
                         type="button"
                         onClick={() => handleViewDetails(product)}
                       >
                         View Details
+                      </button>
+                      <button
+                        className="linkish"
+                        type="button"
+                        onClick={() => handleAddToWishlist(product)}
+                      >
+                        Add to Wishlist
                       </button>
                     </div>
                   </div>

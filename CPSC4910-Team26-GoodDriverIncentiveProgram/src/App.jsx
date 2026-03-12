@@ -20,6 +20,7 @@ import ForgotPassword from "./pages/email/ForgotPassword";
 import ResetPassword from "./pages/email/ResetPassword";
 import SponsorApplications from "./pages/sponsor/SponsorApplications";
 import AdminApplications from "./pages/admin/AdminApplications";
+import DriverWishlist from "./pages/driver/DriverWishlist";
 import SponsorViewDrivers from "./pages/sponsor/SponsorViewDrivers";
 import AdminViewDrivers from "./pages/admin/AdminViewDrivers";
 import DriverPointHistory from "./pages/driver/DriverPointHistory";
@@ -50,6 +51,7 @@ function App() {
         {/* Driver Routes */}
         <Route path="/DriverDashboard" element={<DriverDashboard />} />
         <Route path="/DriverProfile" element={<DriverProfile />} />
+        <Route path="/DriverWishlist" element={<DriverWishlist />} />
         <Route path="/DriverPointHistory" element={<DriverPointHistory />} />
 
         {/* Sponsor Routes */}
