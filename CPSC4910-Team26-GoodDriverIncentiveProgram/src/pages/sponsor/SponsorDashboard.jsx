@@ -202,22 +202,33 @@ function SponsorDashboard() {
           <ul style={{ paddingLeft: "1.25rem" }}>
             {catalogItems.map((item) => (
               <li
-                key={item.catalogItemID ?? item.catalogItemId ?? item.ebayItemId}
+                key={
+                  item.catalogItemID ?? item.catalogItemId ?? item.ebayItemId
+                }
                 style={{ marginBottom: "0.65rem" }}
               >
-                <strong>{item.title || item.name || "Catalog Item"}</strong> - {item.points} points
+                <strong>{item.title || item.name || "Catalog Item"}</strong> -{" "}
+                {item.points} points
               </li>
             ))}
           </ul>
         )}
       </div>
 
-      <h2>Manage Sponsor Orgs and other Sponsors</h2>
+      <h2>Manage Organization</h2>
 
       <div style={{ marginBottom: "1rem" }}>
         <Link to="/SponsorApplications">
           <button className="submit" style={{ marginRight: "1rem" }}>
-            Manage Applications
+            View Applications
+          </button>
+        </Link>
+      </div>
+
+      <div style={{ marginBottom: "1rem" }}>
+        <Link to="/SponsorViewDrivers">
+          <button className="submit" style={{ marginRight: "1rem" }}>
+            View Drivers
           </button>
         </Link>
       </div>

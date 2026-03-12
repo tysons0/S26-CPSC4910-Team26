@@ -41,28 +41,66 @@ function AdminDashboard() {
       </Link>
 
       <h2> Applications </h2>
-      <div className="back-link">
-        <p>
-          <Link to="/AdminApplications"> View Users Applications </Link>
-        </p>
+      <div style={{ marginBottom: "1rem" }}>
+        <Link to="/AdminApplications">
+          <button className="submit" style={{ marginRight: "1rem" }}>
+            Manage Applications
+          </button>
+        </Link>
       </div>
 
       <h2>Manage Users</h2>
+      <div style={{ marginBottom: "1rem" }}>
+        <Link to="/AdminViewDrivers">
+          <button className="submit" style={{ marginRight: "1rem" }}>
+            Drivers
+          </button>
+        </Link>
+      </div>
+
+      <h2>Create Users</h2>
+
+      <div style={{ marginBottom: "1rem" }}>
+        <Link to="/DriverSignUp">
+          <button className="submit" style={{ marginRight: "1rem" }}>
+            Register Driver
+          </button>
+        </Link>
+      </div>
+
+      <div style={{ marginBottom: "1rem" }}>
+        <Link to="/SponsorSignUp">
+          <button className="submit" style={{ marginRight: "1rem" }}>
+            Register Sponsor
+          </button>
+        </Link>
+      </div>
+
+      <div style={{ marginBottom: "1rem" }}>
+        <Link to="/AdminSignUp">
+          <button className="submit" style={{ marginRight: "1rem" }}>
+            Register Admin
+          </button>
+        </Link>
+      </div>
+
+      <div style={{ marginBottom: "1rem" }}>
+        <Link to="/DriverSignUp">
+          <button className="submit" style={{ marginRight: "1rem" }}>
+            Register Driver
+          </button>
+        </Link>
+      </div>
+
+      <div style={{ marginBottom: "1rem" }}>
+        <Link to="/CreateOrganization">
+          <button className="submit" style={{ marginRight: "1rem" }}>
+            Create Organization
+          </button>
+        </Link>
+      </div>
 
       <div className="back-link">
-        <p>
-          Register a Driver <Link to="/DriverSignUp">Create one Here</Link>
-        </p>
-        <p>
-          Register a Sponsor <Link to="/SponsorSignUp">Create one Here</Link>
-        </p>
-        <p>
-          Register an Admin <Link to="/AdminSignUp">Create one Here</Link>
-        </p>
-        <p>
-          Create an Organization{" "}
-          <Link to="/CreateOrganization">Create one Here</Link>
-        </p>
         <p>
           <Link to="/">Back to About Page</Link>
         </p>
