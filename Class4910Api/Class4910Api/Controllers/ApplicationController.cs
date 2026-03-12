@@ -39,7 +39,7 @@ public class ApplicationController : ControllerBase
     [Authorize(Roles = $"{ADMIN},{SPONSOR}")]
     [HttpPost("{applicationId:int}/status")]
     public async Task<ActionResult> ChangeApplicationStatus(int applicationId, [FromQuery] string newStatus,
-                                                            [FromQuery] string changeReason)
+                                                            [FromQuery] string changeReason = "")
     {
         int userId = _contextService.GetUserId(HttpContext);
 
@@ -137,5 +137,31 @@ public class ApplicationController : ControllerBase
         }
 
         return Ok(applications);
+    }
+
+    [Authorize(Roles = DRIVER)]
+    [HttpDelete("{applicationId:int}")]
+    public async Task<ActionResult> WithdrawDriverApplication(int applicationId)
+    {
+        int userId = _contextService.GetUserId(HttpContext);
+
+        Driver? driver = await _driverService.GetDriverByUserId(userId);
+        DriverApplication? application = await _applicationService.GetApplication(applicationId);
+
+        if (driver is null || application is null || application.DriverId != driver.DriverId)
+        {
+            return BadRequest();
+        }
+
+        bool deleteResult = await _applicationService.DeleteApplication(applicationId);
+
+        if (deleteResult)
+        {
+            return Ok($"Deleted Application[{applicationId}]");
+        }
+        else
+        {
+            return StatusCode(500, $"Failed to delete application[{applicationId}]");
+        }
     }
 }

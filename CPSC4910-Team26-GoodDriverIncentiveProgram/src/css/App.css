@@ -1,6 +1,7 @@
 #root {
   margin: 0;
   padding: 0;
+  min-height: 100vh;
 }
 
 nav {
@@ -14,17 +15,20 @@ nav {
   will-change: filter;
   transition: filter 300ms;
 }
+
 .logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+  filter: drop-shadow(0 0 2em rgba(100, 108, 255, 0.67));
 }
+
 .logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+  filter: drop-shadow(0 0 2em rgba(97, 218, 251, 0.67));
 }
 
 @keyframes logo-spin {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -38,8 +42,10 @@ nav {
 
 .card {
   padding: 2em;
+  background: var(--surface);
+  color: var(--text);
 }
 
 .read-the-docs {
-  color: #888;
+  color: var(--text-muted);
 }

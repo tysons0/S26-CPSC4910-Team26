@@ -39,6 +39,14 @@ function AdminDashboard() {
       <Link to="/Login">
         <button className="submit"> Logout </button>
       </Link>
+
+      <h2> Applications </h2>
+      <div className="back-link">
+        <p>
+          <Link to="/AdminApplications"> View Users Applications </Link>
+        </p>
+      </div>
+
       <h2>Manage Users</h2>
 
       <div className="back-link">
@@ -52,7 +60,8 @@ function AdminDashboard() {
           Register an Admin <Link to="/AdminSignUp">Create one Here</Link>
         </p>
         <p>
-          Create an Organization <Link to="/CreateOrganization">Create one Here</Link>
+          Create an Organization{" "}
+          <Link to="/CreateOrganization">Create one Here</Link>
         </p>
         <p>
           <Link to="/">Back to About Page</Link>

@@ -19,6 +19,7 @@ import OrganizationCreate from "./pages/organization/OrganizationCreate";
 import ForgotPassword from "./pages/email/ForgotPassword";
 import ResetPassword from "./pages/email/ResetPassword";
 import SponsorApplications from "./pages/sponsor/SponsorApplications";
+import AdminApplications from "./pages/admin/AdminApplications";
 
 function App() {
   return (
@@ -33,19 +34,29 @@ function App() {
         <Route path="/SignUp" element={<SignUp />} />
 
         {/* Protected Routes */}
-        <Route path="/AdminDashboard" element={<AdminDashboard />} />
-        <Route path="/DriverDashboard" element={<DriverDashboard />} />
-        <Route path="/SponsorDashboard" element={<SponsorDashboard />} />
         <Route path="/SponsorSignUp" element={<SponsorSignUp />} />
         <Route path="/AdminSignUp" element={<AdminSignUp />} />
-        <Route path="/DriverProfile" element={<DriverProfile />} />
-        <Route path="/SponsorProfile" element={<SponsorProfile />} />
         <Route path="/AdminProfile" element={<AdminProfile />} />
         <Route path="/CreateOrganization" element={<OrganizationCreate />} />
         <Route path="/ForgotPassword" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/Organizations" element={<Organizations />} />
+
+        {/* Role Specific Routes */}
+
+        {/* Driver Routes */}
+        <Route path="/DriverDashboard" element={<DriverDashboard />} />
+        <Route path="/DriverProfile" element={<DriverProfile />} />
+
+        {/* Sponsor Routes */}
+        <Route path="/SponsorDashboard" element={<SponsorDashboard />} />
+        <Route path="/SponsorProfile" element={<SponsorProfile />} />
         <Route path="/SponsorApplications" element={<SponsorApplications />} />
+
+        {/* Admin Routes */}
+        <Route path="/AdminDashboard" element={<AdminDashboard />} />
+        <Route path="/AdminProfile" element={<AdminProfile />} />
+        <Route path="/AdminApplications" element={<AdminApplications />} />
       </Routes>
     </>
   );
