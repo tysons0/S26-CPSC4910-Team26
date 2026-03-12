@@ -231,7 +231,7 @@ public class ApplicationService : IApplicationService
 
     public async Task<bool> UpdateApplicationStatus(int applicationId, string newStatus, string reason, int editorUserId)
     {
-        _logger.LogInformation("Update application[{Id}] status to [{Status}] made by User[{}]",
+        _logger.LogInformation("Update application[{Id}] status to [{Status}] made by User[{EditorId}]",
             applicationId, newStatus, editorUserId);
 
         try
@@ -279,16 +279,20 @@ public class ApplicationService : IApplicationService
             {
                 if (approve)
                 {
+                    DriverApplication application = await GetApplication(applicationId) 
+                        ?? throw new("Failed to retrieve application to update");
+
                     command.Parameters.Clear();
-
                     command.CommandText =
-                    @$"UPDATE {DriversTable.Name} d
-                       JOIN {DriverApplicationsTable.Name} a 
-                            ON d.{DriverIdField.SelectName} = a.{DriverIdField.SelectName}
-                       SET d.{OrgIdField.SelectName} = a.{OrgIdField.SelectName}
-                       WHERE a.{ApplicationIdField.SelectName} = @ApplicationId";
+                    @$"UPDATE {DriversTable.Name} 
+                       SET {OrgIdField.SelectName} = @OrgId
+                       WHERE {DriverIdField.SelectName} = @Driverid";
 
-                    command.Parameters.Add(ApplicationIdField.GenerateParameter("@ApplicationId", applicationId));
+                    command.Parameters.Add(OrgIdField.GenerateParameter("@OrgId", application.OrgId));
+                    command.Parameters.Add(DriverIdField.GenerateParameter("@DriverId", application.DriverId));
+
+                    _logger.LogInformation("Put Driver[{DriverId}] in Organization[{OrgId}]", 
+                        application.DriverId, application.OrgId);
 
                     await command.ExecuteNonQueryAsync();
                 }
