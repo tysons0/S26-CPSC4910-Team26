@@ -172,10 +172,19 @@ function DriverDashboard() {
             Points Balance: <strong>{user?.points ?? 0}</strong>
           </div>
         </div>
-
-        <button className="submit" onClick={handleLogout}>
-          Logout
-        </button>
+        <div style={{display: "flex", gap: "10px"}}>
+          <button
+            className="submit"
+            onClick={() => navigate("/DriverWishlist")}
+            >
+            Wishlist
+          </button>
+          <button
+            className="submit" onClick={handleLogout}
+          >
+            Logout
+          </button>
+        </div>
       </header>
 
       <div className="catalog-layout">

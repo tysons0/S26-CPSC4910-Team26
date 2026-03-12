@@ -18,6 +18,7 @@ import AdminProfile from "./pages/admin/AdminProfile";
 import OrganizationCreate from "./pages/organization/OrganizationCreate";
 import SponsorApplications from "./pages/sponsor/SponsorApplications";
 import AdminApplications from "./pages/admin/AdminApplications";
+import DriverWishlist from "./pages/driver/DriverWishlist";
 
 function App() {
   return (
@@ -43,6 +44,7 @@ function App() {
         {/* Driver Routes */}
         <Route path="/DriverDashboard" element={<DriverDashboard />} />
         <Route path="/DriverProfile" element={<DriverProfile />} />
+        <Route path="/DriverWishlist" element={<DriverWishlist />} />
 
         {/* Sponsor Routes */}
         <Route path="/SponsorDashboard" element={<SponsorDashboard />} />

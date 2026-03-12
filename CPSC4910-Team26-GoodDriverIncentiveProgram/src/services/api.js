@@ -963,6 +963,67 @@ const apiService = {
       throw error;
     }
   },
+
+  //Driver Wishlist API Calls
+  getDriverWishlist: async (driverId) => {
+    try {
+      const token = await apiService.getToken();
+      if (!token) {
+        throw new Error("No Authentication token found.");
+      }
+      const response = await fetch(`${BASE_URL}/DriverWishlist/${driverId}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      return await handleResponse(response);
+    } catch (error) {
+      console.error("Failed to get driver's wishlist.", error);
+      throw error;
+    }
+  },
+
+  addWishlistItem: async (driverId, catalogItemId) => {
+    try {
+      const token = await apiService.getToken();
+      if (!token) {
+        throw new Error("No Authentication token found.");
+      }
+      const response = await fetch(`${BASE_URL}/DriverWishlist`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ driverId, catalogItemId }),
+      });
+      return await handleResponse(response);
+    } catch (error) {
+      console.error("Failed to add item to wishlist.", error);
+      throw error;
+    }
+  },
+
+  removeWishlistItem: async (catalogItemId) => {
+    try {
+      const token = await apiService.getToken();
+      if (!token) {
+        throw new Error("No Authentication token found.");
+      }
+      const response = await fetch(`${BASE_URL}/DriverWishlist/${catalogItemId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return await handleResponse(response);
+    } catch (error) {
+      console.error("Failed to remove item from wishlist.", error);
+      throw error;
+    }
+  },
 };
 
 export default apiService;
