@@ -425,7 +425,7 @@ const apiService = {
 forgotPassword: async (email) => {
   try {
     const response = await apiService.postData(
-      "api/Email/forgot-password",
+      "Email/forgot-password",
       JSON.stringify({ email })
     );
     return response;
@@ -438,7 +438,7 @@ forgotPassword: async (email) => {
 resetPassword: async (token, newPassword) => {
   try {
     const response = await apiService.postData(
-      "api/Email/reset-password",
+      "Email/reset-password",
       JSON.stringify({ token, newPassword })  // ← must match ResetPasswordRequest property names exactly
     );
     return response;
