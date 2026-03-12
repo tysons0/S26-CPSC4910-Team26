@@ -15,5 +15,7 @@ public interface IAuthService
 
     Task<OrgAccess> RetrieveUserOrgAccess(int userId, int? orgId);
 
+    Task<bool> CanUserEditOtherUser(int editorUserId, int userId);
+
     Task<bool> UpdateUserPassword(string password, string? userName = null, int? userId = null);
 }

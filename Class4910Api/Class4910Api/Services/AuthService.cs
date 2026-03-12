@@ -155,6 +155,41 @@ public class AuthService : IAuthService
         }
     }
 
+    public async Task<bool> CanUserEditOtherUser(int editorUserId, int userId)
+    {
+        try
+        {
+            if (editorUserId == userId)
+                return true;
+
+            User? editorUser = await _userService.FindUserById(editorUserId);
+            User? editeeUser = await _userService.FindUserById(userId);
+
+            if (editorUser is null || editeeUser is null)
+                return false;
+
+            if (editorUser.Role == UserRole.Sponsor && editeeUser.Role == UserRole.Driver)
+            {
+                Sponsor? editingSponsor = await _sponserService.GetSponsorByUserId(editorUserId) 
+                    ?? throw new("Editor User was identified as a sponsor but could not be found");
+                Driver? editeeDriver = await _driverService.GetDriverByUserId(editeeUser.Id);
+
+                if (editingSponsor.OrganizationId == editeeDriver?.OrganizationId)
+                    return true;
+            }
+            else if (editorUser.Role == UserRole.Admin && editeeUser.Role != UserRole.Admin)
+                return true;
+
+            return false;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error checking if User[{EditorId}] can edit User[{EditeeId}]", 
+                editorUserId, userId);
+            return false;
+        }
+    }
+
     public async Task<bool> UpdateUserPassword(string password, string? userName = null, int? userId = null)
     {
         try
