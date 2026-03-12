@@ -496,8 +496,8 @@ public class DriverService : IDriverService
             MySqlCommand command = conn.CreateCommand();
 
             command.CommandText =
-                @$"SELECT {DriverAddressesTable.GetFields()}
-                   FROM {DriverAddressesTable.Name}
+                @$"SELECT {DriverPointHistoryTable.GetFields()}
+                   FROM {DriverPointHistoryTable.Name}
                    WHERE {DriverIdField.SelectName} = @DriverId";
             command.Parameters.Add(DriverIdField.GenerateParameter("@DriverId", driverId));
 
