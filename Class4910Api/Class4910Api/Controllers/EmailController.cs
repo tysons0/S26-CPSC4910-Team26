@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Class4910Api.Services.Interfaces;
 using Class4910Api.Models.Requests;
 using System.Collections.Concurrent;
+using Class4910Api.Models;
 
 
 namespace Class4910Api.Controllers
@@ -28,17 +29,17 @@ namespace Class4910Api.Controllers
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
         {
-            var user = await _userService.FindUserByEmail(request.Email);
+            User? user = await _userService.FindUserByEmail(request.Email);
 
             if (user == null)
                 return NotFound("No account found with that email address.");
 
-            var token = Guid.NewGuid().ToString();
-            var expiry = DateTime.UtcNow.AddMinutes(30);
+            string token = Guid.NewGuid().ToString();
+            DateTime expiry = DateTime.UtcNow.AddMinutes(30);
 
             _resetTokens[token] = (request.Email, expiry);
 
-            var resetLink = $"http://localhost:5173/reset-password?token={token}&username={Uri.EscapeDataString(user.Username)}";
+            string resetLink = $"https://team26api.cpsc4911.com/reset-password?token={token}&username={Uri.EscapeDataString(user.Username)}";
 
             await _emailService.SendEmailAsync(
                 request.Email,
@@ -62,11 +63,11 @@ namespace Class4910Api.Controllers
             }
 
             // Look up user by email to get their ID
-            var user = await _userService.FindUserByEmail(entry.Email);
+            User? user = await _userService.FindUserByEmail(entry.Email);
             if (user == null)
                 return NotFound("User no longer exists.");
 
-            var success = await _authService.UpdateUserPassword(request.NewPassword, userId: user.Id);
+            bool success = await _authService.UpdateUserPassword(request.NewPassword, userId: user.Id);
             if (!success)
                 return StatusCode(500, "Failed to update password.");
 
