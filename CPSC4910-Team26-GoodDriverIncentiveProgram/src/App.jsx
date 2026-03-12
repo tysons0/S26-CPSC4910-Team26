@@ -16,6 +16,8 @@ import DriverProfile from "./pages/driver/DriverProfile";
 import SponsorProfile from "./pages/sponsor/SponsorProfile";
 import AdminProfile from "./pages/admin/AdminProfile";
 import OrganizationCreate from "./pages/organization/OrganizationCreate";
+import ForgotPassword from "./pages/email/ForgotPassword";
+import ResetPassword from "./pages/email/ResetPassword";
 import SponsorApplications from "./pages/sponsor/SponsorApplications";
 import AdminApplications from "./pages/admin/AdminApplications";
 
@@ -36,6 +38,8 @@ function App() {
         <Route path="/AdminSignUp" element={<AdminSignUp />} />
         <Route path="/AdminProfile" element={<AdminProfile />} />
         <Route path="/CreateOrganization" element={<OrganizationCreate />} />
+        <Route path="/ForgotPassword" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/Organizations" element={<Organizations />} />
 
         {/* Role Specific Routes */}
