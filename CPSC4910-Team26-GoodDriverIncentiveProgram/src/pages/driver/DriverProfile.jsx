@@ -1,23 +1,19 @@
+import { Link } from "react-router-dom";
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import PageTitle from "../../components/PageTitle";
 import apiService from "../../services/api";
 import "../../css/Profile.css";
+import { ECS_SERVICE_EXTENSIONS_ENABLE_DEFAULT_LOG_DRIVER } from "aws-cdk-lib/cx-api";
 
 function DriverProfile() {
+  const [driverData, setDriverData] = useState(null);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-
-  const [changingPassword, setChangingPassword] = useState(false);
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
-  });
 
   //Address States
   const [addresses, setAddresses] = useState([]);
@@ -33,6 +29,12 @@ function DriverProfile() {
   });
 
   //Password States
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
   const [passwordError, setPasswordError] = useState("");
   const [passwordSuccess, setPasswordSuccess] = useState("");
 
@@ -54,8 +56,12 @@ function DriverProfile() {
           return;
         }
 
-        const userData = await apiService.getUserInfo();
-        if (userData) {
+        const driverInfo = await apiService.getDriverInfo();
+
+        if (driverInfo) {
+          setDriverData(driverInfo);
+          const userData = driverInfo.userData;
+
           setUser(userData);
           setFormData({
             firstName: userData.firstName || "",
@@ -66,19 +72,11 @@ function DriverProfile() {
             country: userData.country || "",
           });
 
-          //fetch address
-          try {
-            const userAddresses = await apiService.getDriverAddresses(
-              userData.id,
-            );
-            setAddresses(userAddresses || []);
-          } catch (addressError) {
-            console.error("Error fetching addresses:", addressError);
-            // Don't show error to user, just leave addresses empty
-          }
+          setAddresses(driverInfo.addresses || []);
         }
       } catch (error) {
-        console.error("Error fetching user data", error);
+        console.error("Error fetching driver data", error);
+        setError("Failed to load profile data");
       } finally {
         setLoading(false);
       }
@@ -98,10 +96,10 @@ function DriverProfile() {
       setEditing(false);
       setSuccessMessage("Profile Updated Successfully!");
 
-      const refreshedData = await apiService.getUserInfo();
+      const refreshedData = await apiService.getDriverrInfo();
       if (refreshedData) {
-        setUser(refreshedData);
-        localStorage.setItem("user", JSON.stringify(refreshedData));
+        setDriverData(refreshedData);
+        setUser(refreshedData.userData);
       }
     } catch (error) {
       console.error("Error updating profile", error);
@@ -149,7 +147,7 @@ function DriverProfile() {
 
     try {
       const newAddress = await apiService.addDriverAddress(
-        user.id,
+        driverData.driverId,
         addressFormData,
       );
       setAddresses((prev) => [...prev, newAddress]);
@@ -224,7 +222,8 @@ function DriverProfile() {
     setSaving(true);
 
     try {
-      await apiService.changeDriverPassword(
+      await apiService.changePassword(
+        user.username,
         passwordData.currentPassword,
         passwordData.newPassword,
       );
@@ -294,6 +293,62 @@ function DriverProfile() {
         </div>
       )}
 
+      {/* NEW: Points Summary Card */}
+      <div className="profile-card" style={{ marginBottom: "2rem" }}>
+        <h2 style={{ marginBottom: "1rem", fontSize: "1.25rem" }}>
+          Points & Rewards
+        </h2>
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "1rem",
+            backgroundColor: "#e7f3ff",
+            borderRadius: "8px",
+            border: "2px solid #667eea",
+          }}
+        >
+          <div>
+            <div
+              style={{
+                fontSize: "0.9rem",
+                color: "#666",
+                marginBottom: "0.25rem",
+              }}
+            >
+              Current Balance
+            </div>
+            <div
+              style={{ fontSize: "2rem", fontWeight: "700", color: "#667eea" }}
+            >
+              {driverData?.points || 0} Points
+            </div>
+            {driverData?.organizationId && (
+              <div
+                style={{
+                  fontSize: "0.85rem",
+                  color: "#666",
+                  marginTop: "0.5rem",
+                }}
+              >
+                Organization ID: {driverData.organizationId}
+              </div>
+            )}
+          </div>
+
+          <Link to="/DriverPointHistory">
+            <button
+              className="btn btn-secondary"
+              style={{ whiteSpace: "nowrap" }}
+            >
+              View History
+            </button>
+          </Link>
+        </div>
+      </div>
+
       {/* Profile Information Card */}
       <div className="profile-card">
         <h2 style={{ marginBottom: "1.5rem", fontSize: "1.25rem" }}>
@@ -311,6 +366,11 @@ function DriverProfile() {
               <div className="profile-item">
                 <label>User ID</label>
                 <div className="profile-value">#{user?.id}</div>
+              </div>
+
+              <div className="profile-item">
+                <label>Driver ID</label>
+                <div className="profile-value">#{driverData?.driverId}</div>
               </div>
 
               <div className="profile-item">
@@ -688,90 +748,53 @@ function DriverProfile() {
         </h2>
 
         {passwordSuccess && (
-          <div className="alert alert-success" style={{ marginBottom: "1rem" }}>
+          <div className="alert alert-success">
             <span className="alert-icon">✓</span>
             {passwordSuccess}
           </div>
         )}
 
         {passwordError && (
-          <div className="alert alert-error" style={{ marginBottom: "1rem" }}>
+          <div className="alert alert-error">
             <span className="alert-icon">✕</span>
             {passwordError}
           </div>
         )}
 
-        {!changingPassword ? (
-          <button
-            className="btn btn-secondary"
-            onClick={() => setChangingPassword(true)}
-          >
-            Change Password
-          </button>
-        ) : (
-          <form onSubmit={handlePasswordSubmit} className="profile-form">
-            <div className="form-grid">
-              <div className="form-group full-width">
-                <label>Current Password</label>
-                <input
-                  type="password"
-                  name="currentPassword"
-                  value={passwordData.currentPassword}
-                  onChange={handlePasswordChange}
-                  className="form-input"
-                  placeholder="Enter current password"
-                  required
-                />
-              </div>
+        <div className="profile-item" style={{ marginBottom: "1.5rem" }}>
+          <label>Email on file</label>
+          <div className="profile-value">
+            {user?.email || <span className="not-set">No email set — please add one before resetting your password.</span>}
+          </div>
+        </div>
 
-              <div className="form-group">
-                <label>New Password</label>
-                <input
-                  type="password"
-                  name="newPassword"
-                  value={passwordData.newPassword}
-                  onChange={handlePasswordChange}
-                  className="form-input"
-                  placeholder="Enter new password"
-                  required
-                  minLength={8}
-                />
-              </div>
+        <p style={{ color: "#666", marginBottom: "1.5rem", fontSize: "0.95rem" }}>
+          A password reset link will be sent to your email address on file.
+        </p>
 
-              <div className="form-group">
-                <label>Confirm New Password</label>
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  value={passwordData.confirmPassword}
-                  onChange={handlePasswordChange}
-                  className="form-input"
-                  placeholder="Confirm new password"
-                  required
-                  minLength={8}
-                />
-              </div>
-            </div>
-
-            <div className="form-actions">
-              <button
-                type="submit"
-                className="btn btn-primary"
-                disabled={saving}
-              >
-                {saving ? "Changing..." : "Change Password"}
-              </button>
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={handleCancelPasswordChange}
-                disabled={saving}
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        )}
+        <button
+          className="btn btn-secondary"
+          disabled={saving}
+          onClick={async () => {
+            setSaving(true);
+            setPasswordError("");
+            setPasswordSuccess("");
+            try {
+              if (!user?.email) {
+                setPasswordError("No email address on your account. Please add one first.");
+                return;
+              }
+              await apiService.forgotPassword(user.email);
+              setPasswordSuccess("Password reset email sent! Check your inbox.");
+            } catch (err) {
+              setPasswordError(err.message || "Failed to send reset email.");
+            } finally {
+              setSaving(false);
+            }
+          }}
+        >
+          {saving ? "Sending..." : "Send Password Reset Email"}
+        </button>
       </div>
     </div>
   );

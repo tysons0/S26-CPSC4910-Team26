@@ -16,9 +16,14 @@ import DriverProfile from "./pages/driver/DriverProfile";
 import SponsorProfile from "./pages/sponsor/SponsorProfile";
 import AdminProfile from "./pages/admin/AdminProfile";
 import OrganizationCreate from "./pages/organization/OrganizationCreate";
+import ForgotPassword from "./pages/email/ForgotPassword";
+import ResetPassword from "./pages/email/ResetPassword";
 import SponsorApplications from "./pages/sponsor/SponsorApplications";
 import AdminApplications from "./pages/admin/AdminApplications";
 import DriverWishlist from "./pages/driver/DriverWishlist";
+import SponsorViewDrivers from "./pages/sponsor/SponsorViewDrivers";
+import AdminViewDrivers from "./pages/admin/AdminViewDrivers";
+import DriverPointHistory from "./pages/driver/DriverPointHistory";
 
 function App() {
   return (
@@ -37,6 +42,8 @@ function App() {
         <Route path="/AdminSignUp" element={<AdminSignUp />} />
         <Route path="/AdminProfile" element={<AdminProfile />} />
         <Route path="/CreateOrganization" element={<OrganizationCreate />} />
+        <Route path="/ForgotPassword" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/Organizations" element={<Organizations />} />
 
         {/* Role Specific Routes */}
@@ -45,16 +52,19 @@ function App() {
         <Route path="/DriverDashboard" element={<DriverDashboard />} />
         <Route path="/DriverProfile" element={<DriverProfile />} />
         <Route path="/DriverWishlist" element={<DriverWishlist />} />
+        <Route path="/DriverPointHistory" element={<DriverPointHistory />} />
 
         {/* Sponsor Routes */}
         <Route path="/SponsorDashboard" element={<SponsorDashboard />} />
         <Route path="/SponsorProfile" element={<SponsorProfile />} />
         <Route path="/SponsorApplications" element={<SponsorApplications />} />
+        <Route path="SponsorViewDrivers" element={<SponsorViewDrivers />} />
 
         {/* Admin Routes */}
         <Route path="/AdminDashboard" element={<AdminDashboard />} />
         <Route path="/AdminProfile" element={<AdminProfile />} />
         <Route path="/AdminApplications" element={<AdminApplications />} />
+        <Route path="/AdminViewDrivers" element={<AdminViewDrivers />} />
       </Routes>
     </>
   );

@@ -1,4 +1,4 @@
-﻿using Class4910Api.Configuration;
+using Class4910Api.Configuration;
 using Class4910Api.Services.Interfaces;
 using Microsoft.Extensions.Options;
 using SendGrid;
@@ -33,10 +33,11 @@ public class EmailService : IEmailService
                 throw new Exception($"Response was [{response.StatusCode}]");
             return true;
         }
-        catch (Exception ex)
+        catch(Exception ex)
         {
-            _logger.LogError(ex, "Error sending Sendgrid Email: {Error}", ex.Message);
+            _logger.LogError(ex,"Error sending Sendgrid Email: {Error}", ex.Message);
             return false;
         }
     }
 }
+

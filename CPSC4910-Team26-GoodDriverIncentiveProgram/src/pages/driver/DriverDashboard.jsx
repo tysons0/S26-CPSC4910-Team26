@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import PageTitle from "../../components/PageTitle";
@@ -24,7 +25,9 @@ function DriverDashboard() {
 
     try {
       const catalogItems = await apiService.getCatalog(orgId);
-      const normalizedProducts = (Array.isArray(catalogItems) ? catalogItems : []).map((item) => ({
+      const normalizedProducts = (
+        Array.isArray(catalogItems) ? catalogItems : []
+      ).map((item) => ({
         id: item.catalogItemID ?? item.catalogItemId ?? item.ebayItemId,
         name: item.title || item.name || "Catalog Item",
         points: Number(item.points ?? 0),
@@ -54,7 +57,7 @@ function DriverDashboard() {
           return;
         }
 
-        const userData = await apiService.getUserInfo();
+        const userData = await apiService.getDriverInfo();
         if (!userData) {
           throw new Error("Unable to load user profile.");
         }
@@ -77,9 +80,9 @@ function DriverDashboard() {
 
         try {
           const organizations = await apiService.getOrganizations();
-          const matchingOrg = (Array.isArray(organizations) ? organizations : []).find(
-            (organization) => organization.orgId === driverOrgId,
-          );
+          const matchingOrg = (
+            Array.isArray(organizations) ? organizations : []
+          ).find((organization) => organization.orgId === driverOrgId);
 
           if (matchingOrg?.name) {
             setOrganizationName(matchingOrg.name);
@@ -185,6 +188,9 @@ function DriverDashboard() {
           <div className="catalog-points">
             Points Balance: <strong>{user?.points ?? 0}</strong>
           </div>
+          <Link to="/DriverPointHistory">
+            <button className="submit">View Point History</button>
+          </Link>
         </div>
         <div style={{display: "flex", gap: "10px"}}>
           <button
@@ -263,7 +269,9 @@ function DriverDashboard() {
           </form>
 
           <button
-            onClick={() => organizationId && loadCatalogProducts(organizationId)}
+            onClick={() =>
+              organizationId && loadCatalogProducts(organizationId)
+            }
             className="submit"
             style={{ width: "100%", marginTop: "1rem" }}
             disabled={productLoading || !organizationId}
