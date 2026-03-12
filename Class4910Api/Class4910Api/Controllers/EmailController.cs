@@ -1,77 +1,77 @@
 using Microsoft.AspNetCore.Mvc;
-using Class4910Api.Services;
+using Class4910Api.Services.Interfaces;
 using Class4910Api.Models.Requests;
+using System.Collections.Concurrent;
+
 
 namespace Class4910Api.Controllers
+
 {
     [ApiController]
     [Route("api/[controller]")]
     public class EmailController : ControllerBase
     {
-        private readonly EmailService _emailService;
+        private readonly IEmailService _emailService;
+        private readonly IUserService _userService;
+        private readonly IAuthService _authService;
 
-        public EmailController(EmailService emailService)
+        // In-memory token store: token -> (email, expiry)
+        private static readonly ConcurrentDictionary<string, (string Email, DateTime Expiry)> _resetTokens = new();
+
+        public EmailController(IEmailService emailService, IUserService userService, IAuthService authService)
         {
             _emailService = emailService;
+            _userService = userService;
+            _authService = authService;
         }
 
-        // FORGOT PASSWORD
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
         {
+            var user = await _userService.FindUserByEmail(request.Email);
+
+            if (user == null)
+                return NotFound("No account found with that email address.");
+
             var token = Guid.NewGuid().ToString();
+            var expiry = DateTime.UtcNow.AddMinutes(30);
 
-            // TODO: save token to database
+            _resetTokens[token] = (request.Email, expiry);
 
-            var resetLink = $"http://localhost:3000/reset-password?token={token}";
+            var resetLink = $"http://localhost:5173/reset-password?token={token}&username={Uri.EscapeDataString(user.Username)}";
 
             await _emailService.SendEmailAsync(
                 request.Email,
                 "Reset Your Password",
-                $"Click this link to reset your password:\n{resetLink}"
+                $"<p>Click the link below to reset your password. This link expires in 30 minutes.</p><a href='{resetLink}'>{resetLink}</a>"
             );
 
             return Ok("Password reset email sent.");
         }
 
-        // RESET PASSWORD
         [HttpPost("reset-password")]
-        public IActionResult ResetPassword([FromBody] ResetPasswordRequest request)
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
         {
-            // TODO:
-            // validate token
-            // find user
-            // update password
+            if (!_resetTokens.TryGetValue(request.Token, out var entry))
+                return BadRequest("Invalid or expired reset token.");
 
+            if (DateTime.UtcNow > entry.Expiry)
+            {
+                _resetTokens.TryRemove(request.Token, out _);
+                return BadRequest("Reset token has expired.");
+            }
+
+            // Look up user by email to get their ID
+            var user = await _userService.FindUserByEmail(entry.Email);
+            if (user == null)
+                return NotFound("User no longer exists.");
+
+            var success = await _authService.UpdateUserPassword(request.NewPassword, userId: user.Id);
+            if (!success)
+                return StatusCode(500, "Failed to update password.");
+
+            _resetTokens.TryRemove(request.Token, out _);
             return Ok("Password successfully reset.");
-        }
-
-        // EMAIL VERIFICATION
-        [HttpPost("send-verification")]
-        public async Task<IActionResult> SendVerification([FromBody] RegisterRequest request)
-        {
-            var token = Guid.NewGuid().ToString();
-
-            // TODO: save verification token
-
-            var verifyLink = $"http://localhost:3000/verify-email?token={token}";
-
-            await _emailService.SendEmailAsync(
-                request.Email,
-                "Verify your email",
-                $"Click this link to verify your email:\n{verifyLink}"
-            );
-
-            return Ok("Verification email sent.");
-        }
-
-        // GENERIC NOTIFICATION EMAIL
-        [HttpPost("send-notification")]
-        public async Task<IActionResult> SendNotification(string email, string subject, string message)
-        {
-            await _emailService.SendEmailAsync(email, subject, message);
-
-            return Ok("Notification email sent.");
         }
     }
 }

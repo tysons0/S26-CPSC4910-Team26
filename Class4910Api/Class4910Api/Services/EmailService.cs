@@ -1,25 +1,43 @@
+using Class4910Api.Configuration;
+using Class4910Api.Services.Interfaces;
+using Microsoft.Extensions.Options;
 using SendGrid;
 using SendGrid.Helpers.Mail;
 
-public class EmailService
+namespace Class4910Api.Services;
+
+public class EmailService : IEmailService
 {
     private readonly string _apiKey;
-
-    public EmailService(IConfiguration config)
+    private readonly ILogger<EmailService> _logger;
+    private readonly EmailAddress _sendingEmailAddress;
+    public EmailService(ILogger<EmailService> logger, IOptions<SendGridConfig> sendGridConfigOptions)
     {
-        _apiKey = config["SENDGRID:API_key"];
+        SendGridConfig sendGridConfig = sendGridConfigOptions.Value;
+        _apiKey = sendGridConfig.ApiKey;
+        _logger = logger;
+        _sendingEmailAddress = new(sendGridConfig.SendingEmail, sendGridConfig.SendingEmailName);
     }
 
-    public async Task SendEmailAsync(string toEmail, string subject, string htmlContent)
+    public async Task<bool> SendEmailAsync(string toEmail, string subject, string htmlContent)
     {
-        var client = new SendGridClient(_apiKey);
-        var from = new EmailAddress("team26cpsc4910@gmail.com", "Driver Incentive Program");
-        var to = new EmailAddress(toEmail);
+        try
+        {
+            SendGridClient client = new(_apiKey);
+            EmailAddress to = new(toEmail);
 
-        var msg = MailHelper.CreateSingleEmail(from, to, subject, "", htmlContent);
-        var response = await client.SendEmailAsync(msg);
+            SendGridMessage msg = MailHelper.CreateSingleEmail(_sendingEmailAddress, to, subject, "", htmlContent);
+            Response response = await client.SendEmailAsync(msg);
 
-        if (!response.IsSuccessStatusCode)
-            throw new Exception("Email failed to send.");
+            if (!response.IsSuccessStatusCode)
+                throw new Exception($"Response was [{response.StatusCode}]");
+            return true;
+        }
+        catch(Exception ex)
+        {
+            _logger.LogError(ex,"Error sending Sendgrid Email: {Error}", ex.Message);
+            return false;
+        }
     }
 }
+

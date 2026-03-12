@@ -688,90 +688,53 @@ function DriverProfile() {
         </h2>
 
         {passwordSuccess && (
-          <div className="alert alert-success" style={{ marginBottom: "1rem" }}>
+          <div className="alert alert-success">
             <span className="alert-icon">✓</span>
             {passwordSuccess}
           </div>
         )}
 
         {passwordError && (
-          <div className="alert alert-error" style={{ marginBottom: "1rem" }}>
+          <div className="alert alert-error">
             <span className="alert-icon">✕</span>
             {passwordError}
           </div>
         )}
 
-        {!changingPassword ? (
-          <button
-            className="btn btn-secondary"
-            onClick={() => setChangingPassword(true)}
-          >
-            Change Password
-          </button>
-        ) : (
-          <form onSubmit={handlePasswordSubmit} className="profile-form">
-            <div className="form-grid">
-              <div className="form-group full-width">
-                <label>Current Password</label>
-                <input
-                  type="password"
-                  name="currentPassword"
-                  value={passwordData.currentPassword}
-                  onChange={handlePasswordChange}
-                  className="form-input"
-                  placeholder="Enter current password"
-                  required
-                />
-              </div>
+        <div className="profile-item" style={{ marginBottom: "1.5rem" }}>
+          <label>Email on file</label>
+          <div className="profile-value">
+            {user?.email || <span className="not-set">No email set — please add one before resetting your password.</span>}
+          </div>
+        </div>
 
-              <div className="form-group">
-                <label>New Password</label>
-                <input
-                  type="password"
-                  name="newPassword"
-                  value={passwordData.newPassword}
-                  onChange={handlePasswordChange}
-                  className="form-input"
-                  placeholder="Enter new password"
-                  required
-                  minLength={8}
-                />
-              </div>
+        <p style={{ color: "#666", marginBottom: "1.5rem", fontSize: "0.95rem" }}>
+          A password reset link will be sent to your email address on file.
+        </p>
 
-              <div className="form-group">
-                <label>Confirm New Password</label>
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  value={passwordData.confirmPassword}
-                  onChange={handlePasswordChange}
-                  className="form-input"
-                  placeholder="Confirm new password"
-                  required
-                  minLength={8}
-                />
-              </div>
-            </div>
-
-            <div className="form-actions">
-              <button
-                type="submit"
-                className="btn btn-primary"
-                disabled={saving}
-              >
-                {saving ? "Changing..." : "Change Password"}
-              </button>
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={handleCancelPasswordChange}
-                disabled={saving}
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        )}
+        <button
+          className="btn btn-secondary"
+          disabled={saving}
+          onClick={async () => {
+            setSaving(true);
+            setPasswordError("");
+            setPasswordSuccess("");
+            try {
+              if (!user?.email) {
+                setPasswordError("No email address on your account. Please add one first.");
+                return;
+              }
+              await apiService.forgotPassword(user.email);
+              setPasswordSuccess("Password reset email sent! Check your inbox.");
+            } catch (err) {
+              setPasswordError(err.message || "Failed to send reset email.");
+            } finally {
+              setSaving(false);
+            }
+          }}
+        >
+          {saving ? "Sending..." : "Send Password Reset Email"}
+        </button>
       </div>
     </div>
   );
