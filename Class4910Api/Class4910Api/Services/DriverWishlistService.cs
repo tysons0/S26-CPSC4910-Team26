@@ -15,21 +15,28 @@ public class DriverWishlistService : IDriverWishlistService
         _dbConnection = dbConnection.Value.Connection;
         _logger = logger;
     }
-    public async Task<IEnumerable<DriverWishlist>> GetWishlistAsync(int driverId)
+    public async Task<IEnumerable<DriverWishlistItem>> GetWishlistAsync(int driverId)
     {
         _logger.LogInformation("Retrieve Wishlist for Driver[{Id}]", driverId);
         try
         {
-            List<DriverWishlist> items = [];
-            string sql = @"
-            SELECT
-                wishlistId,
-                driverId,
-                orgId,
-                catalogItemId,
-                createdAt
-            FROM DriverWishlist
-            WHERE driverId = @DriverID;";
+                 var items = new List<DriverWishlistItem>();
+                 string sql = @"
+                 SELECT dw.WishlistID,
+                     dw.catalogItemId AS CatalogItemID,
+                     sci.Points AS Points,
+                     ei.Name,
+                     ei.Description,
+                     ei.ImageURL,
+                     ei.ItemWebURL,
+                     ei.LastKnownPrice,
+                     ei.Currency,
+                     ei.ItemCondition
+                 FROM DriverWishlist dw
+                 JOIN SponsorCatalogItems sci ON dw.catalogItemId = sci.CatalogItemID
+                 JOIN EbayItems ei ON sci.EbayItemID = ei.EbayItemID
+                 WHERE dw.driverId = @DriverID
+                 ORDER BY dw.createdAt DESC;";
 
             using MySqlConnection conn = new(_dbConnection);
             using MySqlCommand cmd = new(sql, conn);
@@ -41,12 +48,18 @@ public class DriverWishlistService : IDriverWishlistService
 
             while (await reader.ReadAsync())
             {
-                items.Add(new DriverWishlist
+                items.Add(new DriverWishlistItem
                 {
                     WishlistID = reader.GetInt32(reader.GetOrdinal("WishlistID")),
-                    DriverID = reader.GetInt32(reader.GetOrdinal("DriverID")),
-                    OrgID = reader.GetInt32(reader.GetOrdinal("OrgID")),
-                    CatalogItemID = reader.GetInt32(reader.GetOrdinal("CatalogItemID"))
+                    CatalogItemID = reader.GetInt32(reader.GetOrdinal("CatalogItemID")),
+                    Points = reader.GetInt32(reader.GetOrdinal("Points")),
+                    Name = reader.GetString(reader.GetOrdinal("Name")),
+                    Description = reader.GetString(reader.GetOrdinal("Description")),
+                    ImageURL = reader.GetString(reader.GetOrdinal("ImageURL")),
+                    ItemWebURL = reader.GetString(reader.GetOrdinal("ItemWebURL")),
+                    LastKnownPrice = reader.GetDecimal(reader.GetOrdinal("LastKnownPrice")),
+                    Currency = reader.GetString(reader.GetOrdinal("Currency")),
+                    ItemCondition = reader.GetString(reader.GetOrdinal("ItemCondition"))
                 });
             }
             return items;
@@ -54,7 +67,7 @@ public class DriverWishlistService : IDriverWishlistService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving wishlist for Driver[{Id}]", driverId);
-            return [];
+            return new List<DriverWishlistItem>();
         }
     }
     public async Task AddToWishlistAsync(int driverId, int orgId, int catalogItemId)

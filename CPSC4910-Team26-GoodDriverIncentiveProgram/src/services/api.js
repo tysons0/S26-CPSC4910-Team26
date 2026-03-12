@@ -1,6 +1,6 @@
 import { ApplicationLoadBalancedServiceRecordType } from "aws-cdk-lib/aws-ecs-patterns";
 
-const BASE_URL = "https://team26api.cpsc4911.com";
+const BASE_URL = "https://localhost:7177";
 
 const handleResponse = async (response) => {
   const contentType = response.headers.get("content-type") || "";

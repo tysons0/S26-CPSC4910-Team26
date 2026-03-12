@@ -20,8 +20,18 @@ function DriverWishlist() {
       const driver = await apiService.getDriverByUserId(userData.id);
 
       const wishlistItems = await apiService.getDriverWishlist(driver.driverId);
+      console.log("Raw wishlist data:", wishlistItems);
+      const normalized = (Array.isArray(wishlistItems) ? wishlistItems : []).map((item) => ({
+        id: item.catalogItemID || item.CatalogItemID || item.catalogItemId,
+        name: item.name || item.Name,
+        points: Number(item.points ?? item.Points ?? 0),
+        image: item.imageURL || item.ImageUrl || "https://via.placeholder.com/120?text=No+Image",
+        itemWebUrl: item.itemWebUrl || item.ItemWebUrl || ""
+      }));
 
-      setWishlist(Array.isArray(wishlistItems) ? wishlistItems : []);
+      setWishlist(normalized);
+
+
     } catch (err) {
       console.error("Wishlist load error", err);
       setError("Failed to load wishlist.");
@@ -97,12 +107,14 @@ function DriverWishlist() {
             <div className="catalog-row" key={item.catalogItemId || index}>
               <div className="col image">
                 <img
-                  src={
-                    item.image ||
-                    "https://via.placeholder.com/120?text=No+Image"
-                  }
+                  src={item.image}
                   alt={item.name}
                   className="catalog-img"
+                  onError={(e) => {
+                    if (e.target.src !== "https://via.placeholder.com/120?text=No+Image") {
+                      e.target.src = "https://via.placeholder.com/120?text=No+Image";
+                    }
+                  }}
                 />
               </div>
 
@@ -112,7 +124,7 @@ function DriverWishlist() {
 
               <div className="col points">
                 <div className="muted">Points:</div>
-                <strong>{item.points}</strong>
+                <strong style= {{color: "black"}}>{item.points}</strong>
               </div>
 
               <div className="col action" style={{ display: "flex", gap: "10px" }}>
