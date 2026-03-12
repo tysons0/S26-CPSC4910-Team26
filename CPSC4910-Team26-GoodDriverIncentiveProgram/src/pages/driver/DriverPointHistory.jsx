@@ -34,6 +34,9 @@ function DriverPointHistory() {
 
         // Get point history
         const history = await apiService.getDriverPointHistory(driverId);
+        console.log("Raw point history response:", history); // DEBUG
+        console.log("Is array?", Array.isArray(history)); // DEBUG
+        console.log("Length:", history?.length); // DEBUG
 
         // Sort by date, newest first
         const sortedHistory = (Array.isArray(history) ? history : []).sort(
