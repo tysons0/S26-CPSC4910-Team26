@@ -61,11 +61,11 @@ function DriverDashboard() {
         if (!userData) {
           throw new Error("Unable to load user profile.");
         }
-
+        console.log("Fetched user data:", userData);
         setUser(userData);
         localStorage.setItem("user", JSON.stringify(userData));
 
-        const driverData = await apiService.getDriverByUserId(userData.id);
+        const driverData = await apiService.getDriverByUserId(userData.userData.id);
         const driverOrgId = driverData?.organizationId;
 
         if (!driverOrgId) {
