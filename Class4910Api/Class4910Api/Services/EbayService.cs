@@ -38,9 +38,9 @@ public class EbayService : IEbayService
 
         string auth = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{clientId}:{clientSecret}"));
 
-        HttpRequestMessage request = new(HttpMethod.Post, "https://api.sandbox.ebay.com/identity/v1/oauth2/token");
+        HttpRequestMessage request = new(HttpMethod.Post, $"{_config.BaseUrl}/identity/v1/oauth2/token");
         request.Headers.Authorization = new AuthenticationHeaderValue("Basic", auth);
-        request.Content = new StringContent("grant_type=client_credentials&scope=https://api.ebay.com/oauth/api_scope", Encoding.UTF8, "application/x-www-form-urlencoded");
+        request.Content = new StringContent($"grant_type=client_credentials&scope={_config.BaseUrl}/oauth/api_scope", Encoding.UTF8, "application/x-www-form-urlencoded");
 
         HttpResponseMessage respone = await _httpClient.SendAsync(request);
         respone.EnsureSuccessStatusCode();

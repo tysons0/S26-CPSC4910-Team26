@@ -19,6 +19,22 @@ public class EbayController : ControllerBase
         _logger = logger;
     }
 
+    [HttpGet("OAuth")]
+    public async Task<ActionResult<string>> GetAccessToken()
+    {
+        try
+        {
+            string token = await _ebayService.GetAccessToken();
+            return Ok(new { token });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error obtaining eBay OAuth token");
+            return StatusCode(500, new { error = "Failed to obtain OAuth token", details = ex.Message });
+        }
+    }
+
+
     [HttpGet("products")]
     public async Task<ActionResult<EbaySearchResponse>> SearchProducts(
         [FromQuery] string keyword = "electronics",
