@@ -11,6 +11,13 @@ function AdminDashboard() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const handleChange = (e) => {
+    const value = e.target.value;
+    if (value) {
+      navigate(value);
+    }
+  };
+
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -51,11 +58,14 @@ function AdminDashboard() {
 
       <h2>Manage Users</h2>
       <div style={{ marginBottom: "1rem" }}>
-        <Link to="/AdminViewDrivers">
-          <button className="submit" style={{ marginRight: "1rem" }}>
-            Drivers
-          </button>
-        </Link>
+        <select onChange={handleChange} defaultValue="">
+          <option value="" disabled>
+            Select user type
+          </option>
+          <option value="/AdminViewDrivers">Drivers</option>
+          <option value="/AdminViewSponsors">Sponsors</option>
+          <option value="/AdminViewAdmins">Admins</option>
+        </select>
       </div>
 
       <h2>Create Users</h2>
@@ -80,14 +90,6 @@ function AdminDashboard() {
         <Link to="/AdminSignUp">
           <button className="submit" style={{ marginRight: "1rem" }}>
             Register Admin
-          </button>
-        </Link>
-      </div>
-
-      <div style={{ marginBottom: "1rem" }}>
-        <Link to="/DriverSignUp">
-          <button className="submit" style={{ marginRight: "1rem" }}>
-            Register Driver
           </button>
         </Link>
       </div>

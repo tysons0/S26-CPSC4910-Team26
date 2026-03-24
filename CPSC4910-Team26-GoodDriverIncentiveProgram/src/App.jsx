@@ -23,6 +23,8 @@ import AdminApplications from "./pages/admin/AdminApplications";
 import DriverWishlist from "./pages/driver/DriverWishlist";
 import SponsorViewDrivers from "./pages/sponsor/SponsorViewDrivers";
 import AdminViewDrivers from "./pages/admin/AdminViewDrivers";
+import AdminViewSponsors from "./pages/admin/AdminViewSponsors";
+import AdminViewAdmins from "./pages/admin/AdminViewAdmins";
 import DriverPointHistory from "./pages/driver/DriverPointHistory";
 import EbayTestDashboard from "./pages/sponsor/EbayTestDashboard";
 
@@ -67,6 +69,8 @@ function App() {
         <Route path="/AdminProfile" element={<AdminProfile />} />
         <Route path="/AdminApplications" element={<AdminApplications />} />
         <Route path="/AdminViewDrivers" element={<AdminViewDrivers />} />
+        <Route path="/AdminViewSponsors" element={<AdminViewSponsors />} />
+        <Route path="/AdminViewAdmins" element={<AdminViewAdmins />} />
       </Routes>
     </>
   );
