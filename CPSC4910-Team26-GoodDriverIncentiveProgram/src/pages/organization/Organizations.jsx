@@ -175,13 +175,13 @@ function Organizations() {
         {!activeApp ? (
           <div
             style={{
-              backgroundColor: "#e7f3ff",
+              backgroundColor: "#cde1f5",
               padding: "1rem",
               borderRadius: "8px",
               borderLeft: "4px solid #0066cc",
             }}
           >
-            <strong>Status:</strong>{" "}
+            <strong style={{color: "#0f172a"}}>Status:</strong>{" "}
             <span style={{ fontWeight: 700, color: "#0066cc" }}>
               No active application
             </span>

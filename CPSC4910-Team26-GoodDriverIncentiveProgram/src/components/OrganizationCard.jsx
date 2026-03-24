@@ -107,6 +107,7 @@ function OrganizationCard({
             }}
             style={{
               opacity: disabled ? 0.7 : 1,
+              padding: "0.3rem",
               cursor: disabled ? "not-allowed" : "pointer",
               backgroundColor: buttonColor,
               color: buttonColor ? "white" : undefined,
