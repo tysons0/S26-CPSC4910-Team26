@@ -24,7 +24,7 @@ import DriverWishlist from "./pages/driver/DriverWishlist";
 import SponsorViewDrivers from "./pages/sponsor/SponsorViewDrivers";
 import AdminViewDrivers from "./pages/admin/AdminViewDrivers";
 import DriverPointHistory from "./pages/driver/DriverPointHistory";
-import EbayTestDashboard from "./pages/Sponsor/EbayTestDashboard";
+import EbayTestDashboard from "./pages/sponsor/EbayTestDashboard";
 
 function App() {
   return (
