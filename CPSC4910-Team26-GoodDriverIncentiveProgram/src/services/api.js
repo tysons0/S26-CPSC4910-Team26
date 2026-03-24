@@ -915,7 +915,7 @@ const apiService = {
       if (!token) throw new Error("No authentication token found!");
 
       const response = await fetch(
-        `${BASE_URL}/Catalog/${orgId}/${catalogItemId}`,
+        `${BASE_URL}/Catalog/${orgId}/items/${catalogItemId}`,
         {
           method: "PUT",
           headers: {
@@ -937,7 +937,7 @@ const apiService = {
       const token = apiService.getToken();
       if (!token) throw new Error("No authentication token found!");
       const response = await fetch(
-        `${BASE_URL}/Catalog/${orgId}/${catalogItemId}`,
+        `${BASE_URL}/Catalog/${orgId}/items/${catalogItemId}`,
         {
           method: "DELETE",
           headers: {

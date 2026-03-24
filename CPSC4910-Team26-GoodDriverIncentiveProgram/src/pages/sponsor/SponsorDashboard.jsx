@@ -28,10 +28,17 @@ function SponsorDashboard() {
     points: "",
   });
 
+  //Manually add products by ebay item ID
+  const [manualFormData, setManualFormData] = useState({
+    ebayItemId: "",
+    points: "",
+  });
+
   const loadCatalog = async (orgId) => {
     setCatalogLoading(true);
     try {
       const items = await apiService.getCatalog(orgId);
+      console.log("Catalog response:", items);
       setCatalogItems(Array.isArray(items) ? items : []);
     } catch (catalogError) {
       console.error("Error loading catalog:", catalogError);
@@ -83,6 +90,14 @@ function SponsorDashboard() {
   const handleFormChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleManualFormChange = (e) => {
+    const { name, value } = e.target;
+    setManualFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleSearchProducts = async (e) => {
@@ -153,10 +168,12 @@ function SponsorDashboard() {
     setSubmitting(true);
 
     try {
-      await apiService.addCatalogItem(sponsorOrgId, {
+      const addedItem = await apiService.addCatalogItem(sponsorOrgId, {
         ebayItemId,
         points,
       });
+
+      console.log("Added selected product response:", addedItem);
 
       setSuccessMessage("Product added to your organization catalog.");
       setFormData({
@@ -214,6 +231,54 @@ function SponsorDashboard() {
   };
   */
 
+  const handleManualAddProduct = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccessMessage("");
+
+    const ebayItemId = manualFormData.ebayItemId.trim();
+    const points = Number(manualFormData.points);
+
+    if (!ebayItemId) {
+      setError("eBay item ID is required.");
+      return;
+    }
+
+    if (!Number.isFinite(points) || points <= 0) {
+      setError("Points must be a positive number.");
+      return;
+    }
+
+    if (!sponsorOrgId) {
+      setError("Sponsor organization is not available.");
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      const addedItem = await apiService.addCatalogItem(sponsorOrgId, {
+        ebayItemId,
+        points,
+      });
+
+      console.log("Added manual product response:", addedItem);
+
+      setSuccessMessage("Manual product added to your organization catalog.");
+      setManualFormData({
+        ebayItemId: "",
+        points: "",
+      });
+
+      await loadCatalog(sponsorOrgId);
+    } catch (submitError) {
+      console.error("Error manually adding catalog product:", submitError);
+      setError(submitError.message || "Failed to add product to catalog.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div style={{ padding: "2rem" }}>
@@ -255,6 +320,58 @@ function SponsorDashboard() {
             Test eBay Products
           </button>
         </Link>
+      </div>
+
+      {/* Manual Add Product */}
+      <div style={{ marginTop: "2rem", marginBottom: "2rem" }}>
+        <h2>Add Product to Catalog</h2>
+
+        <form onSubmit={handleManualAddProduct} style={{ maxWidth: "420px" }}>
+          <div style={{ marginBottom: "1rem" }}>
+            <label htmlFor="manual-ebayItemId">eBay Item ID</label>
+            <input
+              id="manual-ebayItemId"
+              name="ebayItemId"
+              type="text"
+              value={manualFormData.ebayItemId}
+              onChange={handleManualFormChange}
+              placeholder="v1|1234567890|0 or numeric item ID"
+              required
+              style={{
+                width: "100%",
+                padding: "0.5rem",
+                marginTop: "0.35rem",
+              }}
+            />
+          </div>
+
+          <div style={{ marginBottom: "1rem" }}>
+            <label htmlFor="manual-points">Points Cost</label>
+            <input
+              id="manual-points"
+              name="points"
+              type="number"
+              min="1"
+              value={manualFormData.points}
+              onChange={handleManualFormChange}
+              placeholder="100"
+              required
+              style={{
+                width: "100%",
+                padding: "0.5rem",
+                marginTop: "0.35rem",
+              }}
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="submit"
+            disabled={submitting || !sponsorOrgId}
+          >
+            {submitting ? "Adding Product..." : "Add Product"}
+          </button>
+        </form>
       </div>
 
       <div style={{ marginTop: "2rem", marginBottom: "2rem" }}>
