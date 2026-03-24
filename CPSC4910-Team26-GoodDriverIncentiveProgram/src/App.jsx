@@ -24,6 +24,7 @@ import DriverWishlist from "./pages/driver/DriverWishlist";
 import SponsorViewDrivers from "./pages/sponsor/SponsorViewDrivers";
 import AdminViewDrivers from "./pages/admin/AdminViewDrivers";
 import DriverPointHistory from "./pages/driver/DriverPointHistory";
+import EbayTestDashboard from "./pages/Sponsor/EbayTestDashboard";
 
 function App() {
   return (
@@ -59,6 +60,7 @@ function App() {
         <Route path="/SponsorProfile" element={<SponsorProfile />} />
         <Route path="/SponsorApplications" element={<SponsorApplications />} />
         <Route path="SponsorViewDrivers" element={<SponsorViewDrivers />} />
+        <Route path="/EbayTest" element={<EbayTestDashboard />} />
 
         {/* Admin Routes */}
         <Route path="/AdminDashboard" element={<AdminDashboard />} />

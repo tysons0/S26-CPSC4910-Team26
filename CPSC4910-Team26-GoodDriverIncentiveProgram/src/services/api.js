@@ -3,21 +3,30 @@ import { ApplicationLoadBalancedServiceRecordType } from "aws-cdk-lib/aws-ecs-pa
 const BASE_URL = "https://team26api.cpsc4911.com";
 
 const handleResponse = async (response) => {
-  const contentType = response.headers.get("content-type") || "";
-  const isJson = contentType.includes("application/json");
-
-  const data = isJson ? await response.json() : await response.text();
-
   if (!response.ok) {
-    const message =
-      typeof data === "string"
-        ? data
-        : data?.message || data?.title || "Request failed";
+    let errorText = "";
 
-    throw new Error(message);
+    try {
+      errorText = await response.text(); // try to read backend error
+    } catch (e) {
+      errorText = "Could not read error response";
+    }
+
+    console.error("API Error:", response.status, errorText);
+
+    throw new Error(
+      errorText || `Request failed with status ${response.status}`,
+    );
   }
 
-  return data;
+  // Handle different response types safely
+  const contentType = response.headers.get("content-type");
+
+  if (contentType && contentType.includes("application/json")) {
+    return await response.json();
+  }
+
+  return await response.text();
 };
 
 //API Service Object
@@ -532,54 +541,6 @@ const apiService = {
     }
   },
 
-  getCatalog: async (orgId) => {
-    try {
-      const token = apiService.getToken();
-      if (!token) {
-        throw new Error("No authentication token found. Please log in.");
-      }
-
-      const response = await fetch(`${BASE_URL}/Catalog/${orgId}`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      return await handleResponse(response);
-    } catch (error) {
-      console.error("Failed to get catalog", error);
-      throw error;
-    }
-  },
-
-  addCatalogItem: async (orgId, itemData) => {
-    try {
-      const token = apiService.getToken();
-      if (!token) {
-        throw new Error("No authentication token found. Please log in.");
-      }
-
-      const response = await fetch(`${BASE_URL}/Catalog/${orgId}/items`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ebayItemId: itemData.ebayItemId,
-          points: Number(itemData.points),
-        }),
-      });
-
-      return await handleResponse(response);
-    } catch (error) {
-      console.error("Failed to add catalog item", error);
-      throw error;
-    }
-  },
-
   //Application API Calls
   applyToOrganization: async (orgId, message = "") => {
     try {
@@ -900,28 +861,48 @@ const apiService = {
   },
 
   // Catalog-specific API calls
-  getSponsorCatalog: async (orgId) => {
+  getCatalog: async (orgId) => {
     try {
       const token = apiService.getToken();
-      if (!token) throw new Error("No authentication token found!");
-      return await apiService.getDataWithAuth(`Catalog/${orgId}`, token);
+      if (!token) {
+        throw new Error("No authentication token found. Please log in.");
+      }
+
+      const response = await fetch(`${BASE_URL}/Catalog/${orgId}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      return await handleResponse(response);
     } catch (error) {
-      console.error("Failed to get sponsor catalog", error);
+      console.error("Failed to get catalog", error);
       throw error;
     }
   },
 
-  addCatalogItem: async (orgId, request) => {
+  addCatalogItem: async (orgId, itemData) => {
     try {
       const token = apiService.getToken();
-      if (!token) throw new Error("No authentication token found!");
+      if (!token) {
+        throw new Error("No authentication token found. Please log in.");
+      }
 
-      const response = await apiService.postDataWithAuth(
-        `Catalog/${orgId}`,
-        JSON.stringify(request),
-        token,
-      );
-      return response;
+      const response = await fetch(`${BASE_URL}/Catalog/${orgId}/items`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ebayItemId: itemData.ebayItemId,
+          points: Number(itemData.points),
+        }),
+      });
+
+      return await handleResponse(response);
     } catch (error) {
       console.error("Failed to add catalog item", error);
       throw error;
@@ -1105,12 +1086,15 @@ const apiService = {
       if (!token) {
         throw new Error("No Authentication token found.");
       }
-      const response = await fetch(`${BASE_URL}/DriverWishlist/${catalogItemId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const response = await fetch(
+        `${BASE_URL}/DriverWishlist/${catalogItemId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
       return await handleResponse(response);
     } catch (error) {
       console.error("Failed to remove item from wishlist.", error);
