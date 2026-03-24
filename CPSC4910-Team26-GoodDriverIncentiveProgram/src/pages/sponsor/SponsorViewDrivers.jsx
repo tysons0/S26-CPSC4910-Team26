@@ -10,6 +10,10 @@ function SponsorViewDrivers() {
   const [orgId, setOrgId] = useState(null);
   const [adjustingDriver, setAdjustingDriver] = useState(null);
 
+  const [viewingPointHistory, setViewingPointHistory] = useState(null);
+  const [pointHistory, setPointHistory] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
   //Editing State
   const [editingDriver, setEditingDriver] = useState(null);
   const [editFormData, setEditFormData] = useState({
@@ -180,6 +184,32 @@ function SponsorViewDrivers() {
       timeZone: "",
       country: "",
     });
+  };
+
+  const handleViewPointHistory = async (driver) => {
+    setViewingPointHistory(driver.driverId);
+    setLoadingHistory(true);
+
+    try {
+      const history = await apiService.getDriverPointHistory(driver.driverId);
+
+      // Sort by date, newest first
+      const sortedHistory = (Array.isArray(history) ? history : []).sort(
+        (a, b) => new Date(b.createdAtUtc) - new Date(a.createdAtUtc),
+      );
+
+      setPointHistory(sortedHistory);
+    } catch (error) {
+      console.error("Error fetching point history:", error);
+      alert("Failed to load point history");
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  const handleClosePointHistory = () => {
+    setViewingPointHistory(null);
+    setPointHistory([]);
   };
 
   if (loading) {
@@ -544,12 +574,189 @@ function SponsorViewDrivers() {
                       >
                         Edit Info
                       </button>
+
+                      <button
+                        style={{
+                          padding: "0.5rem 1rem",
+                          backgroundColor: "#28a745",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "4px",
+                          cursor: "pointer",
+                        }}
+                        onClick={() => handleViewPointHistory(driver)}
+                      >
+                        Point History
+                      </button>
                     </div>
                   </div>
                 )}
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Point History Panel */}
+      {viewingPointHistory && (
+        <div
+          style={{
+            backgroundColor: "#fff",
+            padding: "2rem",
+            borderRadius: "8px",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+            border: "1px solid #e0e0e0",
+            marginTop: "1rem",
+          }}
+        >
+          {(() => {
+            const driver = drivers.find(
+              (d) => d.driverId === viewingPointHistory,
+            );
+            if (!driver) return null;
+
+            return (
+              <div>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: "1.5rem",
+                  }}
+                >
+                  <div>
+                    <h2 style={{ margin: 0 }}>
+                      Point History - {driver.userData?.username}
+                    </h2>
+                    <div
+                      style={{
+                        fontSize: "1.5rem",
+                        fontWeight: "700",
+                        color: "#667eea",
+                        marginTop: "0.5rem",
+                      }}
+                    >
+                      Current Balance: {driver.points || 0} Points
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleClosePointHistory}
+                    style={{
+                      padding: "0.5rem 1rem",
+                      backgroundColor: "#6c757d",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Close
+                  </button>
+                </div>
+
+                {loadingHistory ? (
+                  <p>Loading point history...</p>
+                ) : pointHistory.length === 0 ? (
+                  <div
+                    style={{
+                      backgroundColor: "#f8f9fa",
+                      padding: "2rem",
+                      borderRadius: "8px",
+                      textAlign: "center",
+                      color: "#666",
+                    }}
+                  >
+                    <p style={{ margin: 0 }}>No point history yet.</p>
+                    <p style={{ margin: "0.5rem 0 0 0", fontSize: "0.9rem" }}>
+                      Point changes will appear here when sponsors adjust this
+                      driver's points.
+                    </p>
+                  </div>
+                ) : (
+                  <div>
+                    <h3 style={{ marginBottom: "1rem" }}>
+                      Transaction History ({pointHistory.length})
+                    </h3>
+
+                    <div style={{ display: "grid", gap: "0.75rem" }}>
+                      {pointHistory.map((transaction, index) => (
+                        <div
+                          key={index}
+                          style={{
+                            backgroundColor: "#fff",
+                            padding: "1rem",
+                            borderRadius: "8px",
+                            boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                            border: "1px solid #e0e0e0",
+                            borderLeft: `4px solid ${transaction.pointChange > 0 ? "#28a745" : "#dc3545"}`,
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                          }}
+                        >
+                          <div>
+                            <div
+                              style={{
+                                fontSize: "1.25rem",
+                                fontWeight: "600",
+                                color:
+                                  transaction.pointChange > 0
+                                    ? "#28a745"
+                                    : "#dc3545",
+                                marginBottom: "0.25rem",
+                              }}
+                            >
+                              {transaction.pointChange > 0 ? "+" : ""}
+                              {transaction.pointChange} Points
+                            </div>
+
+                            {transaction.reason && (
+                              <div
+                                style={{
+                                  color: "#666",
+                                  marginBottom: "0.25rem",
+                                }}
+                              >
+                                <strong>Reason:</strong> {transaction.reason}
+                              </div>
+                            )}
+
+                            {transaction.sponsorId && (
+                              <div
+                                style={{ color: "#999", fontSize: "0.85rem" }}
+                              >
+                                By Sponsor #{transaction.sponsorId}
+                              </div>
+                            )}
+                          </div>
+
+                          <div
+                            style={{
+                              textAlign: "right",
+                              color: "#999",
+                              fontSize: "0.85rem",
+                            }}
+                          >
+                            {new Date(transaction.createdAtUtc).toLocaleString(
+                              "en-US",
+                              {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              },
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
         </div>
       )}
     </div>

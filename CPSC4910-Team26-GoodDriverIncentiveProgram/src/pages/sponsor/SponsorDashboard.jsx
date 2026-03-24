@@ -15,6 +15,14 @@ function SponsorDashboard() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+
+  // eBay search state
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+
+  // Selected product + add form
+  const [selectedProduct, setSelectedProduct] = useState(null);
   const [formData, setFormData] = useState({
     ebayItemId: "",
     points: "",
@@ -66,11 +74,107 @@ function SponsorDashboard() {
     fetchDashboardData();
   }, [navigate]);
 
+  const handleLogout = () => {
+    apiService.logout();
+    window.dispatchEvent(new Event("authChange"));
+    navigate("/Login");
+  };
+
   const handleFormChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleSearchProducts = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccessMessage("");
+    setSelectedProduct(null);
+    setFormData({ ebayItemId: "", points: "" });
+
+    const keyword = searchKeyword.trim();
+    if (!keyword) {
+      setError("Please enter a keyword to search eBay products.");
+      return;
+    }
+
+    setSearchLoading(true);
+
+    try {
+      const result = await apiService.searchEbayProducts(keyword, 12);
+      const products = Array.isArray(result?.products) ? result.products : [];
+      setSearchResults(products);
+
+      if (products.length === 0) {
+        setSuccessMessage("No eBay products were found for that search.");
+      }
+    } catch (err) {
+      console.error("Error searching eBay products:", err);
+      setError(err.message || "Failed to search eBay products.");
+      setSearchResults([]);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  const handleSelectProduct = (product) => {
+    setSelectedProduct(product);
+    setError("");
+    setSuccessMessage("");
+    setFormData((prev) => ({
+      ...prev,
+      ebayItemId: product?.itemId || "",
+    }));
+  };
+
+  const handleAddProduct = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccessMessage("");
+
+    const ebayItemId = formData.ebayItemId.trim();
+    const points = Number(formData.points);
+
+    if (!ebayItemId) {
+      setError("Please select an eBay product first.");
+      return;
+    }
+
+    if (!Number.isFinite(points) || points <= 0) {
+      setError("Points must be a positive number.");
+      return;
+    }
+
+    if (!sponsorOrgId) {
+      setError("Sponsor organization is not available.");
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      await apiService.addCatalogItem(sponsorOrgId, {
+        ebayItemId,
+        points,
+      });
+
+      setSuccessMessage("Product added to your organization catalog.");
+      setFormData({
+        ebayItemId: "",
+        points: "",
+      });
+      setSelectedProduct(null);
+
+      await loadCatalog(sponsorOrgId);
+    } catch (submitError) {
+      console.error("Error adding catalog product:", submitError);
+      setError(submitError.message || "Failed to add product to catalog.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  /*
   const handleAddProduct = async (e) => {
     e.preventDefault();
     setError("");
@@ -108,12 +212,7 @@ function SponsorDashboard() {
       setSubmitting(false);
     }
   };
-
-  const handleLogout = () => {
-    apiService.logout();
-    window.dispatchEvent(new Event("authChange"));
-    navigate("/Login");
-  };
+  */
 
   if (loading) {
     return (
@@ -150,48 +249,216 @@ function SponsorDashboard() {
         </p>
       )}
 
+      <div style={{ marginBottom: "1rem" }}>
+        <Link to="/EbayTest">
+          <button className="submit" style={{ marginRight: "1rem" }}>
+            Test eBay Products
+          </button>
+        </Link>
+      </div>
+
       <div style={{ marginTop: "2rem", marginBottom: "2rem" }}>
-        <h2>Add Product to Catalog</h2>
-        <form onSubmit={handleAddProduct} style={{ maxWidth: "420px" }}>
+        <h2>Search eBay Products</h2>
+
+        <form onSubmit={handleSearchProducts} style={{ maxWidth: "500px" }}>
           <div style={{ marginBottom: "1rem" }}>
-            <label htmlFor="ebayItemId">eBay Item ID</label>
+            <label htmlFor="searchKeyword">Keyword</label>
             <input
-              id="ebayItemId"
-              name="ebayItemId"
+              id="searchKeyword"
               type="text"
-              value={formData.ebayItemId}
-              onChange={handleFormChange}
-              placeholder="v1|1234567890|0"
-              required
-              style={{ width: "100%", padding: "0.5rem", marginTop: "0.35rem" }}
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              placeholder="Search for products"
+              style={{
+                width: "100%",
+                padding: "0.5rem",
+                marginTop: "0.35rem",
+              }}
             />
           </div>
 
-          <div style={{ marginBottom: "1rem" }}>
-            <label htmlFor="points">Points Cost</label>
-            <input
-              id="points"
-              name="points"
-              type="number"
-              min="1"
-              value={formData.points}
-              onChange={handleFormChange}
-              placeholder="100"
-              required
-              style={{ width: "100%", padding: "0.5rem", marginTop: "0.35rem" }}
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="submit"
-            disabled={submitting || !sponsorOrgId}
-          >
-            {submitting ? "Adding Product..." : "Add Product"}
+          <button type="submit" className="submit" disabled={searchLoading}>
+            {searchLoading ? "Searching..." : "Search eBay"}
           </button>
         </form>
       </div>
 
+      {/* Search Results */}
+      <div style={{ marginBottom: "2rem" }}>
+        <h2>Search Results</h2>
+
+        {searchLoading ? (
+          <p>Searching products...</p>
+        ) : searchResults.length === 0 ? (
+          <p>No eBay products loaded yet. Search above to see products.</p>
+        ) : (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+              gap: "1rem",
+            }}
+          >
+            {searchResults.map((product) => {
+              const isSelected = selectedProduct?.itemId === product?.itemId;
+
+              return (
+                <div
+                  key={product?.itemId || Math.random()}
+                  style={{
+                    border: isSelected
+                      ? "2px solid #2c7be5"
+                      : "1px solid #dcdcdc",
+                    borderRadius: "10px",
+                    padding: "1rem",
+                    backgroundColor: "#fff",
+                  }}
+                >
+                  {product?.image ? (
+                    <img
+                      src={product.image}
+                      alt={product?.name || "Product"}
+                      style={{
+                        width: "100%",
+                        height: "180px",
+                        objectFit: "contain",
+                        marginBottom: "0.75rem",
+                        borderRadius: "8px",
+                        backgroundColor: "#fafafa",
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: "100%",
+                        height: "180px",
+                        marginBottom: "0.75rem",
+                        borderRadius: "8px",
+                        backgroundColor: "#f3f3f3",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: "#666",
+                        fontSize: "0.95rem",
+                      }}
+                    >
+                      No image available
+                    </div>
+                  )}
+
+                  <h3 style={{ marginTop: 0 }}>
+                    {product?.name || "Unnamed Product"}
+                  </h3>
+
+                  <p style={{ margin: "0.4rem 0" }}>
+                    <strong>Price:</strong>{" "}
+                    {product?.price != null
+                      ? `${product.price} ${product?.currency || ""}`
+                      : "N/A"}
+                  </p>
+
+                  <p style={{ margin: "0.4rem 0" }}>
+                    <strong>Condition:</strong> {product?.condition || "N/A"}
+                  </p>
+
+                  <p style={{ margin: "0.4rem 0", wordBreak: "break-word" }}>
+                    <strong>Item ID:</strong> {product?.itemId || "N/A"}
+                  </p>
+
+                  {product?.itemWebUrl && (
+                    <p style={{ margin: "0.4rem 0 0.8rem 0" }}>
+                      <a
+                        href={product.itemWebUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        View on eBay
+                      </a>
+                    </p>
+                  )}
+
+                  <button
+                    type="button"
+                    className="submit"
+                    onClick={() => handleSelectProduct(product)}
+                  >
+                    {isSelected ? "Selected" : "Select Product"}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Add Selected Product */}
+      <div style={{ marginTop: "2rem", marginBottom: "2rem" }}>
+        <h2>Add Product to Catalog</h2>
+
+        {!selectedProduct ? (
+          <p>Select a product from the search results above.</p>
+        ) : (
+          <>
+            <div
+              style={{
+                border: "1px solid #dcdcdc",
+                borderRadius: "10px",
+                padding: "1rem",
+                marginBottom: "1rem",
+                backgroundColor: "#fff",
+                maxWidth: "600px",
+              }}
+            >
+              <p>
+                <strong>Selected Product:</strong>{" "}
+                {selectedProduct?.name || "Unnamed Product"}
+              </p>
+              <p>
+                <strong>Item ID:</strong> {selectedProduct?.itemId || "N/A"}
+              </p>
+              <p>
+                <strong>Price:</strong>{" "}
+                {selectedProduct?.price != null
+                  ? `${selectedProduct.price} ${
+                      selectedProduct?.currency || ""
+                    }`
+                  : "N/A"}
+              </p>
+            </div>
+
+            <form onSubmit={handleAddProduct} style={{ maxWidth: "420px" }}>
+              <div style={{ marginBottom: "1rem" }}>
+                <label htmlFor="points">Points Cost</label>
+                <input
+                  id="points"
+                  name="points"
+                  type="number"
+                  min="1"
+                  value={formData.points}
+                  onChange={handleFormChange}
+                  placeholder="100"
+                  required
+                  style={{
+                    width: "100%",
+                    padding: "0.5rem",
+                    marginTop: "0.35rem",
+                  }}
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="submit"
+                disabled={submitting || !sponsorOrgId}
+              >
+                {submitting ? "Adding Product..." : "Add Product to Catalog"}
+              </button>
+            </form>
+          </>
+        )}
+      </div>
+
+      {/* Current Catalog */}
       <div style={{ marginBottom: "2rem" }}>
         <h2>Current Catalog</h2>
         {catalogLoading ? (
