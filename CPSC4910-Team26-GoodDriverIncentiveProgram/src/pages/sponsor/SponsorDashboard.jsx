@@ -314,14 +314,6 @@ function SponsorDashboard() {
         </p>
       )}
 
-      <div style={{ marginBottom: "1rem" }}>
-        <Link to="/EbayTest">
-          <button className="submit" style={{ marginRight: "1rem" }}>
-            Test eBay Products
-          </button>
-        </Link>
-      </div>
-
       {/* Manual Add Product */}
       <div style={{ marginTop: "2rem", marginBottom: "2rem" }}>
         <h2>Add Product to Catalog</h2>
