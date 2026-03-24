@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -68,13 +69,18 @@ public class EbayService : IEbayService
             request.Headers.Add("X-EBAY-C-MARKETPLACE-ID", _config.MarketplaceId);
 
             HttpResponseMessage response = await _httpClient.SendAsync(request);
-            response.EnsureSuccessStatusCode();
-
             string content = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                int status = (int)response.StatusCode;
+                _logger.LogWarning("eBay API returned non-success status {Status} for keyword {Keyword}: {Content}", status, keyword, content);
+                throw new Class4910Api.Services.ApiException($"eBay product search failed: {content}", status);
+            }
 
             EbayApiResponse? searchResponse = JsonSerializer.Deserialize<EbayApiResponse>(content, _serializerOptions);
 
-            List<EbayProduct> products = [];
+            List<EbayProduct> products = new();
 
             if (searchResponse?.ItemSummaries != null)
             {
