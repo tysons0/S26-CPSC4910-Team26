@@ -192,7 +192,7 @@ function Organizations() {
         ) : (
           <div
             style={{
-              backgroundColor: "#e7f3ff",
+              backgroundColor: "#cde1f5",
               padding: "1rem",
               borderRadius: "8px",
               borderLeft: "4px solid #0066cc",
