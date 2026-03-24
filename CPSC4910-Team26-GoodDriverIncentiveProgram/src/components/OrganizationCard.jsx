@@ -45,8 +45,14 @@ function OrganizationCard({
     ? statusColors[status] || "#6c757d"
     : undefined;
 
-  return (
-    <div className="sponsor-card">
+  return (  
+    <div style={{
+      borderWidth: "2px",
+      borderStyle: "solid",
+      borderRadius: "1rem",
+      borderColor: "#334155",
+      padding: "1rem"
+      }} className="sponsor-card">
       <div className="sponsor-image">
         <img
           src="https://via.placeholder.com/200?text=Organization"
