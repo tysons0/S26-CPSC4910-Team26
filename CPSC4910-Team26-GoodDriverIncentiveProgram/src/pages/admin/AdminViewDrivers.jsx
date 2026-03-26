@@ -1,11 +1,13 @@
 import { useEffect, useState, Fragment } from "react";
 import apiService from "../../services/api";
 import PageTitle from "../../components/PageTitle";
+import { useNavigate } from "react-router-dom";
 
 function AdminViewDrivers() {
   const [drivers, setDrivers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   // Editing state
   const [editingDriver, setEditingDriver] = useState(null);
@@ -27,6 +29,12 @@ function AdminViewDrivers() {
   useEffect(() => {
     const fetchDrivers = async () => {
       try {
+        const userRole = apiService.getUserRole();
+        if (userRole?.toLowerCase() !== "admin") {
+          navigate("/Dashboard");
+          return;
+        }
+
         const data = await apiService.getDrivers();
         console.log("Drivers data:", data); // DEBUG
         setDrivers(Array.isArray(data) ? data : []);
@@ -131,6 +139,49 @@ function AdminViewDrivers() {
     }
   };
 
+  const handleDisableDriver = async (driver) => {
+    const userId = driver.userData?.id;
+
+    if (!userId) {
+      alert("Could not find user ID for this driver.");
+      return;
+    }
+
+    if (driver.userData?.disabled) {
+      alert("This driver is already disabled.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Are you sure you want to disable ${driver.userData?.username || "this driver"}?`,
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await apiService.disableUser(userId);
+
+      setDrivers((prevDrivers) =>
+        prevDrivers.map((d) =>
+          d.driverId === driver.driverId
+            ? {
+                ...d,
+                userData: {
+                  ...d.userData,
+                  disabled: true,
+                },
+              }
+            : d,
+        ),
+      );
+
+      alert("Driver disabled successfully.");
+    } catch (error) {
+      console.error("Error disabling driver:", error);
+      alert("Failed to disable driver: " + (error.message || "Unknown error"));
+    }
+  };
+
   // Cancel editing
   const handleCancelEdit = () => {
     setEditingDriver(null);
@@ -171,6 +222,18 @@ function AdminViewDrivers() {
   return (
     <div style={{ padding: "2rem" }}>
       <PageTitle title="View Drivers | Admin" />
+
+      <header className="catalog-header">
+        <div style={{ display: "flex", gap: "10px" }}>
+          <button
+            className="submit"
+            onClick={() => navigate("/AdminDashboard")}
+          >
+            Back
+          </button>
+        </div>
+      </header>
+
       <h1>Registered Drivers</h1>
 
       {drivers.length === 0 ? (
@@ -206,6 +269,9 @@ function AdminViewDrivers() {
                   Organization
                 </th>
                 <th style={{ padding: "0.75rem", textAlign: "left" }}>
+                  Status
+                </th>
+                <th style={{ padding: "0.75rem", textAlign: "left" }}>
                   Actions
                 </th>
               </tr>
@@ -233,6 +299,9 @@ function AdminViewDrivers() {
                       {driver.organizationId
                         ? `Org ${driver.organizationId}`
                         : "None"}
+                    </td>
+                    <td style={{ padding: "0.75rem" }}>
+                      {driver.userData?.disabled ? "Disabled" : "Active"}
                     </td>
                     <td style={{ padding: "0.75rem" }}>
                       <button
@@ -264,6 +333,22 @@ function AdminViewDrivers() {
                         }}
                       >
                         Edit
+                      </button>
+
+                      <button
+                        onClick={() => handleDisableDriver(driver)}
+                        style={{
+                          padding: "0.25rem 0.75rem",
+                          marginLeft: "0.5rem",
+                          backgroundColor: "#dc3545",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "4px",
+                          cursor: "pointer",
+                          fontSize: "0.875rem",
+                        }}
+                      >
+                        Disable
                       </button>
                     </td>
                   </tr>
@@ -555,6 +640,12 @@ function AdminViewDrivers() {
                                 {driver.organizationId
                                   ? `Org ${driver.organizationId}`
                                   : "None"}
+                              </div>
+                              <div>
+                                <strong>Status:</strong>{" "}
+                                {driver.userData?.disabled
+                                  ? "Disabled"
+                                  : "Active"}
                               </div>
                             </div>
 

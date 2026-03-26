@@ -116,7 +116,7 @@ function SponsorDashboard() {
     setSearchLoading(true);
 
     try {
-      const result = await apiService.searchEbayProducts(keyword, 12);
+      const result = await apiService.searchEbayProducts(keyword, 25);
       const products = Array.isArray(result?.products) ? result.products : [];
       setSearchResults(products);
 
@@ -191,46 +191,6 @@ function SponsorDashboard() {
     }
   };
 
-  /*
-  const handleAddProduct = async (e) => {
-    e.preventDefault();
-    setError("");
-    setSuccessMessage("");
-
-    const ebayItemId = formData.ebayItemId.trim();
-    const points = Number(formData.points);
-
-    if (!ebayItemId) {
-      setError("eBay item ID is required.");
-      return;
-    }
-
-    if (!Number.isFinite(points) || points <= 0) {
-      setError("Points must be a positive number.");
-      return;
-    }
-
-    if (!sponsorOrgId) {
-      setError("Sponsor organization is not available.");
-      return;
-    }
-
-    setSubmitting(true);
-
-    try {
-      await apiService.addCatalogItem(sponsorOrgId, { ebayItemId, points });
-      setSuccessMessage("Product added to your organization catalog.");
-      setFormData({ ebayItemId: "", points: "" });
-      await loadCatalog(sponsorOrgId);
-    } catch (submitError) {
-      console.error("Error adding catalog product:", submitError);
-      setError(submitError.message || "Failed to add product to catalog.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-  */
-
   const handleManualAddProduct = async (e) => {
     e.preventDefault();
     setError("");
@@ -292,9 +252,6 @@ function SponsorDashboard() {
     <div style={{ padding: "2rem" }}>
       <PageTitle title="Product Dashboard" />
       <h1>Sponsor Dashboard</h1>
-      <button className="submit" onClick={handleLogout}>
-        Logout
-      </button>
       <p>
         Welcome back <strong> {user?.username || "Sponsor"}!</strong> This is
         where you can view your catalog and manage products.
@@ -605,6 +562,14 @@ function SponsorDashboard() {
         <Link to="/SponsorViewDrivers">
           <button className="submit" style={{ marginRight: "1rem" }}>
             View Drivers
+          </button>
+        </Link>
+      </div>
+
+      <div style={{ marginBottom: "1rem" }}>
+        <Link to="/SponsorViewSponsors">
+          <button className="submit" style={{ marginRight: "1rem" }}>
+            View Organization's Sponsors
           </button>
         </Link>
       </div>
