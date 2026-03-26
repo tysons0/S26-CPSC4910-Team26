@@ -190,8 +190,6 @@ public class AuthService : IAuthService
                         return true;
                 }
             }
-            if (editorUser.Role == UserRole.Admin && editeeUser.Role != UserRole.Admin)
-                return true;
 
             return false;
         }
