@@ -1,11 +1,13 @@
 import { useEffect, useState, Fragment } from "react";
 import apiService from "../../services/api";
 import PageTitle from "../../components/PageTitle";
+import { useNavigate } from "react-router-dom";
 
 function AdminViewAdmins() {
   const [admins, setAdmins] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   // Editing state
   const [editingAdmin, setEditingAdmin] = useState(null);
@@ -140,6 +142,17 @@ function AdminViewAdmins() {
   return (
     <div style={{ padding: "2rem" }}>
       <PageTitle title="View Admins | Admin" />
+
+      <header className="catalog-header">
+        <div style={{ display: "flex", gap: "10px" }}>
+          <button
+            className="submit"
+            onClick={() => navigate("/AdminDashboard")}
+          >
+            Back
+          </button>
+        </div>
+      </header>
       <h1>Registered Admins</h1>
 
       {admins.length === 0 ? (

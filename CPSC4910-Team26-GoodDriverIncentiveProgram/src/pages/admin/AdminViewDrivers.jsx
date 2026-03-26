@@ -1,11 +1,13 @@
 import { useEffect, useState, Fragment } from "react";
 import apiService from "../../services/api";
 import PageTitle from "../../components/PageTitle";
+import { useNavigate } from "react-router-dom";
 
 function AdminViewDrivers() {
   const [drivers, setDrivers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   // Editing state
   const [editingDriver, setEditingDriver] = useState(null);
@@ -171,6 +173,18 @@ function AdminViewDrivers() {
   return (
     <div style={{ padding: "2rem" }}>
       <PageTitle title="View Drivers | Admin" />
+
+      <header className="catalog-header">
+        <div style={{ display: "flex", gap: "10px" }}>
+          <button
+            className="submit"
+            onClick={() => navigate("/AdminDashboard")}
+          >
+            Back
+          </button>
+        </div>
+      </header>
+
       <h1>Registered Drivers</h1>
 
       {drivers.length === 0 ? (
