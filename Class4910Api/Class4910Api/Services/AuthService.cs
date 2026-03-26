@@ -168,6 +168,9 @@ public class AuthService : IAuthService
             if (editorUser is null || editeeUser is null)
                 return false;
 
+            if (editorUser.Role == UserRole.Admin)
+                return true;
+
             if (editorUser.Role == UserRole.Sponsor && editeeUser.Role == UserRole.Driver)
             {
                 Sponsor? editingSponsor = await _sponserService.GetSponsorByUserId(editorUserId) 
