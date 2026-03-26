@@ -191,46 +191,6 @@ function SponsorDashboard() {
     }
   };
 
-  /*
-  const handleAddProduct = async (e) => {
-    e.preventDefault();
-    setError("");
-    setSuccessMessage("");
-
-    const ebayItemId = formData.ebayItemId.trim();
-    const points = Number(formData.points);
-
-    if (!ebayItemId) {
-      setError("eBay item ID is required.");
-      return;
-    }
-
-    if (!Number.isFinite(points) || points <= 0) {
-      setError("Points must be a positive number.");
-      return;
-    }
-
-    if (!sponsorOrgId) {
-      setError("Sponsor organization is not available.");
-      return;
-    }
-
-    setSubmitting(true);
-
-    try {
-      await apiService.addCatalogItem(sponsorOrgId, { ebayItemId, points });
-      setSuccessMessage("Product added to your organization catalog.");
-      setFormData({ ebayItemId: "", points: "" });
-      await loadCatalog(sponsorOrgId);
-    } catch (submitError) {
-      console.error("Error adding catalog product:", submitError);
-      setError(submitError.message || "Failed to add product to catalog.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-  */
-
   const handleManualAddProduct = async (e) => {
     e.preventDefault();
     setError("");
@@ -602,6 +562,14 @@ function SponsorDashboard() {
         <Link to="/SponsorViewDrivers">
           <button className="submit" style={{ marginRight: "1rem" }}>
             View Drivers
+          </button>
+        </Link>
+      </div>
+
+      <div style={{ marginBottom: "1rem" }}>
+        <Link to="/SponsorViewSponsors">
+          <button className="submit" style={{ marginRight: "1rem" }}>
+            View Organization's Sponsors
           </button>
         </Link>
       </div>
