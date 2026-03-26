@@ -171,16 +171,26 @@ public class AuthService : IAuthService
             if (editorUser.Role == UserRole.Admin)
                 return true;
 
-            if (editorUser.Role == UserRole.Sponsor && editeeUser.Role == UserRole.Driver)
+            if (editorUser.Role == UserRole.Sponsor)
             {
-                Sponsor? editingSponsor = await _sponserService.GetSponsorByUserId(editorUserId) 
-                    ?? throw new("Editor User was identified as a sponsor but could not be found");
-                Driver? editeeDriver = await _driverService.GetDriverByUserId(editeeUser.Id);
+                Sponsor? editingSponsor = await _sponserService.GetSponsorByUserId(editorUserId)
+                        ?? throw new("Editor User was identified as a sponsor but could not be found");
+                if (editeeUser.Role == UserRole.Driver)
+                {
+                    Driver? editeeDriver = await _driverService.GetDriverByUserId(editeeUser.Id);
 
-                if (editingSponsor.OrganizationId == editeeDriver?.OrganizationId)
-                    return true;
+                    if (editingSponsor.OrganizationId == editeeDriver?.OrganizationId)
+                        return true;
+                }
+                if (editeeUser.Role == UserRole.Sponsor)
+                {
+                    Sponsor? editeeSponsor = await _sponserService.GetSponsorByUserId(editeeUser.Id);
+
+                    if (editingSponsor.OrganizationId == editeeSponsor?.OrganizationId)
+                        return true;
+                }
             }
-            else if (editorUser.Role == UserRole.Admin && editeeUser.Role != UserRole.Admin)
+            if (editorUser.Role == UserRole.Admin && editeeUser.Role != UserRole.Admin)
                 return true;
 
             return false;
