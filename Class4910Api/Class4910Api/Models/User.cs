@@ -19,6 +19,8 @@ public class User
 
     public required UserRole Role { get; set; }
 
+    public required bool Disabled { get; init; }
+
     public List<int> AssociatedOrgIds { get; set; } = [];
 
     public override string ToString()
@@ -43,6 +45,7 @@ public class User
             Country = Country,
             LastLoginUtc = LastLoginUtc,
             AssociatedOrgIds = AssociatedOrgIds,
+            Disabled = Disabled,
         };
     }
 

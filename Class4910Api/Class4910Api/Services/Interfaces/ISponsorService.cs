@@ -10,4 +10,6 @@ public interface ISponsorService
     Task<Sponsor?> GetSponsorByName(string userName);
 
     Task<List<Sponsor>?> GetSponsorsByOrganizationId(int orgId);
+
+    Task<List<Sponsor>?> GetAllSponsors();
 }

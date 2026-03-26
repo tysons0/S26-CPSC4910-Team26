@@ -14,4 +14,6 @@ public interface IUserService
     Task<User> GetUserFromReader(DbDataReader reader, string? readPrefix = null);
 
     Task<User?> UpdateUser(int userId, UserUpdateRequest userRequest);
+
+    Task<bool> DisableUser(int userId);
 }

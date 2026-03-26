@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using static Class4910Api.ConstantValues;
 
-using static Class4910Api.ConstantValues;
 
 namespace Class4910Api.Controllers;
 

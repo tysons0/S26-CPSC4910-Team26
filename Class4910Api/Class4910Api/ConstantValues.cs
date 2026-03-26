@@ -71,6 +71,9 @@ public static class ConstantValues
     public static readonly DatabaseField UserCreatedAtUtcField =
         new() { Name = "CreatedAtUtc", Type = MySqlDbType.DateTime, Nullable = false };
 
+    public static readonly DatabaseField UserDisabledField =
+        new() { Name = "Disabled", Type = MySqlDbType.Bit, Nullable = false };
+
     public static readonly DatabaseTable UsersTable = new()
     {
         Name = "Users",
@@ -86,7 +89,8 @@ public static class ConstantValues
             UserLastLoginTimeUtcField,
             UserTimeZoneField,
             UserHashedPasswordField,
-            UserCreatedAtUtcField
+            UserCreatedAtUtcField,
+            UserDisabledField
         ]
     };
 

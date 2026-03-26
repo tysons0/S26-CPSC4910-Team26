@@ -20,6 +20,17 @@ public class SponsorController : ControllerBase
 		_contextService = contextService;
 	}
 
+	[HttpGet]
+	public async Task<ActionResult<List<Sponsor>>> GetSponsors()
+	{
+        List<Sponsor>? sponsorList = await _sponsorService.GetAllSponsors();
+
+		if (sponsorList is null)
+			return BadRequest();
+		else
+			return Ok(sponsorList);
+	}
+
 	[Authorize(Roles = SPONSOR)]
 	[HttpGet("me")]
 	public async Task<ActionResult<Sponsor>> GetCurrentSponsor()

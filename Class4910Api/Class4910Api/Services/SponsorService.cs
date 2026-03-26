@@ -188,4 +188,38 @@ public class SponsorService : ISponsorService
             return null;
         }
     }
+
+    public async Task<List<Sponsor>?> GetAllSponsors()
+    {
+        try
+        {
+            await using MySqlConnection conn = new(_dbConnection);
+            conn.Open();
+            MySqlCommand command = conn.CreateCommand();
+
+            command.CommandText =
+                @$"SELECT {UsersTable.GetFields(userAlias)} , {SponsorsTable.GetFields(sponsorAlias)} 
+                   FROM {UsersTable.Name} {userAlias}
+                   JOIN {SponsorsTable.Name} {sponsorAlias} 
+                        ON {userAlias}.{UserIdField.SelectName} = {sponsorAlias}.{UserIdField.SelectName}
+                ";
+
+            await using DbDataReader reader = await command.ExecuteReaderAsync();
+
+            List<Sponsor> sponsorList = [];
+            while (await reader.ReadAsync())
+            {
+                Sponsor sponsor = await GetSponsorFromReader(reader, userAlias, sponsorAlias);
+                sponsorList.Add(sponsor);
+            }
+
+            _logger.LogInformation("Retrieved {Count} sponsors", sponsorList.Count);
+            return sponsorList;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving All Sponsors");
+            return null;
+        }
+    }
 }

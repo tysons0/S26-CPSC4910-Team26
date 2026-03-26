@@ -4,6 +4,7 @@ namespace Class4910Api.Services.Interfaces;
 
 public interface IAdminService
 {
+    Task<List<Admin>?> GetAllAdmins();
     Task<Admin?> GetAdminByAdminId(int adminId);
     Task<Admin?> GetAdminByUserId(int userId);
 

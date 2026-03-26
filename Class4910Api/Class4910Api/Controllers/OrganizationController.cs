@@ -103,7 +103,7 @@ public class OrganizationController : ControllerBase
         return Ok(sponsors);
     }
 
-    [Authorize(Roles = $"{ADMIN},{SPONSOR}, {DRIVER}")]
+    [Authorize]
     [HttpGet("{orgId:int}")]
     public async Task<ActionResult<Organization>> GetOrganizationById(int orgId)
     {
@@ -136,7 +136,6 @@ public class OrganizationController : ControllerBase
         return Ok(organization);
     }
 
-    [Authorize]
     [HttpGet("me")]
     public async Task<ActionResult<Organization>> GetOrganizationContext()
     {
@@ -169,5 +168,22 @@ public class OrganizationController : ControllerBase
         return Ok(organization);
     }
 
+    [Authorize (Roles = $"{ADMIN},{SPONSOR}")]
+    [HttpDelete("remove-driver/{driverId:int}")]
+    public async Task<ActionResult> RemoveDriverFromOrganization(int driverId, [FromQuery] int orgId)
+    {
+        int contextUserId = _contextService.GetUserId(HttpContext);
+
+        OrgAccess orgAccess = await _authService.RetrieveUserOrgAccess(contextUserId, orgId);
+        if (orgAccess != OrgAccess.ReadWrite)
+            return Forbid();
+
+        bool removalResult = await _organizationService.RemoveDriverFromOrganization(driverId, orgId);
+
+        if (!removalResult) 
+            return BadRequest();
+
+        return Ok();
+    }
 }
 

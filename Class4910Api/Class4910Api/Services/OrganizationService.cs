@@ -154,6 +154,35 @@ public class OrganizationService : IOrganizationService
         }
     }
 
+    public async Task<bool> RemoveDriverFromOrganization(int driverId, int orgId)
+    {
+        try
+        {
+            await using MySqlConnection conn = new(_dbConnection);
+            conn.Open();
+            MySqlCommand command = conn.CreateCommand();
+
+            command.CommandText =
+                @$"UPDATE {DriversTable.Name}
+                   SET {DriverOrgIdField.SelectName} = NULL
+                   WHERE {DriverIdField.SelectName} = @DriverId
+                   AND {DriverOrgIdField.SelectName} = @OrgId
+                ";
+            command.Parameters.Add(DriverIdField.GenerateParameter("@DriverId", driverId));
+            command.Parameters.Add(DriverOrgIdField.GenerateParameter("@OrgId", orgId));
+
+            await command.ExecuteNonQueryAsync();
+
+            _logger.LogInformation("Updated Organization[{Id}] for Driver[{Id}] to NULL", orgId, driverId);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error removing driver[{Id}] from organization[{Id}]", driverId, orgId);
+            return false;
+        }
+    }
+
     public async Task<Organization?> UpdateOrganizationPointValue(int organizationId, double newPointValue, int updaterUserId)
     {
         try

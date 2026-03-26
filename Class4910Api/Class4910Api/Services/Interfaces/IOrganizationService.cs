@@ -1,5 +1,6 @@
 ﻿using Class4910Api.Models;
 using Class4910Api.Models.Requests;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Class4910Api.Services.Interfaces;
 
@@ -14,4 +15,6 @@ public interface IOrganizationService
     Task<Organization?> UpdateOrganizationPointValue(int organizationId, double newPointValue, int updaterUserId);
 
     Task<List<Organization>?> GetOrganizations();
+
+    Task<bool> RemoveDriverFromOrganization(int driverId, int orgId);
 }

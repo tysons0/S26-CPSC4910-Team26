@@ -3,6 +3,7 @@ using Class4910Api.Models.Requests;
 using Class4910Api.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Mysqlx;
 
 namespace Class4910Api.Controllers;
 
@@ -48,5 +49,23 @@ public class UserController : ControllerBase
 
         _logger.LogInformation("Successfully updated user with id {UserId}", contextUserId);
         return Ok(updatedUser.ToReadFormat());
+    }
+
+    [HttpPatch("{updateUserId:int}/disable")]
+    public async Task<ActionResult> DisableUser(int updateUserId)
+    {
+        int contextUserId = _contextService.GetUserId(HttpContext);
+
+        bool canUpdate = await _authService.CanUserEditOtherUser(contextUserId, updateUserId);
+
+        if (canUpdate == false) return Forbid();
+        else
+        {
+            bool disableResult = await _userService.DisableUser(updateUserId);
+            if (disableResult)
+                return Ok();
+        }
+
+        return BadRequest();
     }
 }

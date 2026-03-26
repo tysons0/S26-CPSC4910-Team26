@@ -21,6 +21,8 @@ public class UserRead
 
     public required string Role { get; set; }
 
+    public required bool Disabled { get; init; }
+
     public List<int> AssociatedOrgIds { get; set; } = [];
 
     public override string ToString()

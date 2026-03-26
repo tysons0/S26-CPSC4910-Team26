@@ -237,6 +237,8 @@ public static class Startup
                 {UserLastLoginTimeUtcField.SelectName} DATETIME(6) NULL,
 	            {UserCreatedAtUtcField.SelectName} DATETIME(6) NOT NULL,
 
+                {UserDisabledField.SelectName} bit DEFAULT 0 NOT NULL,
+
 	            CONSTRAINT Users_PK PRIMARY KEY({UserIdField.SelectName}),
 	            CONSTRAINT Users_UniqueUserName UNIQUE({UserUserNameField.SelectName}),
                 CONSTRAINT Users_UniqueEmail UNIQUE({UserEmailField.SelectName})

@@ -23,6 +23,35 @@ public class UserService : IUserService
         _dbConnection = databaseConnection.Value.Connection;
     }
 
+    public async Task<bool> DisableUser(int userId)
+    {
+        _logger.LogInformation("Disabling user[{Id}]", userId);
+
+        try
+        {
+            await using MySqlConnection conn = new(_dbConnection);
+            conn.Open();
+            MySqlCommand command = conn.CreateCommand();
+
+            command.CommandText =
+                   @$"UPDATE {UsersTable.Name} 
+                   SET {UserDisabledField.SelectName} = 1
+                   WHERE {UserIdField.SelectName} = @UserId";
+            command.Parameters.Add(UserIdField.GenerateParameter("@UserId", userId));
+
+            int result = await command.ExecuteNonQueryAsync();
+
+            _logger.LogInformation("Disabled user[{Id}]", userId);
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to disable user[{Id}]", userId);
+            return false;
+        }
+    }
+
     public async Task<User?> FindUserByEmail(string email)
     {
         try
@@ -173,6 +202,8 @@ public class UserService : IUserService
             lastLoginUtc = reader.GetDateTime(lastLoginOrdinal);
         }
 
+        bool disabled = reader.GetBoolean($"{pfx}{UserDisabledField.Name}");
+
         return new User
         {
             Id = id,
@@ -187,7 +218,9 @@ public class UserService : IUserService
             PhoneNumber = phoneNumber,
             TimeZone = timeZone,
             Country = country,
-            LastLoginUtc = lastLoginUtc
+            LastLoginUtc = lastLoginUtc,
+
+            Disabled = disabled,
         };
     }
 

@@ -134,6 +134,8 @@ public class AdminService : IAdminService
     public async Task<Admin> GetAdminFromReader(DbDataReader reader, string? userReadPrefix = null, string? adminReadPrefix = null)
     {
         string pfx = adminReadPrefix ?? "";
+        if (!string.IsNullOrWhiteSpace(pfx))
+            pfx += "_";
 
         int adminId = reader.GetInt32($"{pfx}{AdminIdField.Name}");
 
@@ -143,5 +145,39 @@ public class AdminService : IAdminService
             AdminId = adminId,
             UserData = userData.ToReadFormat()
         };
+    }
+
+    public async Task<List<Admin>?> GetAllAdmins()
+    {
+        try
+        {
+            await using MySqlConnection conn = new(_dbConnection);
+            conn.Open();
+            MySqlCommand command = conn.CreateCommand();
+
+            command.CommandText =
+                @$"SELECT {UsersTable.GetFields(userAlias)} , {AdminsTable.GetFields(adminAlias)} 
+                   FROM {UsersTable.Name} {userAlias}
+                   JOIN {AdminsTable.Name} {adminAlias} 
+                        ON {userAlias}.{UserIdField.SelectName} = {adminAlias}.{UserIdField.SelectName}
+                ";
+
+            await using DbDataReader reader = await command.ExecuteReaderAsync();
+
+            List<Admin> adminList = [];
+            while (await reader.ReadAsync())
+            {
+                Admin adminFromUserId = await GetAdminFromReader(reader, userAlias, adminAlias);
+                adminList.Add(adminFromUserId);
+            }
+
+            _logger.LogInformation("Retrieved {Count} admins", adminList.Count);
+            return adminList;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving All Admins");
+            return null;
+        }
     }
 }
