@@ -65,7 +65,7 @@ public class AuthService : IAuthService
             // Check if user exists
             User? requestedUser = await _userService.FindUserByName(request.UserName);
 
-            if (requestedUser is null)
+            if (requestedUser is null || requestedUser.Disabled)
             {
                 return new() { Error = messageForInvalidLogin };
             }
