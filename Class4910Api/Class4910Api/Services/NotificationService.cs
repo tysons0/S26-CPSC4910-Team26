@@ -14,13 +14,17 @@ public class NotificationService : INotificationService
     private readonly ILogger<NotificationService> _logger;
     private readonly string _dbConnection;
 
-    public NotificationService(ILogger<NotificationService> logger, IOptions<DatabaseConnection> databaseConnection)
+    private readonly IEmailService _emailService;
+
+
+    public NotificationService(ILogger<NotificationService> logger, IOptions<DatabaseConnection> databaseConnection, IEmailService emailService)
     {
         _logger = logger;
         _dbConnection = databaseConnection.Value.Connection;
+        _emailService = emailService;
     }
 
-    public async Task<bool> CreateNotification(int userId, string message, NotificationType type)
+    public async Task<bool> CreateNotification(int userId, string message, NotificationType type, bool sendEmail = false)
     {
         try
         {
@@ -43,6 +47,17 @@ public class NotificationService : INotificationService
             command.Parameters.Add(NotificationCreatedAtUtcField.GenerateParameter("@CreatedAtUtc", DateTime.UtcNow));
 
             await command.ExecuteNonQueryAsync();
+            
+            var (email, enabled, isDisabled) = await GetUserEmailSettings(userId);
+
+            if (sendEmail && enabled && !isDisabled && !string.IsNullOrEmpty(email))
+            {
+                await _emailService.SendEmailAsync(
+                    email,
+                    $"New Notification: {type}",
+                    message
+                );
+            }
 
             return true;
         }
@@ -135,4 +150,32 @@ public class NotificationService : INotificationService
             Type = type,
         };
     }
+
+    private async Task<(string? Email, bool EmailEnabled, bool IsDisabled)> GetUserEmailSettings(int userId)
+    {
+        await using MySqlConnection conn = new(_dbConnection);
+        await conn.OpenAsync();
+
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = @"
+            SELECT Email, EmailNotificationsEnabled, Disabled
+            FROM Users
+            WHERE UserId = @UserId";
+
+        cmd.Parameters.AddWithValue("@UserId", userId);
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        if (await reader.ReadAsync())
+        {
+            return (
+                reader["Email"]?.ToString(),
+                Convert.ToBoolean(reader["EmailNotificationsEnabled"]),
+                Convert.ToBoolean(reader["Disabled"])
+            );
+        }
+
+        return (null, false, true);
+    }
+
 }
