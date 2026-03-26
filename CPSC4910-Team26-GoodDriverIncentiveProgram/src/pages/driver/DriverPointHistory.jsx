@@ -68,17 +68,6 @@ function DriverPointHistory() {
     <div style={{ padding: "2rem" }}>
       <PageTitle title="Point History | Team 26" />
 
-      <header className="catalog-header">
-        <div style={{ display: "flex", gap: "10px" }}>
-          <button
-            className="submit"
-            onClick={() => navigate("/DriverDashboard")}
-          >
-            Back
-          </button>
-        </div>
-      </header>
-
       <h1>Point History</h1>
 
       {/* Current Points Summary */}

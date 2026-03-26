@@ -225,17 +225,6 @@ function SponsorViewDrivers() {
     <div style={{ padding: "2rem" }}>
       <PageTitle title="Manage Drivers | Team 26" />
 
-      <header className="catalog-header">
-        <div style={{ display: "flex", gap: "10px" }}>
-          <button
-            className="submit"
-            onClick={() => navigate("/SponsorDashboard")}
-          >
-            Back
-          </button>
-        </div>
-      </header>
-
       <h1>Organization Drivers</h1>
       <p>View and manage drivers in your organization.</p>
 

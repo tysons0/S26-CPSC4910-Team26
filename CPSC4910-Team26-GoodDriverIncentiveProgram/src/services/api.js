@@ -273,27 +273,6 @@ const apiService = {
     }
   },
 
-  disableUser: async (userId, userData) => {
-    try {
-      const token = apiService.getToken();
-      if (!token) {
-        throw new Error("No authentication token found.");
-      }
-
-      const response = await fetch(`${BASE_URL}/User/${userId}/disable`, {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(userData),
-      });
-    } catch (error) {
-      console.error("Failed to disable user", error);
-      throw error;
-    }
-  },
-
   createOrganization: async (orgData) => {
     try {
       const token = apiService.getToken();
@@ -557,31 +536,7 @@ const apiService = {
 
       return await apiService.getDataWithAuth(`Driver`, token);
     } catch (error) {
-      console.error("Failed to get Drivers", error);
-      throw error;
-    }
-  },
-
-  getSponsors: async () => {
-    try {
-      const token = apiService.getToken();
-      if (!token) throw new Error("No authentication token found!");
-
-      return await apiService.getDataWithAuth(`Sponsor`, token);
-    } catch (error) {
-      console.error("Failed to get Sponsors", error);
-      throw error;
-    }
-  },
-
-  getAdmins: async () => {
-    try {
-      const token = apiService.getToken();
-      if (!token) throw new Error("No authentication token found!");
-
-      return await apiService.getDataWithAuth(`Admin`, token);
-    } catch (error) {
-      console.error("Failed to get Admins", error);
+      console.error("Failed to get Driver's", error);
       throw error;
     }
   },
@@ -901,30 +856,6 @@ const apiService = {
       return await handleResponse(response);
     } catch (error) {
       console.error("Failed to get the organizations drivers.", error);
-      throw error;
-    }
-  },
-
-  getOrganizationSponsors: async (orgId) => {
-    try {
-      const token = apiService.getToken();
-      if (!token) throw new Error("No authentication token found.");
-
-      const params = new URLSearchParams({ orgId: orgId });
-
-      const response = await fetch(
-        `${BASE_URL}/Organization/sponsors?${params}`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        },
-      );
-      return await handleResponse(response);
-    } catch (error) {
-      console.error("Failed to get the organizations sponsors.", error);
       throw error;
     }
   },

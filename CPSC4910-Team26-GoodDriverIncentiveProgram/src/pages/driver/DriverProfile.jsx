@@ -274,17 +274,6 @@ function DriverProfile() {
     <div className="profile-container">
       <PageTitle title="Driver Profile | Team 26" />
 
-      <header className="catalog-header">
-        <div style={{ display: "flex", gap: "10px" }}>
-          <button
-            className="submit"
-            onClick={() => navigate("/DriverDashboard")}
-          >
-            Back
-          </button>
-        </div>
-      </header>
-
       <div className="profile-header">
         <h1>{user?.username}'s Profile</h1>
         <div className="user-badge">{user?.role}</div>
@@ -775,17 +764,11 @@ function DriverProfile() {
         <div className="profile-item" style={{ marginBottom: "1.5rem" }}>
           <label>Email on file</label>
           <div className="profile-value">
-            {user?.email || (
-              <span className="not-set">
-                No email set — please add one before resetting your password.
-              </span>
-            )}
+            {user?.email || <span className="not-set">No email set — please add one before resetting your password.</span>}
           </div>
         </div>
 
-        <p
-          style={{ color: "#666", marginBottom: "1.5rem", fontSize: "0.95rem" }}
-        >
+        <p style={{ color: "#666", marginBottom: "1.5rem", fontSize: "0.95rem" }}>
           A password reset link will be sent to your email address on file.
         </p>
 
@@ -798,15 +781,11 @@ function DriverProfile() {
             setPasswordSuccess("");
             try {
               if (!user?.email) {
-                setPasswordError(
-                  "No email address on your account. Please add one first.",
-                );
+                setPasswordError("No email address on your account. Please add one first.");
                 return;
               }
               await apiService.forgotPassword(user.email);
-              setPasswordSuccess(
-                "Password reset email sent! Check your inbox.",
-              );
+              setPasswordSuccess("Password reset email sent! Check your inbox.");
             } catch (err) {
               setPasswordError(err.message || "Failed to send reset email.");
             } finally {

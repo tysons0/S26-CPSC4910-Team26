@@ -55,8 +55,6 @@ public class UserController : ControllerBase
     public async Task<ActionResult> DisableUser(int updateUserId)
     {
         int contextUserId = _contextService.GetUserId(HttpContext);
-        _logger.LogInformation("User[{ContextId}] is attempting to disable User[{Id}]", 
-            contextUserId, updateUserId);
 
         bool canUpdate = await _authService.CanUserEditOtherUser(contextUserId, updateUserId);
 

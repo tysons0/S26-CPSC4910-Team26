@@ -100,17 +100,6 @@ function AdminSignUp() {
     <div className="signup-container">
       <PageTitle title="Admin Signup" />
 
-      <header className="catalog-header">
-        <div style={{ display: "flex", gap: "10px" }}>
-          <button
-            className="submit"
-            onClick={() => navigate("/AdminDashboard")}
-          >
-            Back
-          </button>
-        </div>
-      </header>
-
       <div className="signup-card">
         <h1 className="signup-title">Register an Admin!</h1>
 

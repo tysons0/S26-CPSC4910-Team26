@@ -103,17 +103,6 @@ function SponsorApplications() {
     <div style={{ padding: "2rem" }}>
       <PageTitle title="Manage Applications | Team 26" />
 
-      <header className="catalog-header">
-        <div style={{ display: "flex", gap: "10px" }}>
-          <button
-            className="submit"
-            onClick={() => navigate("/SponsorDashboard")}
-          >
-            Back
-          </button>
-        </div>
-      </header>
-
       <h1>Application Management</h1>
       <p>Review and manage driver applications to your organization.</p>
 

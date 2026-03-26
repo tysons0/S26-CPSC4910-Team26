@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import PageTitle from "../../components/PageTitle";
@@ -69,9 +70,7 @@ function AdminProfile() {
       }
     } catch (error) {
       console.error("Error updating profile", error);
-      setError(
-        error.message || "Failed to update user profile. Please try again.",
-      );
+      setError(error.message || "Failed to update user profile. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -108,17 +107,6 @@ function AdminProfile() {
   return (
     <div className="profile-container">
       <PageTitle title="Admin Profile | Team 26" />
-
-      <header className="catalog-header">
-        <div style={{ display: "flex", gap: "10px" }}>
-          <button
-            className="submit"
-            onClick={() => navigate("/AdminDashboard")}
-          >
-            Back
-          </button>
-        </div>
-      </header>
 
       <div className="profile-header">
         <h1>{user?.username}'s Profile</h1>
@@ -176,9 +164,7 @@ function AdminProfile() {
               <div className="profile-item">
                 <label>Phone Number</label>
                 <div className="profile-value">
-                  {user?.phoneNumber || (
-                    <span className="not-set">Not set</span>
-                  )}
+                  {user?.phoneNumber || <span className="not-set">Not set</span>}
                 </div>
               </div>
               <div className="profile-item">
@@ -220,10 +206,7 @@ function AdminProfile() {
                 </div>
               </div>
             </div>
-            <button
-              className="btn btn-primary"
-              onClick={() => setEditing(true)}
-            >
+            <button className="btn btn-primary" onClick={() => setEditing(true)}>
               Edit Profile
             </button>
           </>
@@ -232,85 +215,34 @@ function AdminProfile() {
             <div className="form-grid">
               <div className="form-group">
                 <label>First Name</label>
-                <input
-                  type="text"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  className="form-input"
-                  placeholder="Enter first name"
-                />
+                <input type="text" name="firstName" value={formData.firstName} onChange={handleChange} className="form-input" placeholder="Enter first name" />
               </div>
               <div className="form-group">
                 <label>Last Name</label>
-                <input
-                  type="text"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  className="form-input"
-                  placeholder="Enter last name"
-                />
+                <input type="text" name="lastName" value={formData.lastName} onChange={handleChange} className="form-input" placeholder="Enter last name" />
               </div>
               <div className="form-group full-width">
                 <label>Email</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="form-input"
-                  placeholder="email@example.com"
-                />
+                <input type="email" name="email" value={formData.email} onChange={handleChange} className="form-input" placeholder="email@example.com" />
               </div>
               <div className="form-group">
                 <label>Phone Number</label>
-                <input
-                  type="tel"
-                  name="phoneNumber"
-                  value={formData.phoneNumber}
-                  onChange={handleChange}
-                  className="form-input"
-                  placeholder="(555) 123-4567"
-                />
+                <input type="tel" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} className="form-input" placeholder="(555) 123-4567" />
               </div>
               <div className="form-group">
                 <label>Time Zone</label>
-                <input
-                  type="text"
-                  name="timeZone"
-                  value={formData.timeZone}
-                  onChange={handleChange}
-                  className="form-input"
-                  placeholder="America/New_York"
-                />
+                <input type="text" name="timeZone" value={formData.timeZone} onChange={handleChange} className="form-input" placeholder="America/New_York" />
               </div>
               <div className="form-group full-width">
                 <label>Country</label>
-                <input
-                  type="text"
-                  name="country"
-                  value={formData.country}
-                  onChange={handleChange}
-                  className="form-input"
-                  placeholder="United States"
-                />
+                <input type="text" name="country" value={formData.country} onChange={handleChange} className="form-input" placeholder="United States" />
               </div>
             </div>
             <div className="form-actions">
-              <button
-                type="submit"
-                className="btn btn-primary"
-                disabled={saving}
-              >
+              <button type="submit" className="btn btn-primary" disabled={saving}>
                 {saving ? "Saving..." : "Save Changes"}
               </button>
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={handleCancel}
-                disabled={saving}
-              >
+              <button type="button" className="btn btn-secondary" onClick={handleCancel} disabled={saving}>
                 Cancel
               </button>
             </div>
@@ -341,17 +273,11 @@ function AdminProfile() {
         <div className="profile-item" style={{ marginBottom: "1.5rem" }}>
           <label>Email on file</label>
           <div className="profile-value">
-            {user?.email || (
-              <span className="not-set">
-                No email set — please add one before resetting your password.
-              </span>
-            )}
+            {user?.email || <span className="not-set">No email set — please add one before resetting your password.</span>}
           </div>
         </div>
 
-        <p
-          style={{ color: "#666", marginBottom: "1.5rem", fontSize: "0.95rem" }}
-        >
+        <p style={{ color: "#666", marginBottom: "1.5rem", fontSize: "0.95rem" }}>
           A password reset link will be sent to your email address on file.
         </p>
 
@@ -364,15 +290,11 @@ function AdminProfile() {
             setPasswordSuccess("");
             try {
               if (!user?.email) {
-                setPasswordError(
-                  "No email address on your account. Please add one first.",
-                );
+                setPasswordError("No email address on your account. Please add one first.");
                 return;
               }
               await apiService.forgotPassword(user.email);
-              setPasswordSuccess(
-                "Password reset email sent! Check your inbox.",
-              );
+              setPasswordSuccess("Password reset email sent! Check your inbox.");
             } catch (err) {
               setPasswordError(err.message || "Failed to send reset email.");
             } finally {
