@@ -116,7 +116,7 @@ function SponsorDashboard() {
     setSearchLoading(true);
 
     try {
-      const result = await apiService.searchEbayProducts(keyword, 12);
+      const result = await apiService.searchEbayProducts(keyword, 25);
       const products = Array.isArray(result?.products) ? result.products : [];
       setSearchResults(products);
 
@@ -292,9 +292,6 @@ function SponsorDashboard() {
     <div style={{ padding: "2rem" }}>
       <PageTitle title="Product Dashboard" />
       <h1>Sponsor Dashboard</h1>
-      <button className="submit" onClick={handleLogout}>
-        Logout
-      </button>
       <p>
         Welcome back <strong> {user?.username || "Sponsor"}!</strong> This is
         where you can view your catalog and manage products.

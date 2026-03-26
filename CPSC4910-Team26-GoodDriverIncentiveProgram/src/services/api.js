@@ -536,7 +536,31 @@ const apiService = {
 
       return await apiService.getDataWithAuth(`Driver`, token);
     } catch (error) {
-      console.error("Failed to get Driver's", error);
+      console.error("Failed to get Drivers", error);
+      throw error;
+    }
+  },
+
+  getSponsors: async () => {
+    try {
+      const token = apiService.getToken();
+      if (!token) throw new Error("No authentication token found!");
+
+      return await apiService.getDataWithAuth(`Sponsor`, token);
+    } catch (error) {
+      console.error("Failed to get Sponsors", error);
+      throw error;
+    }
+  },
+
+  getAdmins: async () => {
+    try {
+      const token = apiService.getToken();
+      if (!token) throw new Error("No authentication token found!");
+
+      return await apiService.getDataWithAuth(`Admin`, token);
+    } catch (error) {
+      console.error("Failed to get Admins", error);
       throw error;
     }
   },
