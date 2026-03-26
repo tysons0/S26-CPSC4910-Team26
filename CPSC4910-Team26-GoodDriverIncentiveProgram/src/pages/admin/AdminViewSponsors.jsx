@@ -25,6 +25,12 @@ function AdminViewSponsors() {
   useEffect(() => {
     const fetchSponsors = async () => {
       try {
+        const userRole = apiService.getUserRole();
+        if (userRole?.toLowerCase() !== "admin") {
+          navigate("/Dashboard");
+          return;
+        }
+
         const data = await apiService.getSponsors();
         console.log("Sponsor's data:", data); // DEBUG
         setSponsors(Array.isArray(data) ? data : []);
@@ -102,6 +108,49 @@ function AdminViewSponsors() {
       alert("Failed to update sponsor: " + (error.message || "Unknown error"));
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDisableSponsor = async (sponsor) => {
+    const userId = sponsor.userData?.id;
+
+    if (!userId) {
+      alert("Could not find user ID for this sponsor.");
+      return;
+    }
+
+    if (sponsor.userData?.disabled) {
+      alert("This sponsor is already disabled.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Are you sure you want to disable ${sponsor.userData?.username || "this sponsor"}?`,
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await apiService.disableUser(userId);
+
+      setSponsors((prevSponsors) =>
+        prevSponsors.map((s) =>
+          s.sponsorId === sponsor.sponsorId
+            ? {
+                ...s,
+                userData: {
+                  ...s.userData,
+                  disabled: true,
+                },
+              }
+            : s,
+        ),
+      );
+
+      alert("Sponsor disabled successfully.");
+    } catch (error) {
+      console.error("Error disabling sponsor:", error);
+      alert("Failed to disable sponsor: " + (error.message || "Unknown error"));
     }
   };
 
@@ -186,6 +235,9 @@ function AdminViewSponsors() {
                   Organization
                 </th>
                 <th style={{ padding: "0.75rem", textAlign: "left" }}>
+                  Status
+                </th>
+                <th style={{ padding: "0.75rem", textAlign: "left" }}>
                   Actions
                 </th>
               </tr>
@@ -213,6 +265,9 @@ function AdminViewSponsors() {
                       {sponsor.organizationId
                         ? `Org ${sponsor.organizationId}`
                         : "None"}
+                    </td>
+                    <td style={{ padding: "0.75rem" }}>
+                      {sponsor.userData?.disabled ? "Disabled" : "Active"}
                     </td>
                     <td style={{ padding: "0.75rem" }}>
                       <button
@@ -244,6 +299,22 @@ function AdminViewSponsors() {
                         }}
                       >
                         Edit
+                      </button>
+
+                      <button
+                        onClick={() => handleDisableSponsor(sponsor)}
+                        style={{
+                          padding: "0.25rem 0.75rem",
+                          marginLeft: "0.5rem",
+                          backgroundColor: "#dc3545",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "4px",
+                          cursor: "pointer",
+                          fontSize: "0.875rem",
+                        }}
+                      >
+                        Disable
                       </button>
                     </td>
                   </tr>

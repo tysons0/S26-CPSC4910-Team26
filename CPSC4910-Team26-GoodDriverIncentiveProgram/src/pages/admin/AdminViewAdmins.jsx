@@ -25,6 +25,12 @@ function AdminViewAdmins() {
   useEffect(() => {
     const fetchAdmins = async () => {
       try {
+        const userRole = apiService.getUserRole();
+        if (userRole?.toLowerCase() !== "admin") {
+          navigate("/Dashboard");
+          return;
+        }
+
         const data = await apiService.getAdmins();
         console.log("Admins data:", data); // DEBUG
         setAdmins(Array.isArray(data) ? data : []);
@@ -105,6 +111,49 @@ function AdminViewAdmins() {
     }
   };
 
+  const handleDisableAdmin = async (admin) => {
+    const userId = admin.userData?.id;
+
+    if (!userId) {
+      alert("Could not find user ID for this admin.");
+      return;
+    }
+
+    if (admin.userData?.disabled) {
+      alert("This admin is already disabled.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Are you sure you want to disable ${admin.userData?.username || "this admin"}?`,
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await apiService.disableUser(userId);
+
+      setAdmins((prevAdmins) =>
+        prevAdmins.map((a) =>
+          a.adminId === admin.adminId
+            ? {
+                ...a,
+                userData: {
+                  ...a.userData,
+                  disabled: true,
+                },
+              }
+            : a,
+        ),
+      );
+
+      alert("Admin disabled successfully.");
+    } catch (error) {
+      console.error("Error disabling admin:", error);
+      alert("Failed to disable admin: " + (error.message || "Unknown error"));
+    }
+  };
+
   // Cancel editing
   const handleCancelEdit = () => {
     setEditingAdmin(null);
@@ -182,6 +231,9 @@ function AdminViewAdmins() {
                 </th>
                 <th style={{ padding: "0.75rem", textAlign: "left" }}>Email</th>
                 <th style={{ padding: "0.75rem", textAlign: "left" }}>
+                  Status
+                </th>
+                <th style={{ padding: "0.75rem", textAlign: "left" }}>
                   Actions
                 </th>
               </tr>
@@ -203,6 +255,9 @@ function AdminViewAdmins() {
                     </td>
                     <td style={{ padding: "0.75rem" }}>
                       {admin.userData?.email || "N/A"}
+                    </td>
+                    <td style={{ padding: "0.75rem" }}>
+                      {admin.userData?.disabled ? "Disabled" : "Active"}
                     </td>
                     <td style={{ padding: "0.75rem" }}>
                       <button
@@ -234,6 +289,21 @@ function AdminViewAdmins() {
                         }}
                       >
                         Edit
+                      </button>
+                      <button
+                        onClick={() => handleDisableAdmin(admin)}
+                        style={{
+                          padding: "0.25rem 0.75rem",
+                          marginLeft: "0.5rem",
+                          backgroundColor: "#dc3545",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "4px",
+                          cursor: "pointer",
+                          fontSize: "0.875rem",
+                        }}
+                      >
+                        Disable
                       </button>
                     </td>
                   </tr>
