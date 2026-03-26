@@ -1,11 +1,13 @@
 import { useEffect, useState, Fragment } from "react";
 import apiService from "../../services/api";
 import PageTitle from "../../components/PageTitle";
+import { useNavigate } from "react-router-dom";
 
 function AdminViewSponsors() {
   const [sponsors, setSponsors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   // Editing state
   const [editingSponsor, setEditingSponsor] = useState(null);
@@ -140,6 +142,18 @@ function AdminViewSponsors() {
   return (
     <div style={{ padding: "2rem" }}>
       <PageTitle title="View Sponsors | Admin" />
+
+      <header className="catalog-header">
+        <div style={{ display: "flex", gap: "10px" }}>
+          <button
+            className="submit"
+            onClick={() => navigate("/AdminDashboard")}
+          >
+            Back
+          </button>
+        </div>
+      </header>
+
       <h1>Registered Sponsors</h1>
 
       {sponsors.length === 0 ? (
