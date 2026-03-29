@@ -22,6 +22,7 @@ import SponsorApplications from "./pages/sponsor/SponsorApplications";
 import AdminApplications from "./pages/admin/AdminApplications";
 import DriverWishlist from "./pages/driver/DriverWishlist";
 import SponsorViewDrivers from "./pages/sponsor/SponsorViewDrivers";
+import SponsorViewSponsors from "./pages/sponsor/SponsorViewSponsors";
 import AdminViewDrivers from "./pages/admin/AdminViewDrivers";
 import AdminViewSponsors from "./pages/admin/AdminViewSponsors";
 import AdminViewAdmins from "./pages/admin/AdminViewAdmins";
@@ -62,6 +63,7 @@ function App() {
         <Route path="/SponsorProfile" element={<SponsorProfile />} />
         <Route path="/SponsorApplications" element={<SponsorApplications />} />
         <Route path="SponsorViewDrivers" element={<SponsorViewDrivers />} />
+        <Route path="/SponsorViewSponsors" element={<SponsorViewSponsors />} />
         <Route path="/EbayTest" element={<EbayTestDashboard />} />
 
         {/* Admin Routes */}
