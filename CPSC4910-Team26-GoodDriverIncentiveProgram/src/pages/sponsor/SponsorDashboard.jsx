@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import PageTitle from "../../components/PageTitle";
 import apiService from "../../services/api";
-import "../../css/Dashboard.css";
+import "../../css/SponsorDashboard.css";
 
 function SponsorDashboard() {
   const navigate = useNavigate();
@@ -15,6 +15,8 @@ function SponsorDashboard() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [drivers, setDrivers] = useState([]);
+  const [applications, setApplications] = useState([]);
 
   // eBay search state
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -51,8 +53,9 @@ function SponsorDashboard() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        if (!apiService.isAuthenticated()) {
-          navigate("/Login");
+        const userRole = apiService.getUserRole();
+        if (userRole?.toLowerCase() !== "sponsor") {
+          navigate("/About");
           return;
         }
 
@@ -70,7 +73,17 @@ function SponsorDashboard() {
         }
 
         setSponsorOrgId(orgId);
-        await loadCatalog(orgId);
+
+        // Fetch catalog and drivers at the same time
+        const [, orgDrivers] = await Promise.all([
+          loadCatalog(orgId),
+          apiService.getOrganizationDrivers(orgId),
+        ]);
+
+        setDrivers(orgDrivers);
+
+        const applications = await apiService.getApplications();
+        setApplications(applications);
       } catch (error) {
         console.error("Error loading dashboard data:", error);
         setError(error.message || "Failed to load sponsor dashboard data.");
@@ -239,344 +252,600 @@ function SponsorDashboard() {
     }
   };
 
+  const pendingApplications = applications.filter((app) => {
+    const status = app.status?.toLowerCase();
+    return (
+      status === "pending" || status === "waiting" || status === "submitted"
+    );
+  });
+
   if (loading) {
     return (
       <div style={{ padding: "2rem" }}>
-        <PageTitle title="Product Dashboard" />
+        <PageTitle title="Sponsor Dashboard" />
         <h1>Loading...</h1>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: "2rem" }}>
-      <PageTitle title="Product Dashboard" />
-      <h1>Sponsor Dashboard</h1>
-      <p>
-        Welcome back <strong> {user?.username || "Sponsor"}!</strong> This is
-        where you can view your catalog and manage products.
-      </p>
-      <p>
-        <strong>Organization ID:</strong> {sponsorOrgId ?? "N/A"}
-      </p>
+    <div className="sponsor-shell">
+      <PageTitle title="Sponsor Dashboard" />
 
-      {error && (
-        <p style={{ color: "#e74c3c", fontWeight: 600, marginTop: "1rem" }}>
-          {error}
-        </p>
-      )}
-      {successMessage && (
-        <p style={{ color: "#27ae60", fontWeight: 600, marginTop: "1rem" }}>
-          {successMessage}
-        </p>
-      )}
+      {/* Sidebar */}
+      <aside className="sponsor-sidebar">
+        <div className="sidebar-brand">
+          <div className="brand-dot">S</div>
+          <span className="brand-name">SponsorDashboard</span>
+        </div>
 
-      {/* Manual Add Product */}
-      <div style={{ marginTop: "2rem", marginBottom: "2rem" }}>
-        <h2>Add Product to Catalog</h2>
+        <span className="nav-section-label">Overview</span>
+        <Link to="/SponsorDashboard" className="nav-item active">
+          ⊞ Dashboard
+        </Link>
 
-        <form onSubmit={handleManualAddProduct} style={{ maxWidth: "420px" }}>
-          <div style={{ marginBottom: "1rem" }}>
-            <label htmlFor="manual-ebayItemId">eBay Item ID</label>
-            <input
-              id="manual-ebayItemId"
-              name="ebayItemId"
-              type="text"
-              value={manualFormData.ebayItemId}
-              onChange={handleManualFormChange}
-              placeholder="v1|1234567890|0 or numeric item ID"
-              required
-              style={{
-                width: "100%",
-                padding: "0.5rem",
-                marginTop: "0.35rem",
-              }}
-            />
+        <span className="nav-section-label">Organization</span>
+        <Link to="/SponsorApplications" className="nav-item">
+          📋 Applications
+        </Link>
+        <Link to="/SponsorViewDrivers" className="nav-item">
+          🚗 View Drivers
+        </Link>
+        <Link to="/SponsorViewSponsors" className="nav-item">
+          🧑‍💼 Our Sponsors
+        </Link>
+        <Link to="/SponsorSignUp" className="nav-item">
+          ➕ Register Sponsor
+        </Link>
+
+        <div className="sidebar-bottom">
+          <div className="user-chip">
+            <div className="avatar">
+              {user?.username?.[0]?.toUpperCase() || "S"}
+            </div>
+            <div>
+              <div className="user-name">{user?.username || "Sponsor"}</div>
+              <div className="user-role">Org ID: {sponsorOrgId ?? "N/A"}</div>
+            </div>
           </div>
+        </div>
+      </aside>
 
-          <div style={{ marginBottom: "1rem" }}>
-            <label htmlFor="manual-points">Points Cost</label>
-            <input
-              id="manual-points"
-              name="points"
-              type="number"
-              min="1"
-              value={manualFormData.points}
-              onChange={handleManualFormChange}
-              placeholder="100"
-              required
-              style={{
-                width: "100%",
-                padding: "0.5rem",
-                marginTop: "0.35rem",
-              }}
-            />
+      {/* Main */}
+      <div className="sponsor-main">
+        <header className="sponsor-topbar">
+          <div>
+            <div className="topbar-title">
+              Welcome back, {user?.username || "Sponsor"} 👋
+            </div>
+            <div className="topbar-sub">
+              Manage your catalog and organization from here.
+            </div>
           </div>
+        </header>
 
-          <button
-            type="submit"
-            className="submit"
-            disabled={submitting || !sponsorOrgId}
-          >
-            {submitting ? "Adding Product..." : "Add Product"}
-          </button>
-        </form>
-      </div>
-
-      <div style={{ marginTop: "2rem", marginBottom: "2rem" }}>
-        <h2>Search eBay Products</h2>
-
-        <form onSubmit={handleSearchProducts} style={{ maxWidth: "500px" }}>
-          <div style={{ marginBottom: "1rem" }}>
-            <label htmlFor="searchKeyword">Keyword</label>
-            <input
-              id="searchKeyword"
-              type="text"
-              value={searchKeyword}
-              onChange={(e) => setSearchKeyword(e.target.value)}
-              placeholder="Search for products"
-              style={{
-                width: "100%",
-                padding: "0.5rem",
-                marginTop: "0.35rem",
-              }}
-            />
-          </div>
-
-          <button type="submit" className="submit" disabled={searchLoading}>
-            {searchLoading ? "Searching..." : "Search eBay"}
-          </button>
-        </form>
-      </div>
-
-      {/* Search Results */}
-      <div style={{ marginBottom: "2rem" }}>
-        <h2>Search Results</h2>
-
-        {searchLoading ? (
-          <p>Searching products...</p>
-        ) : searchResults.length === 0 ? (
-          <p>No eBay products loaded yet. Search above to see products.</p>
-        ) : (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-              gap: "1rem",
-            }}
-          >
-            {searchResults.map((product) => {
-              const isSelected = selectedProduct?.itemId === product?.itemId;
-
-              return (
-                <div
-                  key={product?.itemId || Math.random()}
-                  style={{
-                    border: isSelected
-                      ? "2px solid #2c7be5"
-                      : "1px solid #dcdcdc",
-                    borderRadius: "10px",
-                    padding: "1rem",
-                    backgroundColor: "#fff",
-                  }}
-                >
-                  {product?.image ? (
-                    <img
-                      src={product.image}
-                      alt={product?.name || "Product"}
-                      style={{
-                        width: "100%",
-                        height: "180px",
-                        objectFit: "contain",
-                        marginBottom: "0.75rem",
-                        borderRadius: "8px",
-                        backgroundColor: "#fafafa",
-                      }}
-                    />
-                  ) : (
-                    <div
-                      style={{
-                        width: "100%",
-                        height: "180px",
-                        marginBottom: "0.75rem",
-                        borderRadius: "8px",
-                        backgroundColor: "#f3f3f3",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: "#666",
-                        fontSize: "0.95rem",
-                      }}
-                    >
-                      No image available
-                    </div>
-                  )}
-
-                  <h3 style={{ marginTop: 0 }}>
-                    {product?.name || "Unnamed Product"}
-                  </h3>
-
-                  <p style={{ margin: "0.4rem 0" }}>
-                    <strong>Price:</strong>{" "}
-                    {product?.price != null
-                      ? `${product.price} ${product?.currency || ""}`
-                      : "N/A"}
-                  </p>
-
-                  <p style={{ margin: "0.4rem 0" }}>
-                    <strong>Condition:</strong> {product?.condition || "N/A"}
-                  </p>
-
-                  <p style={{ margin: "0.4rem 0", wordBreak: "break-word" }}>
-                    <strong>Item ID:</strong> {product?.itemId || "N/A"}
-                  </p>
-
-                  {product?.itemWebUrl && (
-                    <p style={{ margin: "0.4rem 0 0.8rem 0" }}>
-                      <a
-                        href={product.itemWebUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        View on eBay
-                      </a>
-                    </p>
-                  )}
-
-                  <button
-                    type="button"
-                    className="submit"
-                    onClick={() => handleSelectProduct(product)}
-                  >
-                    {isSelected ? "Selected" : "Select Product"}
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* Add Selected Product */}
-      <div style={{ marginTop: "2rem", marginBottom: "2rem" }}>
-        <h2>Add Product to Catalog</h2>
-
-        {!selectedProduct ? (
-          <p>Select a product from the search results above.</p>
-        ) : (
-          <>
+        <main className="sponsor-content">
+          {/* Alerts */}
+          {error && (
             <div
               style={{
-                border: "1px solid #dcdcdc",
-                borderRadius: "10px",
-                padding: "1rem",
-                marginBottom: "1rem",
-                backgroundColor: "#fff",
-                maxWidth: "600px",
+                padding: "0.6rem 0.875rem",
+                borderRadius: "8px",
+                background: "rgba(231,76,60,0.08)",
+                border: "1px solid rgba(231,76,60,0.25)",
+                color: "#c0392b",
+                fontSize: "0.85rem",
+                marginBottom: "1.25rem",
               }}
             >
-              <p>
-                <strong>Selected Product:</strong>{" "}
-                {selectedProduct?.name || "Unnamed Product"}
-              </p>
-              <p>
-                <strong>Item ID:</strong> {selectedProduct?.itemId || "N/A"}
-              </p>
-              <p>
-                <strong>Price:</strong>{" "}
-                {selectedProduct?.price != null
-                  ? `${selectedProduct.price} ${
-                      selectedProduct?.currency || ""
-                    }`
-                  : "N/A"}
-              </p>
+              {error}
+            </div>
+          )}
+          {successMessage && (
+            <div
+              style={{
+                padding: "0.6rem 0.875rem",
+                borderRadius: "8px",
+                background: "rgba(72,187,120,0.1)",
+                border: "1px solid rgba(72,187,120,0.3)",
+                color: "#276749",
+                fontSize: "0.85rem",
+                marginBottom: "1.25rem",
+              }}
+            >
+              {successMessage}
+            </div>
+          )}
+
+          {/* Stats */}
+          <div className="stats-row">
+            <div className="stat-card">
+              <div className="stat-label">Catalog Items</div>
+              <div className="stat-value">{catalogItems.length}</div>
+              <div className="stat-sub">Active products</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-label">Pending Applications</div>
+              <div className="stat-value">{pendingApplications.length}</div>
+              <Link
+                to="/SponsorApplications"
+                style={{
+                  color: "#667eea",
+                  fontWeight: 600,
+                  textDecoration: "none",
+                  fontSize: "0.75rem",
+                }}
+              >
+                Needs review →
+              </Link>
+            </div>
+            <div className="stat-card">
+              <div className="stat-label">Active Drivers</div>
+              <div className="stat-value">{drivers.length}</div>
+              <Link
+                to="/SponsorViewDrivers"
+                style={{
+                  color: "#667eea",
+                  fontWeight: 600,
+                  textDecoration: "none",
+                  fontSize: "0.75rem",
+                }}
+              >
+                View all →
+              </Link>
+            </div>
+          </div>
+
+          {/* Add by eBay ID + Current Catalog */}
+          <div className="sponsor-grid-2" style={{ marginBottom: "1.25rem" }}>
+            <div className="section-card">
+              <div className="section-title">Add Product by eBay ID</div>
+              <form onSubmit={handleManualAddProduct}>
+                <div style={{ marginBottom: "0.875rem" }}>
+                  <label
+                    htmlFor="manual-ebayItemId"
+                    style={{
+                      fontSize: "0.8rem",
+                      color: "var(--text-alt)",
+                      fontWeight: 600,
+                      display: "block",
+                    }}
+                  >
+                    eBay Item ID
+                  </label>
+                  <input
+                    id="manual-ebayItemId"
+                    name="ebayItemId"
+                    type="text"
+                    value={manualFormData.ebayItemId}
+                    onChange={handleManualFormChange}
+                    placeholder="v1|1234567890|0"
+                    required
+                    className="view-select"
+                    style={{ marginTop: "0.35rem" }}
+                  />
+                </div>
+                <div style={{ marginBottom: "0.875rem" }}>
+                  <label
+                    htmlFor="manual-points"
+                    style={{
+                      fontSize: "0.8rem",
+                      color: "var(--text-alt)",
+                      fontWeight: 600,
+                      display: "block",
+                    }}
+                  >
+                    Points Cost
+                  </label>
+                  <input
+                    id="manual-points"
+                    name="points"
+                    type="number"
+                    min="1"
+                    value={manualFormData.points}
+                    onChange={handleManualFormChange}
+                    placeholder="100"
+                    required
+                    className="view-select"
+                    style={{ marginTop: "0.35rem" }}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="submit"
+                  style={{ width: "100%" }}
+                  disabled={submitting || !sponsorOrgId}
+                >
+                  {submitting ? "Adding Product..." : "Add to Catalog"}
+                </button>
+              </form>
             </div>
 
-            <form onSubmit={handleAddProduct} style={{ maxWidth: "420px" }}>
-              <div style={{ marginBottom: "1rem" }}>
-                <label htmlFor="points">Points Cost</label>
-                <input
-                  id="points"
-                  name="points"
-                  type="number"
-                  min="1"
-                  value={formData.points}
-                  onChange={handleFormChange}
-                  placeholder="100"
-                  required
+            <div className="section-card">
+              <div className="section-title">Current Catalog</div>
+              {catalogLoading ? (
+                <p style={{ fontSize: "0.85rem", color: "var(--text-alt)" }}>
+                  Loading catalog...
+                </p>
+              ) : catalogItems.length === 0 ? (
+                <p
                   style={{
-                    width: "100%",
-                    padding: "0.5rem",
-                    marginTop: "0.35rem",
+                    fontSize: "0.85rem",
+                    color: "var(--text-alt)",
+                    textAlign: "center",
+                    padding: "1.5rem 0",
                   }}
+                >
+                  No catalog products yet.
+                </p>
+              ) : (
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "0.6rem",
+                  }}
+                >
+                  {catalogItems.map((item) => (
+                    <div
+                      key={
+                        item.catalogItemID ??
+                        item.catalogItemId ??
+                        item.ebayItemId
+                      }
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "0.65rem 0.875rem",
+                        borderRadius: "8px",
+                        border: "1px solid var(--border)",
+                      }}
+                    >
+                      <div>
+                        <div
+                          style={{
+                            fontWeight: 600,
+                            fontSize: "0.875rem",
+                            color: "var(--text-muted)",
+                          }}
+                        >
+                          {item.title || item.name || "Catalog Item"}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: "0.75rem",
+                            color: "var(--text-alt)",
+                          }}
+                        >
+                          eBay item
+                        </div>
+                      </div>
+                      <span
+                        style={{
+                          background:
+                            "linear-gradient(135deg, rgba(102,126,234,0.15), rgba(118,75,162,0.15))",
+                          color: "#667eea",
+                          borderRadius: "5px",
+                          padding: "0.2rem 0.55rem",
+                          fontSize: "0.75rem",
+                          fontWeight: 600,
+                        }}
+                      >
+                        {item.points} pts
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* eBay Search */}
+          <div className="section-card" style={{ marginBottom: "1.25rem" }}>
+            <div className="section-title">Search eBay Products</div>
+            <form
+              onSubmit={handleSearchProducts}
+              style={{
+                display: "flex",
+                gap: "0.75rem",
+                alignItems: "flex-end",
+              }}
+            >
+              <div style={{ flex: 1 }}>
+                <label
+                  htmlFor="searchKeyword"
+                  style={{
+                    fontSize: "0.8rem",
+                    color: "var(--text-alt)",
+                    fontWeight: 600,
+                    display: "block",
+                    marginBottom: "0.35rem",
+                  }}
+                >
+                  Keyword
+                </label>
+                <input
+                  id="searchKeyword"
+                  type="text"
+                  value={searchKeyword}
+                  onChange={(e) => setSearchKeyword(e.target.value)}
+                  placeholder="Search for products…"
+                  className="view-select"
                 />
               </div>
-
               <button
                 type="submit"
                 className="submit"
-                disabled={submitting || !sponsorOrgId}
+                disabled={searchLoading}
+                style={{ whiteSpace: "nowrap" }}
               >
-                {submitting ? "Adding Product..." : "Add Product to Catalog"}
+                {searchLoading ? "Searching..." : "Search eBay"}
               </button>
             </form>
-          </>
-        )}
-      </div>
 
-      {/* Current Catalog */}
-      <div style={{ marginBottom: "2rem" }}>
-        <h2>Current Catalog</h2>
-        {catalogLoading ? (
-          <p>Loading catalog...</p>
-        ) : catalogItems.length === 0 ? (
-          <p>No catalog products found for this organization.</p>
-        ) : (
-          <ul style={{ paddingLeft: "1.25rem" }}>
-            {catalogItems.map((item) => (
-              <li
-                key={
-                  item.catalogItemID ?? item.catalogItemId ?? item.ebayItemId
-                }
-                style={{ marginBottom: "0.65rem" }}
+            {searchLoading ? (
+              <p
+                style={{
+                  fontSize: "0.85rem",
+                  color: "var(--text-alt)",
+                  marginTop: "1rem",
+                }}
               >
-                <strong>{item.title || item.name || "Catalog Item"}</strong> -{" "}
-                {item.points} points
-              </li>
-            ))}
-          </ul>
-        )}
+                Searching products...
+              </p>
+            ) : searchResults.length === 0 ? (
+              <p
+                style={{
+                  fontSize: "0.85rem",
+                  color: "var(--text-alt)",
+                  marginTop: "1rem",
+                }}
+              >
+                No products loaded yet. Search above to see results.
+              </p>
+            ) : (
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+                  gap: "0.75rem",
+                  marginTop: "1rem",
+                }}
+              >
+                {searchResults.map((product) => {
+                  const isSelected =
+                    selectedProduct?.itemId === product?.itemId;
+                  return (
+                    <div
+                      key={product?.itemId || Math.random()}
+                      onClick={() => handleSelectProduct(product)}
+                      style={{
+                        background: isSelected
+                          ? "linear-gradient(135deg, rgba(102,126,234,0.08), rgba(118,75,162,0.08))"
+                          : "var(--bg)",
+                        border: isSelected
+                          ? "1px solid #667eea"
+                          : "1px solid var(--border)",
+                        borderRadius: "9px",
+                        padding: "0.875rem",
+                        cursor: "pointer",
+                        transition: "all 0.15s",
+                      }}
+                    >
+                      {product?.image ? (
+                        <img
+                          src={product.image}
+                          alt={product?.name || "Product"}
+                          style={{
+                            width: "100%",
+                            height: "100px",
+                            objectFit: "contain",
+                            borderRadius: "6px",
+                            background: "var(--surface-alt)",
+                            marginBottom: "0.6rem",
+                            display: "block",
+                          }}
+                        />
+                      ) : (
+                        <div
+                          style={{
+                            width: "100%",
+                            height: "100px",
+                            borderRadius: "6px",
+                            background: "var(--surface-alt)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: "0.78rem",
+                            color: "var(--text-alt)",
+                            marginBottom: "0.6rem",
+                          }}
+                        >
+                          No image
+                        </div>
+                      )}
+                      <div
+                        style={{
+                          fontWeight: 600,
+                          fontSize: "0.82rem",
+                          color: "var(--text-muted)",
+                          lineHeight: 1.3,
+                          marginBottom: "0.3rem",
+                          display: "-webkit-box",
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: "vertical",
+                          overflow: "hidden",
+                        }}
+                      >
+                        {product?.name || "Unnamed Product"}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "0.75rem",
+                          color: "var(--text-alt)",
+                        }}
+                      >
+                        {product?.price != null
+                          ? `${product.price} ${product?.currency || ""}`
+                          : "N/A"}
+                      </div>
+                      {product?.itemWebUrl && (
+                        <a
+                          href={product.itemWebUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          style={{
+                            fontSize: "0.75rem",
+                            color: "#667eea",
+                            display: "block",
+                            marginTop: "0.4rem",
+                          }}
+                        >
+                          View on eBay ↗
+                        </a>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Add Selected + Manage Org */}
+          <div className="sponsor-grid-2">
+            <div className="section-card">
+              <div className="section-title">
+                Add Selected Product to Catalog
+              </div>
+              {!selectedProduct ? (
+                <p style={{ fontSize: "0.85rem", color: "var(--text-alt)" }}>
+                  Select a product from the search results above.
+                </p>
+              ) : (
+                <>
+                  <div
+                    style={{
+                      background: "var(--bg)",
+                      border: "1px solid var(--border)",
+                      borderRadius: "8px",
+                      padding: "0.875rem",
+                      marginBottom: "0.875rem",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontWeight: 600,
+                        fontSize: "0.875rem",
+                        color: "var(--text-muted)",
+                        marginBottom: "0.25rem",
+                      }}
+                    >
+                      {selectedProduct?.name || "Unnamed Product"}
+                    </div>
+                    <div
+                      style={{ fontSize: "0.78rem", color: "var(--text-alt)" }}
+                    >
+                      Item ID: {selectedProduct?.itemId || "N/A"} &nbsp;·&nbsp;{" "}
+                      {selectedProduct?.price != null
+                        ? `${selectedProduct.price} ${selectedProduct?.currency || ""}`
+                        : "N/A"}
+                    </div>
+                  </div>
+                  <form onSubmit={handleAddProduct}>
+                    <div style={{ marginBottom: "0.875rem" }}>
+                      <label
+                        htmlFor="points"
+                        style={{
+                          fontSize: "0.8rem",
+                          color: "var(--text-alt)",
+                          fontWeight: 600,
+                          display: "block",
+                        }}
+                      >
+                        Points Cost
+                      </label>
+                      <input
+                        id="points"
+                        name="points"
+                        type="number"
+                        min="1"
+                        value={formData.points}
+                        onChange={handleFormChange}
+                        placeholder="100"
+                        required
+                        className="view-select"
+                        style={{ marginTop: "0.35rem" }}
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      className="submit"
+                      style={{ width: "100%" }}
+                      disabled={submitting || !sponsorOrgId}
+                    >
+                      {submitting ? "Adding Product..." : "Add to Catalog"}
+                    </button>
+                  </form>
+                </>
+              )}
+            </div>
+
+            <div className="section-card">
+              <div className="section-title">Manage Organization</div>
+              <Link to="/SponsorApplications" className="action-row">
+                <div className="action-row-left">
+                  <div
+                    className="action-icon"
+                    style={{ background: "rgba(102,126,234,0.15)" }}
+                  >
+                    📋
+                  </div>{" "}
+                  View Applications
+                </div>
+                <span style={{ color: "var(--text-alt)" }}>›</span>
+              </Link>
+              <Link to="/SponsorViewDrivers" className="action-row">
+                <div className="action-row-left">
+                  <div
+                    className="action-icon"
+                    style={{ background: "rgba(72,187,120,0.15)" }}
+                  >
+                    🚗
+                  </div>{" "}
+                  View Drivers
+                </div>
+                <span style={{ color: "var(--text-alt)" }}>›</span>
+              </Link>
+              <Link to="/SponsorViewSponsors" className="action-row">
+                <div className="action-row-left">
+                  <div
+                    className="action-icon"
+                    style={{ background: "rgba(237,137,54,0.15)" }}
+                  >
+                    🏢
+                  </div>{" "}
+                  View Organization's Sponsors
+                </div>
+                <span style={{ color: "var(--text-alt)" }}>›</span>
+              </Link>
+              <Link to="/SponsorSignUp" className="action-row">
+                <div className="action-row-left">
+                  <div
+                    className="action-icon"
+                    style={{ background: "rgba(237,100,166,0.15)" }}
+                  >
+                    ➕
+                  </div>{" "}
+                  Register New Sponsor
+                </div>
+                <span style={{ color: "var(--text-alt)" }}>›</span>
+              </Link>
+            </div>
+          </div>
+        </main>
       </div>
-
-      <h2>Manage Organization</h2>
-
-      <div style={{ marginBottom: "1rem" }}>
-        <Link to="/SponsorApplications">
-          <button className="submit" style={{ marginRight: "1rem" }}>
-            View Applications
-          </button>
-        </Link>
-      </div>
-
-      <div style={{ marginBottom: "1rem" }}>
-        <Link to="/SponsorViewDrivers">
-          <button className="submit" style={{ marginRight: "1rem" }}>
-            View Drivers
-          </button>
-        </Link>
-      </div>
-
-      <div style={{ marginBottom: "1rem" }}>
-        <Link to="/SponsorViewSponsors">
-          <button className="submit" style={{ marginRight: "1rem" }}>
-            View Organization's Sponsors
-          </button>
-        </Link>
-      </div>
-
-      <p>
-        Register a Sponsor <Link to="/SponsorSignUp">Create one Here</Link>
-      </p>
     </div>
   );
 }

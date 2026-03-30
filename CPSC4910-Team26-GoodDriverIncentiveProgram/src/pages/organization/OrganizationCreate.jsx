@@ -3,7 +3,10 @@ import { useState, useEffect } from "react";
 import PageTitle from "../../components/PageTitle";
 import apiService from "../../services/api";
 import "../../css/SignUp.css";
-import { ORGANIZATION_NAME_REGEX, ORGANIZATION_NAME_REGEX_ERROR } from "../../services/regex";
+import {
+  ORGANIZATION_NAME_REGEX,
+  ORGANIZATION_NAME_REGEX_ERROR,
+} from "../../services/regex";
 
 function OrganizationCreate() {
   const navigate = useNavigate();
@@ -27,7 +30,7 @@ function OrganizationCreate() {
 
     if (!userRole || userRole.toLowerCase() !== "admin") {
       alert("Only admins can create organizations.");
-      navigate("/Dashboard");
+      navigate("/About");
     }
   }, [navigate]);
 
@@ -124,16 +127,10 @@ function OrganizationCreate() {
 
           {/* Submit Error */}
           {errors.submit && (
-            <div className="error-message submit-error">
-              {errors.submit}
-            </div>
+            <div className="error-message submit-error">{errors.submit}</div>
           )}
 
-          <button
-            type="submit"
-            className="submit-button"
-            disabled={loading}
-          >
+          <button type="submit" className="submit-button" disabled={loading}>
             {loading ? "Creating..." : "Create Organization"}
           </button>
 
