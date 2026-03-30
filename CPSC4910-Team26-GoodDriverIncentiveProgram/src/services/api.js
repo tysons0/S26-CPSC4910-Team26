@@ -1128,7 +1128,7 @@ const apiService = {
     }
   },
 
-  addWishlistItem: async (driverId, catalogItemId) => {
+  addWishlistItem: async (driverId, orgId,catalogItemId) => {
     try {
       const token = await apiService.getToken();
       if (!token) {
@@ -1140,7 +1140,7 @@ const apiService = {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ driverId, catalogItemId }),
+        body: JSON.stringify({ driverId, orgId, catalogItemId }),
       });
       return await handleResponse(response);
     } catch (error) {

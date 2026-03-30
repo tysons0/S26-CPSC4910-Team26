@@ -118,8 +118,10 @@ function DriverDashboard() {
       if (!user || !organizationId) {
         return;
       }
-      const driverData = await apiService.getDriverByUserId(user.id);
-      await apiService.addWishlistItem(driverData.id, product.id);
+      console.log("User id: ", user.userData.id);
+      const driverData = await apiService.getDriverByUserId(user.userData.id);
+      console.log("Adding to wishlist - driver data:", driverData, "product:", product);
+      await apiService.addWishlistItem(driverData.driverId, driverData.organizationId, product.id);
       alert(`Added "${product.name}" to your wishlist!`);
     } catch (error) {
       console.error("Error adding to wishlist:", error);
