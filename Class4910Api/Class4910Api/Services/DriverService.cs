@@ -457,7 +457,7 @@ public class DriverService : IDriverService
         }
     }
 
-    public async Task<bool> AddToDriverPointHistory(int driverId, int sponsorId, PointChangeRequest pointChangeRequest)
+    public async Task<bool> AddToDriverPointHistory(int driverId, int? sponsorId, PointChangeRequest pointChangeRequest)
     {
         try
         {

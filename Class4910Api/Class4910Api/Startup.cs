@@ -318,7 +318,7 @@ public static class Startup
             CREATE TABLE IF NOT EXISTS DriverPointHistory (
 	            {PointHistoryIdField.SelectName} int AUTO_INCREMENT,
 	            {DriverIdField.SelectName} int NOT NULL,
-	            {SponsorIdField.SelectName} int NOT NULL,
+	            {SponsorIdField.SelectName} int NULL,
 
 	            {PointHistoryReasonField.SelectName} TEXT NOT NULL,
 	            {PointHistoryDeltaField.SelectName} int NOT NULL,
