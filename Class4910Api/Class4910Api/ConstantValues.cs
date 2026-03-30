@@ -75,7 +75,7 @@ public static class ConstantValues
         new() { Name = "Disabled", Type = MySqlDbType.Bit, Nullable = false };
 
     public static readonly DatabaseField UserEmailNotificationsEnabled =
-        new() { Name = "EmailNotificationsForOrdersEnabled", Type = MySqlDbType.Bit, Nullable = false };
+        new() { Name = "EmailNotificationsEnabled", Type = MySqlDbType.Bit, Nullable = false };
     public static readonly DatabaseTable UsersTable = new()
     {
         Name = "Users",
