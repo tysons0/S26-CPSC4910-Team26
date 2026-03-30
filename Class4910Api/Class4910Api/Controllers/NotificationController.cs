@@ -52,6 +52,25 @@ public class NotificationController : ControllerBase
         return Ok(notifications ?? []);
     }
 
+    [HttpPost("{userId:int}")]
+    public async Task<ActionResult> CreateNotification(int userId, [FromBody] string message)
+    {
+        int contextUserId = _contextService.GetUserId(HttpContext);
+
+        bool canAdd = await _authService.CanUserEditOtherUser(contextUserId, userId);
+        
+        if (!canAdd)
+        {
+            _logger.LogWarning("User[{Id}] tried to create notification for User[{Id}] but was forbidden.",
+                contextUserId, userId);
+            return Forbid();
+        }
+
+        await _notificationService.CreateNotification(userId, message, NotificationType.NoType);
+        return Ok($"Created notification for User[{userId}] with message: {message}");
+    }
+
+
     [HttpGet("me")]
     public async Task<ActionResult<List<Notification>>> GetMyNotifications()
     {
@@ -76,7 +95,7 @@ public class NotificationController : ControllerBase
             return BadRequest("Could not identify user from request");
         }
 
-        _logger.LogInformation("Received request from {user} to mark notification[{Id}] as seen", 
+        _logger.LogInformation("Received request from {user} to mark notification[{Id}] as seen",
             user.Username, notificationId);
 
         List<Notification>? userNotifications =

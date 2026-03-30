@@ -1,7 +1,7 @@
 using Class4910Api.Models;
 using Class4910Api.Services.Interfaces;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Class4910Api.Controllers;
 

@@ -74,6 +74,8 @@ public static class ConstantValues
     public static readonly DatabaseField UserDisabledField =
         new() { Name = "Disabled", Type = MySqlDbType.Bit, Nullable = false };
 
+    public static readonly DatabaseField UserEmailNotificationsEnabled =
+        new() { Name = "EmailNotificationsForOrdersEnabled", Type = MySqlDbType.Bit, Nullable = false };
     public static readonly DatabaseTable UsersTable = new()
     {
         Name = "Users",
@@ -90,10 +92,10 @@ public static class ConstantValues
             UserTimeZoneField,
             UserHashedPasswordField,
             UserCreatedAtUtcField,
-            UserDisabledField
+            UserDisabledField,
+            UserEmailNotificationsEnabled
         ]
     };
-
     #endregion
 
     #region Admins

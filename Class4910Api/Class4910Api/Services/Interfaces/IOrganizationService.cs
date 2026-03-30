@@ -1,6 +1,5 @@
 ﻿using Class4910Api.Models;
 using Class4910Api.Models.Requests;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Class4910Api.Services.Interfaces;
 

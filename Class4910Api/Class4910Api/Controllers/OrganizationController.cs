@@ -93,7 +93,7 @@ public class OrganizationController : ControllerBase
         int userId = _contextService.GetUserId(HttpContext);
         OrgAccess orgAccess = await _authService.RetrieveUserOrgAccess(userId, orgId);
 
-        if (orgAccess == OrgAccess.NoAccess) 
+        if (orgAccess == OrgAccess.NoAccess)
         {
             return Unauthorized();
         }
@@ -168,7 +168,7 @@ public class OrganizationController : ControllerBase
         return Ok(organization);
     }
 
-    [Authorize (Roles = $"{ADMIN},{SPONSOR}")]
+    [Authorize(Roles = $"{ADMIN},{SPONSOR}")]
     [HttpDelete("remove-driver/{driverId:int}")]
     public async Task<ActionResult> RemoveDriverFromOrganization(int driverId, [FromQuery] int orgId)
     {
@@ -180,7 +180,7 @@ public class OrganizationController : ControllerBase
 
         bool removalResult = await _organizationService.RemoveDriverFromOrganization(driverId, orgId);
 
-        if (!removalResult) 
+        if (!removalResult)
             return BadRequest();
 
         return Ok();

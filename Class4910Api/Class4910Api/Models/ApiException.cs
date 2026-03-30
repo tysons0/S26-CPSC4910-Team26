@@ -1,6 +1,4 @@
-using System;
-
-namespace Class4910Api.Services
+namespace Class4910Api.Models
 {
     public class ApiException : Exception
     {

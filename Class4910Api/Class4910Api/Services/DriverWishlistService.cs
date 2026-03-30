@@ -20,8 +20,8 @@ public class DriverWishlistService : IDriverWishlistService
         _logger.LogInformation("Retrieve Wishlist for Driver[{Id}]", driverId);
         try
         {
-                 var items = new List<DriverWishlistItem>();
-                 string sql = @"
+            var items = new List<DriverWishlistItem>();
+            string sql = @"
                  SELECT dw.WishlistID,
                      dw.catalogItemId AS CatalogItemID,
                      sci.Points AS Points,

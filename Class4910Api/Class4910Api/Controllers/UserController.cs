@@ -3,7 +3,6 @@ using Class4910Api.Models.Requests;
 using Class4910Api.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Mysqlx;
 
 namespace Class4910Api.Controllers;
 
@@ -52,17 +51,23 @@ public class UserController : ControllerBase
     }
 
     [HttpPatch("{updateUserId:int}/disable")]
-    public async Task<ActionResult> DisableUser(int updateUserId)
+    public async Task<ActionResult> DisableUser(int updateUserId) => await ChangeUserDisableState(updateUserId, disable: true);
+
+    [HttpPatch("{updateUserId:int}/enable")]
+    public async Task<ActionResult> EnableUser(int updateUserId) => await ChangeUserDisableState(updateUserId, disable: false);
+
+    public async Task<ActionResult> ChangeUserDisableState(int updateUserId, bool disable)
     {
         int contextUserId = _contextService.GetUserId(HttpContext);
 
         bool canUpdate = await _authService.CanUserEditOtherUser(contextUserId, updateUserId);
 
-        if (canUpdate == false) return Forbid();
+        if (canUpdate == false)
+            return Forbid();
         else
         {
-            bool disableResult = await _userService.DisableUser(updateUserId);
-            if (disableResult)
+            bool changeResult = await _userService.ChangeUserDisableState(updateUserId, disable);
+            if (changeResult)
                 return Ok();
         }
 

@@ -15,5 +15,5 @@ public interface IUserService
 
     Task<User?> UpdateUser(int userId, UserUpdateRequest userRequest);
 
-    Task<bool> DisableUser(int userId);
+    Task<bool> ChangeUserDisableState(int userId, bool disable);
 }

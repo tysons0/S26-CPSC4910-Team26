@@ -51,7 +51,7 @@ public class EbayController : ControllerBase
             EbaySearchResponse result = await _ebayService.SearchProductsAsync(keyword, limit);
             return Ok(result);
         }
-        catch (Class4910Api.Services.ApiException apiEx)
+        catch (ApiException apiEx)
         {
             _logger.LogWarning(apiEx, "eBay service returned API error searching products");
             if (apiEx.StatusCode == 400)

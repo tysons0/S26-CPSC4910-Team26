@@ -173,7 +173,7 @@ public class AuthService : IAuthService
 
             if (editorUser.Role == UserRole.Sponsor && editeeUser.Role == UserRole.Driver)
             {
-                Sponsor? editingSponsor = await _sponserService.GetSponsorByUserId(editorUserId) 
+                Sponsor? editingSponsor = await _sponserService.GetSponsorByUserId(editorUserId)
                     ?? throw new("Editor User was identified as a sponsor but could not be found");
                 Driver? editeeDriver = await _driverService.GetDriverByUserId(editeeUser.Id);
 
@@ -187,7 +187,7 @@ public class AuthService : IAuthService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error checking if User[{EditorId}] can edit User[{EditeeId}]", 
+            _logger.LogError(ex, "Error checking if User[{EditorId}] can edit User[{EditeeId}]",
                 editorUserId, userId);
             return false;
         }

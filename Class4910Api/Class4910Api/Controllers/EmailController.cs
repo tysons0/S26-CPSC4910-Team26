@@ -1,8 +1,8 @@
-using Microsoft.AspNetCore.Mvc;
-using Class4910Api.Services.Interfaces;
-using Class4910Api.Models.Requests;
 using System.Collections.Concurrent;
 using Class4910Api.Models;
+using Class4910Api.Models.Requests;
+using Class4910Api.Services.Interfaces;
+using Microsoft.AspNetCore.Mvc;
 
 
 namespace Class4910Api.Controllers

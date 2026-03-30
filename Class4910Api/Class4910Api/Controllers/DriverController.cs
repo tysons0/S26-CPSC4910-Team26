@@ -1,6 +1,5 @@
 ﻿using Class4910Api.Models;
 using Class4910Api.Models.Requests;
-using Class4910Api.Services;
 using Class4910Api.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -31,7 +30,7 @@ public class DriverController : ControllerBase
         _authService = authService;
     }
 
-    [Authorize (Roles = $"{ADMIN},{SPONSOR}")]
+    [Authorize(Roles = $"{ADMIN},{SPONSOR}")]
     [HttpGet]
     public async Task<ActionResult<List<Driver>>> GetAllDrivers()
     {
@@ -47,7 +46,7 @@ public class DriverController : ControllerBase
         {
             Sponsor? sponsor = await _sponsorService.GetSponsorByUserId(user.Id);
 
-            if (sponsor is null) 
+            if (sponsor is null)
             {
 
                 return BadRequest();
@@ -183,7 +182,7 @@ public class DriverController : ControllerBase
         }
     }
 
-    [Authorize (Roles = SPONSOR)]
+    [Authorize(Roles = SPONSOR)]
     [HttpPatch("{driverId:int}/points")]
     public async Task<ActionResult<Driver>> UpdateDriverPoints(int driverId, [FromBody] PointChangeRequest pointChangeRequest)
     {
@@ -200,7 +199,7 @@ public class DriverController : ControllerBase
 
         if (sponsor is null || orgAccess != OrgAccess.ReadWrite)
         {
-            _logger.LogWarning("User[{Id}] attempted to change points for driver[{DriverId}]", 
+            _logger.LogWarning("User[{Id}] attempted to change points for driver[{DriverId}]",
                 contextUserId, driverId);
             return Unauthorized();
         }
@@ -211,7 +210,7 @@ public class DriverController : ControllerBase
 
         bool changeMatches = (oldPoints + pointChangeRequest.PointChange) == driver!.Points;
 
-        if (changeMatches) 
+        if (changeMatches)
         {
             return Ok(driver);
         }

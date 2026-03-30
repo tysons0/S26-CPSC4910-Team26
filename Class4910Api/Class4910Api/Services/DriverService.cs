@@ -6,7 +6,6 @@ using Class4910Api.Models.Requests;
 using Class4910Api.Services.Interfaces;
 using Microsoft.Extensions.Options;
 using MySql.Data.MySqlClient;
-using Org.BouncyCastle.Ocsp;
 using static Class4910Api.ConstantValues;
 
 namespace Class4910Api.Services;
@@ -16,12 +15,17 @@ public class DriverService : IDriverService
     private readonly ILogger<DriverService> _logger;
     private readonly string _dbConnection;
     private readonly IUserService _userService;
+    private readonly INotificationService _notificationService;
 
-    public DriverService(ILogger<DriverService> logger, IOptions<DatabaseConnection> databaseConnection, IUserService userService)
+    public DriverService(ILogger<DriverService> logger, 
+                         IOptions<DatabaseConnection> databaseConnection, 
+                         IUserService userService,
+                         INotificationService notificationService)
     {
         _logger = logger;
         _dbConnection = databaseConnection.Value.Connection;
         _userService = userService;
+        _notificationService = notificationService;
     }
 
     public async Task<Driver?> GetDriverByDriverId(int driverId)
@@ -475,7 +479,13 @@ public class DriverService : IDriverService
 
             await command.ExecuteNonQueryAsync();
 
-            _logger.LogInformation("Created PointHistory Entry for Driver[{Id}]. PointChange[{Change}]", 
+            await _notificationService.CreateNotification(
+                driverId, 
+                $"Your points have been updated by {pointChangeRequest.PointChange} points for the following reason: {pointChangeRequest.ChangeReason}", 
+                NotificationType.PointsChange
+            );
+
+            _logger.LogInformation("Created PointHistory Entry for Driver[{Id}]. PointChange[{Change}]",
                 driverId, pointChangeRequest.PointChange);
             return true;
         }

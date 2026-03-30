@@ -21,6 +21,8 @@ public class User
 
     public required bool Disabled { get; init; }
 
+    public required bool EmailNotificationsEnabled { get; init; }
+
     public List<int> AssociatedOrgIds { get; set; } = [];
 
     public override string ToString()
@@ -46,6 +48,7 @@ public class User
             LastLoginUtc = LastLoginUtc,
             AssociatedOrgIds = AssociatedOrgIds,
             Disabled = Disabled,
+            EmailNotificationsEnabled = EmailNotificationsEnabled,
         };
     }
 

@@ -1,11 +1,10 @@
-﻿using Class4910Api.Configuration;
+﻿using System.Data;
+using System.Data.Common;
+using Class4910Api.Configuration;
 using Class4910Api.Models;
 using Class4910Api.Services.Interfaces;
-using Google.Protobuf;
 using Microsoft.Extensions.Options;
 using MySql.Data.MySqlClient;
-using System.Data;
-using System.Data.Common;
 using static Class4910Api.ConstantValues;
 
 namespace Class4910Api.Services;
@@ -15,13 +14,20 @@ public class ApplicationService : IApplicationService
     private readonly ILogger<ApplicationService> _logger;
     private readonly string _dbConnection;
     private readonly ISponsorService _sponsorService;
+    private readonly INotificationService _notificationService;
+    private readonly IDriverService _driverService;
 
-    public ApplicationService(ILogger<ApplicationService> logger, ISponsorService sponsorService,
-                              IOptions<DatabaseConnection> databaseConnection)
+    public ApplicationService(ILogger<ApplicationService> logger,
+                              ISponsorService sponsorService,
+                              IDriverService driverService,
+                              IOptions<DatabaseConnection> databaseConnection,
+                              INotificationService notificationService)
     {
         _logger = logger;
         _dbConnection = databaseConnection.Value.Connection;
         _sponsorService = sponsorService;
+        _notificationService = notificationService;
+        _driverService = driverService;
     }
 
 
@@ -277,11 +283,11 @@ public class ApplicationService : IApplicationService
 
             if (result == 1)
             {
+                DriverApplication application = await GetApplication(applicationId)
+                        ?? throw new("Failed to retrieve application to update");
+                // Update driver organization if approved
                 if (approve)
                 {
-                    DriverApplication application = await GetApplication(applicationId) 
-                        ?? throw new("Failed to retrieve application to update");
-
                     command.Parameters.Clear();
                     command.CommandText =
                     @$"UPDATE {DriversTable.Name} 
@@ -291,11 +297,20 @@ public class ApplicationService : IApplicationService
                     command.Parameters.Add(OrgIdField.GenerateParameter("@OrgId", application.OrgId));
                     command.Parameters.Add(DriverIdField.GenerateParameter("@DriverId", application.DriverId));
 
-                    _logger.LogInformation("Put Driver[{DriverId}] in Organization[{OrgId}]", 
+                    _logger.LogInformation("Put Driver[{DriverId}] in Organization[{OrgId}]",
                         application.DriverId, application.OrgId);
 
                     await command.ExecuteNonQueryAsync();
                 }
+
+                // Send notification to driver about application status update
+                Driver driver = await _driverService.GetDriverByDriverId(application.DriverId)
+                    ?? throw new("Failed to retrieve driver to send notification");
+                await _notificationService.CreateNotification(
+                    userId: driver.UserData.Id,
+                    $"Your application to Org[{application.OrgId}] has been updated to status[{newStatus}]. Reason: {reason}",
+                    NotificationType.ApplicationStatusChange);
+
                 _logger.LogInformation("Updated application[{Id}] to status[{NewStatus}]", applicationId, newStatus);
             }
             else

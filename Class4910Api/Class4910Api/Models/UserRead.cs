@@ -23,6 +23,8 @@ public class UserRead
 
     public required bool Disabled { get; init; }
 
+    public required bool EmailNotificationsEnabled { get; init; }
+
     public List<int> AssociatedOrgIds { get; set; } = [];
 
     public override string ToString()
@@ -35,6 +37,7 @@ public class UserRead
             $"Country: {FormatNullable(Country)}, Role: {Role}, " +
             $"CreatedAtUtc: {FormatDate(CreatedAtUtc)}, " +
             $"LastLoginUtc: {FormatDate(LastLoginUtc)}, " +
+            $"EmailNotificationsEnabled: {EmailNotificationsEnabled}, " +
             $"Associated With Orgs [{string.Join(", ", AssociatedOrgIds)}] ]";
     }
 }

@@ -4,7 +4,6 @@ using Class4910Api.Configuration;
 using Class4910Api.Models;
 using Class4910Api.Models.Requests;
 using Class4910Api.Services.Interfaces;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using MySql.Data.MySqlClient;
 
@@ -23,9 +22,9 @@ public class UserService : IUserService
         _dbConnection = databaseConnection.Value.Connection;
     }
 
-    public async Task<bool> DisableUser(int userId)
+    public async Task<bool> ChangeUserDisableState(int userId, bool disable)
     {
-        _logger.LogInformation("Disabling user[{Id}]", userId);
+        _logger.LogInformation("Changing disable state to [{State}] for user[{Id}]", disable, userId);
 
         try
         {
@@ -35,19 +34,21 @@ public class UserService : IUserService
 
             command.CommandText =
                    @$"UPDATE {UsersTable.Name} 
-                   SET {UserDisabledField.SelectName} = 1
+                   SET {UserDisabledField.SelectName} = @Disabled
                    WHERE {UserIdField.SelectName} = @UserId";
             command.Parameters.Add(UserIdField.GenerateParameter("@UserId", userId));
+            command.Parameters.Add(UserDisabledField.GenerateParameter("@Disabled", disable));
 
             int result = await command.ExecuteNonQueryAsync();
 
-            _logger.LogInformation("Disabled user[{Id}]", userId);
+            _logger.LogInformation("Changed disable state to [{State}] for user[{Id}]", disable, userId);
 
             return true;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to disable user[{Id}]", userId);
+            _logger.LogError(ex, "Failed to change disable state to [{State}] for user[{Id}]",
+                             disable, userId);
             return false;
         }
     }
@@ -203,6 +204,8 @@ public class UserService : IUserService
         }
 
         bool disabled = reader.GetBoolean($"{pfx}{UserDisabledField.Name}");
+        bool emailNotifications = reader.GetBoolean($"{pfx}{UserEmailNotificationsEnabled.Name}");
+
 
         return new User
         {
@@ -221,6 +224,7 @@ public class UserService : IUserService
             LastLoginUtc = lastLoginUtc,
 
             Disabled = disabled,
+            EmailNotificationsEnabled = emailNotifications,
         };
     }
 

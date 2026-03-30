@@ -1,4 +1,3 @@
-using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -75,7 +74,7 @@ public class EbayService : IEbayService
             {
                 int status = (int)response.StatusCode;
                 _logger.LogWarning("eBay API returned non-success status {Status} for keyword {Keyword}: {Content}", status, keyword, content);
-                throw new Class4910Api.Services.ApiException($"eBay product search failed: {content}", status);
+                throw new ApiException($"eBay product search failed: {content}", status);
             }
 
             EbayApiResponse? searchResponse = JsonSerializer.Deserialize<EbayApiResponse>(content, _serializerOptions);
@@ -99,7 +98,7 @@ public class EbayService : IEbayService
                         Condition = item.Condition ?? ""
                     });
 
-                    
+
                 }
             }
 
@@ -120,15 +119,15 @@ public class EbayService : IEbayService
 
     private static string ConvertToHttps(string url)
     {
-    if (string.IsNullOrEmpty(url))
-        return "";
-    
-    if (url.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
-    {
-        return "https://" + url.Substring(7);
-    }
-    
-    return url;
+        if (string.IsNullOrEmpty(url))
+            return "";
+
+        if (url.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
+        {
+            return "https://" + url.Substring(7);
+        }
+
+        return url;
     }
 
     public async Task<EbayProduct?> GetProductByIDAsync(string itemID)

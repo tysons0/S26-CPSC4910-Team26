@@ -2,7 +2,6 @@
 using System.Data.Common;
 using Class4910Api.Configuration;
 using Class4910Api.Models;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using MySql.Data.MySqlClient;
