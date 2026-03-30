@@ -17,7 +17,7 @@ function SponsorApplications() {
         // Check if user is a sponsor
         const userRole = apiService.getUserRole();
         if (userRole?.toLowerCase() !== "sponsor") {
-          navigate("/Dashboard");
+          navigate("/About");
           return;
         }
 

@@ -34,8 +34,9 @@ function SponsorProfile() {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        if (!apiService.isAuthenticated()) {
-          navigate("/Login");
+        const userRole = apiService.getUserRole();
+        if (userRole?.toLowerCase() !== "sponsor") {
+          navigate("/About");
           return;
         }
 

@@ -17,7 +17,7 @@ function AdminApplications() {
         // Check if user is a admin
         const userRole = apiService.getUserRole();
         if (userRole?.toLowerCase() !== "admin") {
-          navigate("/Dashboard");
+          navigate("/About");
           return;
         }
 

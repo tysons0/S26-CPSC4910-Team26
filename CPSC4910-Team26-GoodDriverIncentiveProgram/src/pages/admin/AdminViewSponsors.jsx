@@ -27,7 +27,7 @@ function AdminViewSponsors() {
       try {
         const userRole = apiService.getUserRole();
         if (userRole?.toLowerCase() !== "admin") {
-          navigate("/Dashboard");
+          navigate("/About");
           return;
         }
 
