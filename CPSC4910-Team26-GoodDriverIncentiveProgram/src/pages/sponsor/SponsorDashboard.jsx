@@ -29,6 +29,10 @@ function SponsorDashboard() {
     ebayItemId: "",
     points: "",
   });
+  const [editingItemId, setEditingItemId] = useState(null);
+  const [editingPoints, setEditingPoints] = useState("");
+  const [updating, setUpdating] = useState(false);
+  const [removing, setRemoving] = useState(null);
 
   //Manually add products by ebay item ID
   const [manualFormData, setManualFormData] = useState({
@@ -252,6 +256,49 @@ function SponsorDashboard() {
     }
   };
 
+  const handleUpdatePoints = async (catalogItemId) => {
+    setError("");
+    setSuccessMessage("");
+    const points = Number(editingPoints);
+
+    if (!Number.isFinite(points) || points <= 0) {
+      setError("Points must be a positive number.");
+      return;
+    }
+
+    setUpdating(true);
+    try {
+      await apiService.updateCatalogItem(sponsorOrgId, catalogItemId, {
+        points,
+      });
+      setSuccessMessage("Points updated successfully.");
+      setEditingItemId(null);
+      setEditingPoints("");
+      await loadCatalog(sponsorOrgId);
+    } catch (err) {
+      console.error("Error updating catalog item:", err);
+      setError(err.message || "Failed to update points.");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleRemoveItem = async (catalogItemId) => {
+    setError("");
+    setSuccessMessage("");
+    setRemoving(catalogItemId);
+    try {
+      await apiService.removeCatalogItem(sponsorOrgId, catalogItemId);
+      setSuccessMessage("Item removed from catalog.");
+      await loadCatalog(sponsorOrgId);
+    } catch (err) {
+      console.error("Error removing catalog item:", err);
+      setError(err.message || "Failed to remove item.");
+    } finally {
+      setRemoving(null);
+    }
+  };
+
   const pendingApplications = applications.filter((app) => {
     const status = app.status?.toLowerCase();
     return (
@@ -468,16 +515,7 @@ function SponsorDashboard() {
                   Loading catalog...
                 </p>
               ) : catalogItems.length === 0 ? (
-                <p
-                  style={{
-                    fontSize: "0.85rem",
-                    color: "var(--text-alt)",
-                    textAlign: "center",
-                    padding: "1.5rem 0",
-                  }}
-                >
-                  No catalog products yet.
-                </p>
+                <p className="empty-state">No catalog products yet.</p>
               ) : (
                 <div
                   style={{
@@ -486,56 +524,122 @@ function SponsorDashboard() {
                     gap: "0.6rem",
                   }}
                 >
-                  {catalogItems.map((item) => (
-                    <div
-                      key={
-                        item.catalogItemID ??
-                        item.catalogItemId ??
-                        item.ebayItemId
-                      }
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        padding: "0.65rem 0.875rem",
-                        borderRadius: "8px",
-                        border: "1px solid var(--border)",
-                      }}
-                    >
-                      <div>
-                        <div
-                          style={{
-                            fontWeight: 600,
-                            fontSize: "0.875rem",
-                            color: "var(--text-muted)",
-                          }}
-                        >
-                          {item.title || item.name || "Catalog Item"}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: "0.75rem",
-                            color: "var(--text-alt)",
-                          }}
-                        >
-                          eBay item
-                        </div>
-                      </div>
-                      <span
+                  {catalogItems.map((item) => {
+                    const itemId =
+                      item.catalogItemID ??
+                      item.catalogItemId ??
+                      item.ebayItemId;
+                    const isEditing = editingItemId === itemId;
+                    const isRemoving = removing === itemId;
+
+                    return (
+                      <div
+                        key={itemId}
+                        className="catalog-row"
                         style={{
-                          background:
-                            "linear-gradient(135deg, rgba(102,126,234,0.15), rgba(118,75,162,0.15))",
-                          color: "#667eea",
-                          borderRadius: "5px",
-                          padding: "0.2rem 0.55rem",
-                          fontSize: "0.75rem",
-                          fontWeight: 600,
+                          flexDirection: "column",
+                          alignItems: "stretch",
+                          gap: "0.5rem",
                         }}
                       >
-                        {item.points} pts
-                      </span>
-                    </div>
-                  ))}
+                        {/* Top row — name, badge, actions */}
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            gap: "0.5rem",
+                          }}
+                        >
+                          <div>
+                            <div className="catalog-name">
+                              {item.title || item.name || "Catalog Item"}
+                            </div>
+                            <div className="catalog-meta">eBay item</div>
+                          </div>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "0.5rem",
+                              flexShrink: 0,
+                            }}
+                          >
+                            <span className="pts-badge">{item.points} pts</span>
+                            <button
+                              onClick={() => {
+                                setEditingItemId(isEditing ? null : itemId);
+                                setEditingPoints(item.points);
+                              }}
+                              style={{
+                                background: "transparent",
+                                border: "1px solid var(--border)",
+                                borderRadius: "6px",
+                                padding: "0.2rem 0.5rem",
+                                fontSize: "0.75rem",
+                                cursor: "pointer",
+                                color: "var(--text-alt)",
+                                transition: "border-color 0.15s",
+                              }}
+                            >
+                              {isEditing ? "Cancel" : "✏️ Edit"}
+                            </button>
+                            <button
+                              onClick={() => handleRemoveItem(itemId)}
+                              disabled={isRemoving}
+                              style={{
+                                background: "transparent",
+                                border: "1px solid rgba(231,76,60,0.3)",
+                                borderRadius: "6px",
+                                padding: "0.2rem 0.5rem",
+                                fontSize: "0.75rem",
+                                cursor: "pointer",
+                                color: "#c0392b",
+                                transition: "border-color 0.15s",
+                              }}
+                            >
+                              {isRemoving ? "..." : "🗑️ Remove"}
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Inline edit row — only shown when editing */}
+                        {isEditing && (
+                          <div
+                            style={{
+                              display: "flex",
+                              gap: "0.5rem",
+                              alignItems: "center",
+                              paddingTop: "0.4rem",
+                              borderTop: "1px solid var(--border)",
+                            }}
+                          >
+                            <input
+                              type="number"
+                              min="1"
+                              value={editingPoints}
+                              onChange={(e) => setEditingPoints(e.target.value)}
+                              placeholder="New points value"
+                              className="view-select"
+                              style={{ flex: 1 }}
+                            />
+                            <button
+                              onClick={() => handleUpdatePoints(itemId)}
+                              disabled={updating}
+                              className="submit"
+                              style={{
+                                whiteSpace: "nowrap",
+                                padding: "0.5rem 1rem",
+                                fontSize: "0.85rem",
+                              }}
+                            >
+                              {updating ? "Saving..." : "Save"}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>

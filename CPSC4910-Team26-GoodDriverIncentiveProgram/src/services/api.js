@@ -586,7 +586,9 @@ const apiService = {
     }
   },
 
-  //Application API Calls
+  /* ============================================
+          Application API Calls
+   ============================================ */
   applyToOrganization: async (orgId, message = "") => {
     try {
       const token = apiService.getToken();
@@ -730,7 +732,9 @@ const apiService = {
     }
   },
 
-  //Notifications API Calls
+  /* ============================================
+          Notification API Calls
+   ============================================ */
   getNotifications: async () => {
     try {
       const token = apiService.getToken();
@@ -773,7 +777,9 @@ const apiService = {
     }
   },
 
-  //Driver Address API Calls
+  /* ============================================
+          Driver Address API Calls
+   ============================================ */
   getDriverAddresses: async (driverId) => {
     try {
       const token = apiService.getToken();
@@ -841,7 +847,9 @@ const apiService = {
     }
   },
 
-  // Sponsor-specific API calls
+  /* ============================================
+        Sponsor-specific API Calls
+   ============================================ */
   getSponsor: async () => {
     try {
       const token = apiService.getToken();
@@ -868,7 +876,9 @@ const apiService = {
     }
   },
 
-  // Organization-specific API calls
+  /* ============================================
+        Organization-specific API calls
+   ============================================ */
   getOrganizationById: async (orgId) => {
     try {
       const token = apiService.getToken();
@@ -929,7 +939,9 @@ const apiService = {
     }
   },
 
-  // Catalog-specific API calls
+  /* ============================================
+            Catalog-specific API calls
+   ============================================ */
   getCatalog: async (orgId) => {
     try {
       const token = apiService.getToken();
@@ -1021,7 +1033,9 @@ const apiService = {
     }
   },
 
-  // Ebay-specific API calls
+  /* ============================================
+        Ebay-specific API calls    
+   ============================================ */
   searchEbayProducts: async (keyword, limit = 12) => {
     try {
       const token = apiService.getToken();
@@ -1057,7 +1071,9 @@ const apiService = {
     }
   },
 
-  //Point API Calls
+  /* ============================================
+            Point-specific API calls
+   ============================================ */
   getDriverPointHistory: async (driverId) => {
     try {
       const token = apiService.getToken();
@@ -1107,7 +1123,9 @@ const apiService = {
     }
   },
 
-  //Driver Wishlist API Calls
+  /* ============================================
+          Driver wishlist API calls  
+   ============================================ */
   getDriverWishlist: async (driverId) => {
     try {
       const token = await apiService.getToken();
@@ -1128,7 +1146,7 @@ const apiService = {
     }
   },
 
-  addWishlistItem: async (driverId, orgId,catalogItemId) => {
+  addWishlistItem: async (driverId, orgId, catalogItemId) => {
     try {
       const token = await apiService.getToken();
       if (!token) {
@@ -1170,6 +1188,10 @@ const apiService = {
       throw error;
     }
   },
+
+  /* ============================================
+            Order API Calls
+   ============================================ */
 };
 
 export default apiService;
