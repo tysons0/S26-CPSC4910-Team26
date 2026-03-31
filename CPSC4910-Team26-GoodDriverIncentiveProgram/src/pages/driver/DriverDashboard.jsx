@@ -110,12 +110,12 @@ function DriverDashboard() {
           return;
         }
 
-        const defaultOrgId = driver?.organizationId
-          ? String(driver.organizationId)
-          : String(memberships[0].orgId);
-
+        const savedOrgId = localStorage.getItem("activeOrgId");
         const defaultOrg =
-          memberships.find((o) => String(o.orgId) === defaultOrgId) ||
+          memberships.find((o) => String(o.orgId) === savedOrgId) || // last selected
+          memberships.find(
+            (o) => String(o.orgId) === String(driver?.organizationId),
+          ) || // primary org
           memberships[0];
 
         setActiveOrgId(String(defaultOrg.orgId));
@@ -137,6 +137,7 @@ function DriverDashboard() {
     if (!org) return;
     setActiveOrgId(String(org.orgId));
     setActiveOrgName(org.name || "Organization");
+    localStorage.setItem("activeOrgId", String(org.orgId));
     setSearchKeyword("");
     setMinPoints("");
     setMaxPoints("");
