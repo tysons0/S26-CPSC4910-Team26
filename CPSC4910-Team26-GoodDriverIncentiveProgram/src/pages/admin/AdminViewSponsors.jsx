@@ -2,6 +2,7 @@ import { useEffect, useState, Fragment } from "react";
 import apiService from "../../services/api";
 import PageTitle from "../../components/PageTitle";
 import { useNavigate } from "react-router-dom";
+import "../../css/AdminDashboard.css";
 
 function AdminViewSponsors() {
   const [sponsors, setSponsors] = useState([]);
@@ -189,7 +190,15 @@ function AdminViewSponsors() {
   }
 
   return (
-    <div style={{ padding: "2rem" }}>
+    <div
+      style={{
+        padding: "2rem",
+        background: "var(--bg)",
+        minHeight: "100vh",
+        color: "var(--text-muted)",
+        transition: "background 0.3s, color 0.3s",
+      }}
+    >
       <PageTitle title="View Sponsors | Admin" />
 
       <header className="catalog-header">
@@ -203,10 +212,12 @@ function AdminViewSponsors() {
         </div>
       </header>
 
-      <h1>Registered Sponsors</h1>
+      <h1 style={{ color: "var(--text-muted)", marginBottom: "1rem" }}>
+        Registered Sponsors
+      </h1>
 
       {sponsors.length === 0 ? (
-        <p>No sponsors found.</p>
+        <p style={{ color: "var(--text-alt)" }}>No sponsors found.</p>
       ) : (
         <div>
           <table
@@ -219,106 +230,179 @@ function AdminViewSponsors() {
             <thead>
               <tr
                 style={{
-                  backgroundColor: "#f8f9fa",
-                  borderBottom: "2px solid #dee2e6",
+                  background: "var(--surface-alt)",
+                  borderBottom: "2px solid var(--border)",
                 }}
               >
-                <th style={{ padding: "0.75rem", textAlign: "left" }}>
-                  Sponsor ID
-                </th>
-                <th style={{ padding: "0.75rem", textAlign: "left" }}>Name</th>
-                <th style={{ padding: "0.75rem", textAlign: "left" }}>
-                  Username
-                </th>
-                <th style={{ padding: "0.75rem", textAlign: "left" }}>Email</th>
-                <th style={{ padding: "0.75rem", textAlign: "left" }}>
-                  Organization
-                </th>
-                <th style={{ padding: "0.75rem", textAlign: "left" }}>
-                  Status
-                </th>
-                <th style={{ padding: "0.75rem", textAlign: "left" }}>
-                  Actions
-                </th>
+                {[
+                  "Sponsor ID",
+                  "Name",
+                  "Username",
+                  "Email",
+                  "Organization",
+                  "Status",
+                  "Actions",
+                ].map((h) => (
+                  <th
+                    key={h}
+                    style={{
+                      padding: "0.75rem",
+                      textAlign: "left",
+                      color: "var(--text-muted)",
+                      fontSize: "0.875rem",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {h}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
               {sponsors.map((sponsor, index) => (
                 <Fragment key={sponsor.sponsorId || index}>
-                  <tr style={{ borderBottom: "1px solid #dee2e6" }}>
-                    <td style={{ padding: "0.75rem" }}>
+                  {/* Main row */}
+                  <tr
+                    style={{
+                      borderBottom: "1px solid var(--border)",
+                      transition: "background 0.15s",
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.background = "var(--surface-alt)")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.background = "transparent")
+                    }
+                  >
+                    <td
+                      style={{
+                        padding: "0.75rem",
+                        color: "var(--text-alt)",
+                        fontSize: "0.875rem",
+                      }}
+                    >
                       {sponsor.sponsorId || "N/A"}
                     </td>
-                    <td style={{ padding: "0.75rem" }}>
+                    <td
+                      style={{
+                        padding: "0.75rem",
+                        color: "var(--text-muted)",
+                        fontSize: "0.875rem",
+                      }}
+                    >
                       {sponsor.userData?.firstName && sponsor.userData?.lastName
                         ? `${sponsor.userData.firstName} ${sponsor.userData.lastName}`
                         : sponsor.userData?.username || "N/A"}
                     </td>
-                    <td style={{ padding: "0.75rem" }}>
+                    <td
+                      style={{
+                        padding: "0.75rem",
+                        color: "var(--text-muted)",
+                        fontSize: "0.875rem",
+                      }}
+                    >
                       {sponsor.userData?.username || "N/A"}
                     </td>
-                    <td style={{ padding: "0.75rem" }}>
+                    <td
+                      style={{
+                        padding: "0.75rem",
+                        color: "var(--text-muted)",
+                        fontSize: "0.875rem",
+                      }}
+                    >
                       {sponsor.userData?.email || "N/A"}
                     </td>
-
-                    <td style={{ padding: "0.75rem" }}>
+                    <td
+                      style={{
+                        padding: "0.75rem",
+                        color: "var(--text-alt)",
+                        fontSize: "0.875rem",
+                      }}
+                    >
                       {sponsor.organizationId
                         ? `Org ${sponsor.organizationId}`
                         : "None"}
                     </td>
                     <td style={{ padding: "0.75rem" }}>
-                      {sponsor.userData?.disabled ? "Disabled" : "Active"}
+                      <span
+                        style={{
+                          padding: "0.2rem 0.6rem",
+                          borderRadius: "12px",
+                          fontSize: "0.78rem",
+                          fontWeight: 600,
+                          background: sponsor.userData?.disabled
+                            ? "rgba(231,76,60,0.1)"
+                            : "rgba(72,187,120,0.12)",
+                          color: sponsor.userData?.disabled
+                            ? "#c0392b"
+                            : "#276749",
+                          border: `1px solid ${sponsor.userData?.disabled ? "rgba(231,76,60,0.25)" : "rgba(72,187,120,0.3)"}`,
+                        }}
+                      >
+                        {sponsor.userData?.disabled ? "Disabled" : "Active"}
+                      </span>
                     </td>
                     <td style={{ padding: "0.75rem" }}>
-                      <button
-                        onClick={() => handleViewSponsor(sponsor)}
+                      <div
                         style={{
-                          padding: "0.25rem 0.75rem",
-                          marginRight: "0.5rem",
-                          backgroundColor: "#17a2b8",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "4px",
-                          cursor: "pointer",
-                          fontSize: "0.875rem",
+                          display: "flex",
+                          gap: "0.4rem",
+                          flexWrap: "wrap",
                         }}
                       >
-                        View Details
-                      </button>
-
-                      <button
-                        onClick={() => handleEditSponsor(sponsor)}
-                        style={{
-                          padding: "0.25rem 0.75rem",
-                          backgroundColor: "#667eea",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "4px",
-                          cursor: "pointer",
-                          fontSize: "0.875rem",
-                        }}
-                      >
-                        Edit
-                      </button>
-
-                      <button
-                        onClick={() => handleDisableSponsor(sponsor)}
-                        style={{
-                          padding: "0.25rem 0.75rem",
-                          marginLeft: "0.5rem",
-                          backgroundColor: "#dc3545",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "4px",
-                          cursor: "pointer",
-                          fontSize: "0.875rem",
-                        }}
-                      >
-                        Disable
-                      </button>
+                        <button
+                          onClick={() => handleViewSponsor(sponsor)}
+                          style={{
+                            padding: "0.25rem 0.7rem",
+                            background: "rgba(102,126,234,0.12)",
+                            color: "#667eea",
+                            border: "1px solid rgba(102,126,234,0.3)",
+                            borderRadius: "6px",
+                            cursor: "pointer",
+                            fontSize: "0.8rem",
+                            fontWeight: 600,
+                            transition: "all 0.15s",
+                          }}
+                        >
+                          View Details
+                        </button>
+                        <button
+                          onClick={() => handleEditSponsor(sponsor)}
+                          style={{
+                            padding: "0.25rem 0.7rem",
+                            background: "rgba(102,126,234,0.12)",
+                            color: "#667eea",
+                            border: "1px solid rgba(102,126,234,0.3)",
+                            borderRadius: "6px",
+                            cursor: "pointer",
+                            fontSize: "0.8rem",
+                            fontWeight: 600,
+                            transition: "all 0.15s",
+                          }}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDisableSponsor(sponsor)}
+                          style={{
+                            padding: "0.25rem 0.7rem",
+                            background: "rgba(231,76,60,0.1)",
+                            color: "#c0392b",
+                            border: "1px solid rgba(231,76,60,0.25)",
+                            borderRadius: "6px",
+                            cursor: "pointer",
+                            fontSize: "0.8rem",
+                            fontWeight: 600,
+                            transition: "all 0.15s",
+                          }}
+                        >
+                          Disable
+                        </button>
+                      </div>
                     </td>
                   </tr>
 
+                  {/* Expanded row */}
                   {(viewingSponsor === sponsor.sponsorId ||
                     editingSponsor === sponsor.sponsorId) && (
                     <tr>
@@ -326,304 +410,258 @@ function AdminViewSponsors() {
                         colSpan="7"
                         style={{
                           padding: "1rem",
-                          backgroundColor: "#f8f9fa",
-                          borderBottom: "1px solid #dee2e6",
+                          background: "var(--bg)",
+                          borderBottom: "1px solid var(--border)",
                         }}
                       >
-                        {editingSponsor === sponsor.sponsorId ? (
-                          <div
-                            style={{
-                              backgroundColor: "#fff",
-                              padding: "1.5rem",
-                              borderRadius: "8px",
-                              border: "1px solid #ddd",
-                            }}
-                          >
-                            <h2 style={{ marginTop: 0 }}>
-                              Edit Sponsor Information -{" "}
-                              {sponsor.userData?.username}
-                            </h2>
-
-                            <div
-                              style={{
-                                display: "grid",
-                                gap: "1rem",
-                                gridTemplateColumns: "1fr 1fr",
-                                marginBottom: "1.5rem",
-                              }}
-                            >
-                              <div>
-                                <label
-                                  style={{
-                                    display: "block",
-                                    marginBottom: "0.25rem",
-                                  }}
-                                >
-                                  First Name
-                                </label>
-                                <input
-                                  type="text"
-                                  name="firstName"
-                                  value={editFormData.firstName}
-                                  onChange={handleEditChange}
-                                  style={{
-                                    width: "100%",
-                                    padding: "0.5rem",
-                                    borderRadius: "4px",
-                                    border: "1px solid #ddd",
-                                  }}
-                                />
-                              </div>
-
-                              <div>
-                                <label
-                                  style={{
-                                    display: "block",
-                                    marginBottom: "0.25rem",
-                                  }}
-                                >
-                                  Last Name
-                                </label>
-                                <input
-                                  type="text"
-                                  name="lastName"
-                                  value={editFormData.lastName}
-                                  onChange={handleEditChange}
-                                  style={{
-                                    width: "100%",
-                                    padding: "0.5rem",
-                                    borderRadius: "4px",
-                                    border: "1px solid #ddd",
-                                  }}
-                                />
-                              </div>
-
-                              <div>
-                                <label
-                                  style={{
-                                    display: "block",
-                                    marginBottom: "0.25rem",
-                                  }}
-                                >
-                                  Email
-                                </label>
-                                <input
-                                  type="email"
-                                  name="email"
-                                  value={editFormData.email}
-                                  onChange={handleEditChange}
-                                  style={{
-                                    width: "100%",
-                                    padding: "0.5rem",
-                                    borderRadius: "4px",
-                                    border: "1px solid #ddd",
-                                  }}
-                                />
-                              </div>
-
-                              <div>
-                                <label
-                                  style={{
-                                    display: "block",
-                                    marginBottom: "0.25rem",
-                                  }}
-                                >
-                                  Phone Number
-                                </label>
-                                <input
-                                  type="tel"
-                                  name="phoneNumber"
-                                  value={editFormData.phoneNumber}
-                                  onChange={handleEditChange}
-                                  style={{
-                                    width: "100%",
-                                    padding: "0.5rem",
-                                    borderRadius: "4px",
-                                    border: "1px solid #ddd",
-                                  }}
-                                />
-                              </div>
-
-                              <div>
-                                <label
-                                  style={{
-                                    display: "block",
-                                    marginBottom: "0.25rem",
-                                  }}
-                                >
-                                  Time Zone
-                                </label>
-                                <input
-                                  type="text"
-                                  name="timeZone"
-                                  value={editFormData.timeZone}
-                                  onChange={handleEditChange}
-                                  style={{
-                                    width: "100%",
-                                    padding: "0.5rem",
-                                    borderRadius: "4px",
-                                    border: "1px solid #ddd",
-                                  }}
-                                />
-                              </div>
-
-                              <div>
-                                <label
-                                  style={{
-                                    display: "block",
-                                    marginBottom: "0.25rem",
-                                  }}
-                                >
-                                  Country
-                                </label>
-                                <input
-                                  type="text"
-                                  name="country"
-                                  value={editFormData.country}
-                                  onChange={handleEditChange}
-                                  style={{
-                                    width: "100%",
-                                    padding: "0.5rem",
-                                    borderRadius: "4px",
-                                    border: "1px solid #ddd",
-                                  }}
-                                />
-                              </div>
-                            </div>
-
-                            <div style={{ display: "flex", gap: "0.5rem" }}>
-                              <button
-                                onClick={() => handleSaveSponsor(sponsor)}
-                                disabled={saving}
+                        <div
+                          style={{
+                            background: "var(--surface-alt)",
+                            padding: "1.5rem",
+                            borderRadius: "10px",
+                            border: "1px solid var(--border)",
+                            transition: "background 0.3s",
+                          }}
+                        >
+                          {editingSponsor === sponsor.sponsorId ? (
+                            // EDIT MODE
+                            <>
+                              <h2
                                 style={{
-                                  padding: "0.5rem 1.5rem",
-                                  backgroundColor: "#28a745",
-                                  color: "white",
-                                  border: "none",
-                                  borderRadius: "4px",
-                                  cursor: saving ? "not-allowed" : "pointer",
+                                  marginTop: 0,
+                                  marginBottom: "1.25rem",
+                                  color: "var(--text-muted)",
                                 }}
                               >
-                                {saving ? "Saving..." : "Save Changes"}
-                              </button>
-
-                              <button
-                                onClick={handleCancelEdit}
-                                disabled={saving}
-                                style={{
-                                  padding: "0.5rem 1.5rem",
-                                  backgroundColor: "#6c757d",
-                                  color: "white",
-                                  border: "none",
-                                  borderRadius: "4px",
-                                  cursor: saving ? "not-allowed" : "pointer",
-                                }}
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div
-                            style={{
-                              backgroundColor: "#fff",
-                              padding: "1.5rem",
-                              borderRadius: "8px",
-                              border: "1px solid #ddd",
-                            }}
-                          >
-                            <div
-                              style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "start",
-                                marginBottom: "1rem",
-                              }}
-                            >
-                              <h2 style={{ margin: 0 }}>
-                                Sponsor Details - {sponsor.userData?.username}
+                                Edit Sponsor — {sponsor.userData?.username}
                               </h2>
-                              <button
-                                onClick={handleCancelEdit}
+                              <div
                                 style={{
-                                  padding: "0.5rem 1rem",
-                                  backgroundColor: "#6c757d",
-                                  color: "white",
-                                  border: "none",
-                                  borderRadius: "4px",
-                                  cursor: "pointer",
+                                  display: "grid",
+                                  gap: "1rem",
+                                  gridTemplateColumns: "1fr 1fr",
+                                  marginBottom: "1.25rem",
                                 }}
                               >
-                                Close
-                              </button>
-                            </div>
+                                {[
+                                  {
+                                    label: "First Name",
+                                    name: "firstName",
+                                    type: "text",
+                                  },
+                                  {
+                                    label: "Last Name",
+                                    name: "lastName",
+                                    type: "text",
+                                  },
+                                  {
+                                    label: "Email",
+                                    name: "email",
+                                    type: "email",
+                                  },
+                                  {
+                                    label: "Phone Number",
+                                    name: "phoneNumber",
+                                    type: "tel",
+                                  },
+                                  {
+                                    label: "Time Zone",
+                                    name: "timeZone",
+                                    type: "text",
+                                  },
+                                  {
+                                    label: "Country",
+                                    name: "country",
+                                    type: "text",
+                                  },
+                                ].map(({ label, name, type }) => (
+                                  <div key={name}>
+                                    <label
+                                      style={{
+                                        display: "block",
+                                        marginBottom: "0.25rem",
+                                        fontWeight: 600,
+                                        fontSize: "0.8rem",
+                                        color: "var(--text-alt)",
+                                      }}
+                                    >
+                                      {label}
+                                    </label>
+                                    <input
+                                      type={type}
+                                      name={name}
+                                      value={editFormData[name]}
+                                      onChange={handleEditChange}
+                                      className="view-select"
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+                              <div style={{ display: "flex", gap: "0.5rem" }}>
+                                <button
+                                  onClick={() => handleSaveSponsor(sponsor)}
+                                  disabled={saving}
+                                  style={{
+                                    padding: "0.5rem 1.1rem",
+                                    background: "rgba(72,187,120,0.15)",
+                                    color: "#276749",
+                                    border: "1px solid rgba(72,187,120,0.4)",
+                                    borderRadius: "7px",
+                                    cursor: saving ? "not-allowed" : "pointer",
+                                    fontWeight: 600,
+                                    fontSize: "0.875rem",
+                                    opacity: saving ? 0.6 : 1,
+                                    transition: "all 0.15s",
+                                  }}
+                                >
+                                  {saving ? "Saving..." : "Save Changes"}
+                                </button>
+                                <button
+                                  onClick={handleCancelEdit}
+                                  disabled={saving}
+                                  style={{
+                                    padding: "0.5rem 1.1rem",
+                                    background: "transparent",
+                                    color: "var(--text-muted)",
+                                    border: "1px solid var(--border)",
+                                    borderRadius: "7px",
+                                    cursor: saving ? "not-allowed" : "pointer",
+                                    fontWeight: 600,
+                                    fontSize: "0.875rem",
+                                    opacity: saving ? 0.6 : 1,
+                                    transition: "all 0.15s",
+                                  }}
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </>
+                          ) : (
+                            // VIEW MODE
+                            <>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  alignItems: "flex-start",
+                                  marginBottom: "1.25rem",
+                                }}
+                              >
+                                <h2
+                                  style={{
+                                    margin: 0,
+                                    color: "var(--text-muted)",
+                                  }}
+                                >
+                                  Sponsor Details — {sponsor.userData?.username}
+                                </h2>
+                                <button
+                                  onClick={handleCancelEdit}
+                                  style={{
+                                    padding: "0.5rem 1.1rem",
+                                    background: "transparent",
+                                    color: "var(--text-muted)",
+                                    border: "1px solid var(--border)",
+                                    borderRadius: "7px",
+                                    cursor: "pointer",
+                                    fontWeight: 600,
+                                    fontSize: "0.875rem",
+                                    transition: "all 0.15s",
+                                  }}
+                                >
+                                  Close
+                                </button>
+                              </div>
 
-                            <div
-                              style={{
-                                display: "grid",
-                                gap: "1rem",
-                                gridTemplateColumns: "1fr 1fr",
-                              }}
-                            >
-                              <div>
-                                <strong>Sponsor ID:</strong> {sponsor.sponsorId}
-                              </div>
-                              <div>
-                                <strong>User ID:</strong> {sponsor.userData?.id}
-                              </div>
-                              <div>
-                                <strong>Username:</strong>{" "}
-                                {sponsor.userData?.username || "N/A"}
-                              </div>
-                              <div>
-                                <strong>Full Name:</strong>{" "}
-                                {sponsor.userData?.firstName &&
-                                sponsor.userData?.lastName
-                                  ? `${sponsor.userData.firstName} ${sponsor.userData.lastName}`
-                                  : "N/A"}
-                              </div>
-                              <div>
-                                <strong>Email:</strong>{" "}
-                                {sponsor.userData?.email || "N/A"}
-                              </div>
-                              <div>
-                                <strong>Phone:</strong>{" "}
-                                {sponsor.userData?.phoneNumber || "N/A"}
-                              </div>
-                              <div>
-                                <strong>Time Zone:</strong>{" "}
-                                {sponsor.userData?.timeZone || "N/A"}
-                              </div>
-                              <div>
-                                <strong>Country:</strong>{" "}
-                                {sponsor.userData?.country || "N/A"}
+                              <div
+                                style={{
+                                  display: "grid",
+                                  gap: "0.75rem",
+                                  gridTemplateColumns: "1fr 1fr",
+                                  marginBottom: "1.25rem",
+                                }}
+                              >
+                                {[
+                                  {
+                                    label: "Sponsor ID",
+                                    value: sponsor.sponsorId,
+                                  },
+                                  {
+                                    label: "User ID",
+                                    value: sponsor.userData?.id,
+                                  },
+                                  {
+                                    label: "Username",
+                                    value: sponsor.userData?.username || "N/A",
+                                  },
+                                  {
+                                    label: "Full Name",
+                                    value:
+                                      sponsor.userData?.firstName &&
+                                      sponsor.userData?.lastName
+                                        ? `${sponsor.userData.firstName} ${sponsor.userData.lastName}`
+                                        : "N/A",
+                                  },
+                                  {
+                                    label: "Email",
+                                    value: sponsor.userData?.email || "N/A",
+                                  },
+                                  {
+                                    label: "Phone",
+                                    value:
+                                      sponsor.userData?.phoneNumber || "N/A",
+                                  },
+                                  {
+                                    label: "Time Zone",
+                                    value: sponsor.userData?.timeZone || "N/A",
+                                  },
+                                  {
+                                    label: "Country",
+                                    value: sponsor.userData?.country || "N/A",
+                                  },
+                                  {
+                                    label: "Organization",
+                                    value: sponsor.organizationId
+                                      ? `Org ${sponsor.organizationId}`
+                                      : "None",
+                                  },
+                                ].map(({ label, value }) => (
+                                  <div
+                                    key={label}
+                                    style={{
+                                      fontSize: "0.9rem",
+                                      color: "var(--text-alt)",
+                                    }}
+                                  >
+                                    <strong
+                                      style={{ color: "var(--text-muted)" }}
+                                    >
+                                      {label}:
+                                    </strong>{" "}
+                                    {value}
+                                  </div>
+                                ))}
                               </div>
 
-                              <div>
-                                <strong>Organization:</strong>{" "}
-                                {sponsor.organizationId
-                                  ? `Org ${sponsor.organizationId}`
-                                  : "None"}
-                              </div>
-                            </div>
-
-                            <div style={{ marginTop: "1rem" }}>
                               <button
                                 onClick={() => handleEditSponsor(sponsor)}
                                 style={{
-                                  padding: "0.5rem 1.5rem",
-                                  backgroundColor: "#667eea",
-                                  color: "white",
-                                  border: "none",
-                                  borderRadius: "4px",
+                                  padding: "0.5rem 1.1rem",
+                                  background: "rgba(102,126,234,0.12)",
+                                  color: "#667eea",
+                                  border: "1px solid rgba(102,126,234,0.3)",
+                                  borderRadius: "7px",
                                   cursor: "pointer",
+                                  fontWeight: 600,
+                                  fontSize: "0.875rem",
+                                  transition: "all 0.15s",
                                 }}
                               >
                                 Edit Sponsor Info
                               </button>
-                            </div>
-                          </div>
-                        )}
+                            </>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   )}

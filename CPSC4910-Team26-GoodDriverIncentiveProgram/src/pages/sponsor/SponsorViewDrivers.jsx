@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import PageTitle from "../../components/PageTitle";
 import apiService from "../../services/api";
+import "../../css/SponsorDashboard.css";
 
 function SponsorViewDrivers() {
   const [drivers, setDrivers] = useState([]);
@@ -222,7 +223,15 @@ function SponsorViewDrivers() {
   }
 
   return (
-    <div style={{ padding: "2rem" }}>
+    <div
+      style={{
+        padding: "2rem",
+        background: "var(--bg)",
+        minHeight: "100vh",
+        color: "var(--text-muted)",
+        transition: "background 0.3s, color 0.3s",
+      }}
+    >
       <PageTitle title="Manage Drivers | Team 26" />
 
       <header className="catalog-header">
@@ -236,17 +245,22 @@ function SponsorViewDrivers() {
         </div>
       </header>
 
-      <h1>Organization Drivers</h1>
-      <p>View and manage drivers in your organization.</p>
+      <h1 style={{ color: "var(--text-muted)", marginBottom: "0.5rem" }}>
+        Organization Drivers
+      </h1>
+      <p style={{ color: "var(--text-alt)", marginBottom: "1.5rem" }}>
+        View and manage drivers in your organization.
+      </p>
 
       {error && (
         <div
           style={{
-            backgroundColor: "#f8d7da",
-            color: "#721c24",
             padding: "1rem",
             borderRadius: "8px",
             marginBottom: "1rem",
+            background: "rgba(231,76,60,0.08)",
+            border: "1px solid rgba(231,76,60,0.25)",
+            color: "#c0392b",
           }}
         >
           {error}
@@ -254,30 +268,38 @@ function SponsorViewDrivers() {
       )}
 
       {drivers.length === 0 ? (
-        <p>No drivers in your organization yet.</p>
+        <p style={{ color: "var(--text-alt)" }}>
+          No drivers in your organization yet.
+        </p>
       ) : (
         <div>
-          <h2>Drivers ({drivers.length})</h2>
+          <h2 style={{ color: "var(--text-muted)", marginBottom: "1rem" }}>
+            Drivers ({drivers.length})
+          </h2>
 
           <div style={{ display: "grid", gap: "1rem" }}>
             {drivers.map((driver) => (
               <div
                 key={driver.driverId}
                 style={{
-                  backgroundColor: "#fff",
+                  background: "var(--surface-alt)",
                   padding: "1.5rem",
-                  borderRadius: "8px",
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                  border: "1px solid #e0e0e0",
+                  borderRadius: "10px",
+                  border: "1px solid var(--border)",
+                  transition: "background 0.3s, border-color 0.3s",
                 }}
               >
                 {editingDriver === driver.driverId ? (
-                  // EDITING MODE
+                  // EDIT MODE
                   <div>
-                    <h3 style={{ margin: "0 0 1rem 0" }}>
+                    <h3
+                      style={{
+                        margin: "0 0 1rem 0",
+                        color: "var(--text-muted)",
+                      }}
+                    >
                       Edit Driver Information
                     </h3>
-
                     <div
                       style={{
                         display: "grid",
@@ -286,162 +308,59 @@ function SponsorViewDrivers() {
                         marginBottom: "1rem",
                       }}
                     >
-                      <div>
-                        <label
-                          style={{
-                            display: "block",
-                            marginBottom: "0.25rem",
-                            fontWeight: "500",
-                          }}
-                        >
-                          First Name
-                        </label>
-                        <input
-                          type="text"
-                          name="firstName"
-                          value={editFormData.firstName}
-                          onChange={handleEditChange}
-                          style={{
-                            width: "100%",
-                            padding: "0.5rem",
-                            borderRadius: "4px",
-                            border: "1px solid #ddd",
-                          }}
-                        />
-                      </div>
-
-                      <div>
-                        <label
-                          style={{
-                            display: "block",
-                            marginBottom: "0.25rem",
-                            fontWeight: "500",
-                          }}
-                        >
-                          Last Name
-                        </label>
-                        <input
-                          type="text"
-                          name="lastName"
-                          value={editFormData.lastName}
-                          onChange={handleEditChange}
-                          style={{
-                            width: "100%",
-                            padding: "0.5rem",
-                            borderRadius: "4px",
-                            border: "1px solid #ddd",
-                          }}
-                        />
-                      </div>
-
-                      <div>
-                        <label
-                          style={{
-                            display: "block",
-                            marginBottom: "0.25rem",
-                            fontWeight: "500",
-                          }}
-                        >
-                          Email
-                        </label>
-                        <input
-                          type="email"
-                          name="email"
-                          value={editFormData.email}
-                          onChange={handleEditChange}
-                          style={{
-                            width: "100%",
-                            padding: "0.5rem",
-                            borderRadius: "4px",
-                            border: "1px solid #ddd",
-                          }}
-                        />
-                      </div>
-
-                      <div>
-                        <label
-                          style={{
-                            display: "block",
-                            marginBottom: "0.25rem",
-                            fontWeight: "500",
-                          }}
-                        >
-                          Phone Number
-                        </label>
-                        <input
-                          type="tel"
-                          name="phoneNumber"
-                          value={editFormData.phoneNumber}
-                          onChange={handleEditChange}
-                          style={{
-                            width: "100%",
-                            padding: "0.5rem",
-                            borderRadius: "4px",
-                            border: "1px solid #ddd",
-                          }}
-                        />
-                      </div>
-
-                      <div>
-                        <label
-                          style={{
-                            display: "block",
-                            marginBottom: "0.25rem",
-                            fontWeight: "500",
-                          }}
-                        >
-                          Time Zone
-                        </label>
-                        <input
-                          type="text"
-                          name="timeZone"
-                          value={editFormData.timeZone}
-                          onChange={handleEditChange}
-                          style={{
-                            width: "100%",
-                            padding: "0.5rem",
-                            borderRadius: "4px",
-                            border: "1px solid #ddd",
-                          }}
-                        />
-                      </div>
-
-                      <div>
-                        <label
-                          style={{
-                            display: "block",
-                            marginBottom: "0.25rem",
-                            fontWeight: "500",
-                          }}
-                        >
-                          Country
-                        </label>
-                        <input
-                          type="text"
-                          name="country"
-                          value={editFormData.country}
-                          onChange={handleEditChange}
-                          style={{
-                            width: "100%",
-                            padding: "0.5rem",
-                            borderRadius: "4px",
-                            border: "1px solid #ddd",
-                          }}
-                        />
-                      </div>
+                      {[
+                        {
+                          label: "First Name",
+                          name: "firstName",
+                          type: "text",
+                        },
+                        { label: "Last Name", name: "lastName", type: "text" },
+                        { label: "Email", name: "email", type: "email" },
+                        {
+                          label: "Phone Number",
+                          name: "phoneNumber",
+                          type: "tel",
+                        },
+                        { label: "Time Zone", name: "timeZone", type: "text" },
+                        { label: "Country", name: "country", type: "text" },
+                      ].map(({ label, name, type }) => (
+                        <div key={name}>
+                          <label
+                            style={{
+                              display: "block",
+                              marginBottom: "0.25rem",
+                              fontWeight: 600,
+                              fontSize: "0.8rem",
+                              color: "var(--text-alt)",
+                            }}
+                          >
+                            {label}
+                          </label>
+                          <input
+                            type={type}
+                            name={name}
+                            value={editFormData[name]}
+                            onChange={handleEditChange}
+                            className="view-select"
+                          />
+                        </div>
+                      ))}
                     </div>
-
                     <div style={{ display: "flex", gap: "0.5rem" }}>
                       <button
                         onClick={() => handleSaveDriver(driver)}
                         disabled={saving}
                         style={{
-                          padding: "0.5rem 1rem",
-                          backgroundColor: "#28a745",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "4px",
+                          padding: "0.5rem 1.1rem",
+                          background: "rgba(72,187,120,0.15)",
+                          color: "#276749",
+                          border: "1px solid rgba(72,187,120,0.4)",
+                          borderRadius: "7px",
                           cursor: saving ? "not-allowed" : "pointer",
+                          fontWeight: 600,
+                          fontSize: "0.875rem",
+                          opacity: saving ? 0.6 : 1,
+                          transition: "all 0.15s",
                         }}
                       >
                         {saving ? "Saving..." : "Save Changes"}
@@ -450,12 +369,16 @@ function SponsorViewDrivers() {
                         onClick={handleCancelEdit}
                         disabled={saving}
                         style={{
-                          padding: "0.5rem 1rem",
-                          backgroundColor: "#6c757d",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "4px",
+                          padding: "0.5rem 1.1rem",
+                          background: "transparent",
+                          color: "var(--text-muted)",
+                          border: "1px solid var(--border)",
+                          borderRadius: "7px",
                           cursor: saving ? "not-allowed" : "pointer",
+                          fontWeight: 600,
+                          fontSize: "0.875rem",
+                          opacity: saving ? 0.6 : 1,
+                          transition: "all 0.15s",
                         }}
                       >
                         Cancel
@@ -463,64 +386,81 @@ function SponsorViewDrivers() {
                     </div>
                   </div>
                 ) : (
-                  // VIEW MODE (existing code)
+                  // VIEW MODE
                   <div
                     style={{
                       display: "flex",
                       justifyContent: "space-between",
-                      alignItems: "start",
+                      alignItems: "flex-start",
+                      gap: "1rem",
                     }}
                   >
                     <div>
-                      <h3 style={{ margin: "0 0 0.5rem 0" }}>
+                      <h3
+                        style={{
+                          margin: "0 0 0.75rem 0",
+                          color: "var(--text-muted)",
+                        }}
+                      >
                         {driver.userData?.firstName && driver.userData?.lastName
                           ? `${driver.userData.firstName} ${driver.userData.lastName}`
                           : driver.userData?.username ||
                             `Driver #${driver.driverId}`}
                       </h3>
 
-                      <div style={{ color: "#666", marginBottom: "0.5rem" }}>
-                        <strong>Username:</strong> {driver.userData?.username}
-                      </div>
-
-                      {driver.userData?.email && (
-                        <div style={{ color: "#666", marginBottom: "0.5rem" }}>
-                          <strong>Email:</strong> {driver.userData.email}
-                        </div>
-                      )}
-
-                      {driver.userData?.phoneNumber && (
-                        <div style={{ color: "#666", marginBottom: "0.5rem" }}>
-                          <strong>Phone:</strong> {driver.userData.phoneNumber}
-                        </div>
-                      )}
-
-                      <div style={{ color: "#666", marginBottom: "0.5rem" }}>
-                        <strong>Driver ID:</strong> {driver.driverId}
-                      </div>
+                      {[
+                        { label: "Username", value: driver.userData?.username },
+                        { label: "Email", value: driver.userData?.email },
+                        { label: "Phone", value: driver.userData?.phoneNumber },
+                        { label: "Driver ID", value: driver.driverId },
+                      ]
+                        .filter(({ value }) => value)
+                        .map(({ label, value }) => (
+                          <div
+                            key={label}
+                            style={{
+                              fontSize: "0.9rem",
+                              color: "var(--text-alt)",
+                              marginBottom: "0.4rem",
+                            }}
+                          >
+                            <strong style={{ color: "var(--text-muted)" }}>
+                              {label}:
+                            </strong>{" "}
+                            {value}
+                          </div>
+                        ))}
 
                       <div
                         style={{
-                          color: "#28a745",
-                          fontWeight: "600",
+                          fontWeight: 700,
                           fontSize: "1.1rem",
+                          color: "#667eea",
                           marginTop: "0.5rem",
                         }}
                       >
                         <strong>Points:</strong> {driver.points || 0}
                       </div>
 
-                      {driver.addresses && driver.addresses.length > 0 && (
+                      {driver.addresses?.filter((a) => a.primary).length >
+                        0 && (
                         <div style={{ marginTop: "0.75rem" }}>
-                          <strong>Primary Address:</strong>
+                          <strong
+                            style={{
+                              fontSize: "0.9rem",
+                              color: "var(--text-muted)",
+                            }}
+                          >
+                            Primary Address:
+                          </strong>
                           {driver.addresses
-                            .filter((addr) => addr.primary)
+                            .filter((a) => a.primary)
                             .map((addr) => (
                               <div
                                 key={addr.addressId}
                                 style={{
-                                  color: "#666",
-                                  fontSize: "0.9rem",
+                                  color: "var(--text-alt)",
+                                  fontSize: "0.875rem",
                                   marginTop: "0.25rem",
                                 }}
                               >
@@ -535,7 +475,7 @@ function SponsorViewDrivers() {
 
                       <div
                         style={{
-                          color: "#999",
+                          color: "var(--text-alt)",
                           fontSize: "0.85rem",
                           marginTop: "0.75rem",
                         }}
@@ -547,55 +487,72 @@ function SponsorViewDrivers() {
                       </div>
                     </div>
 
+                    {/* Action buttons */}
                     <div
                       style={{
                         display: "flex",
                         flexDirection: "column",
                         gap: "0.5rem",
+                        flexShrink: 0,
                       }}
                     >
                       <button
-                        style={{
-                          padding: "0.5rem 1rem",
-                          backgroundColor: "#667eea",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "4px",
-                          cursor: "pointer",
-                        }}
                         onClick={() => handleAdjustPoints(driver)}
                         disabled={adjustingDriver === driver.driverId}
+                        style={{
+                          padding: "0.5rem 1.1rem",
+                          background:
+                            "linear-gradient(135deg, rgba(102,126,234,0.15), rgba(118,75,162,0.15))",
+                          color: "#667eea",
+                          border: "1px solid rgba(102,126,234,0.3)",
+                          borderRadius: "7px",
+                          cursor:
+                            adjustingDriver === driver.driverId
+                              ? "not-allowed"
+                              : "pointer",
+                          fontWeight: 600,
+                          fontSize: "0.875rem",
+                          opacity:
+                            adjustingDriver === driver.driverId ? 0.6 : 1,
+                          transition: "all 0.15s",
+                          whiteSpace: "nowrap",
+                        }}
                       >
                         {adjustingDriver === driver.driverId
                           ? "Processing..."
                           : "Adjust Points"}
                       </button>
-
-                      {/* NEW: Edit Button */}
                       <button
-                        style={{
-                          padding: "0.5rem 1rem",
-                          backgroundColor: "#17a2b8",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "4px",
-                          cursor: "pointer",
-                        }}
                         onClick={() => handleEditDriver(driver)}
+                        style={{
+                          padding: "0.5rem 1.1rem",
+                          background: "rgba(102,126,234,0.12)",
+                          color: "#667eea",
+                          border: "1px solid rgba(102,126,234,0.3)",
+                          borderRadius: "7px",
+                          cursor: "pointer",
+                          fontWeight: 600,
+                          fontSize: "0.875rem",
+                          transition: "all 0.15s",
+                          whiteSpace: "nowrap",
+                        }}
                       >
                         Edit Info
                       </button>
-
                       <button
-                        style={{
-                          padding: "0.5rem 1rem",
-                          backgroundColor: "#28a745",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "4px",
-                          cursor: "pointer",
-                        }}
                         onClick={() => handleViewPointHistory(driver)}
+                        style={{
+                          padding: "0.5rem 1.1rem",
+                          background: "rgba(72,187,120,0.12)",
+                          color: "#276749",
+                          border: "1px solid rgba(72,187,120,0.3)",
+                          borderRadius: "7px",
+                          cursor: "pointer",
+                          fontWeight: 600,
+                          fontSize: "0.875rem",
+                          transition: "all 0.15s",
+                          whiteSpace: "nowrap",
+                        }}
                       >
                         Point History
                       </button>
@@ -609,144 +566,160 @@ function SponsorViewDrivers() {
       )}
 
       {/* Point History Panel */}
-      {viewingPointHistory && (
-        <div
-          style={{
-            backgroundColor: "#fff",
-            padding: "2rem",
-            borderRadius: "8px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-            border: "1px solid #e0e0e0",
-            marginTop: "1rem",
-          }}
-        >
-          {(() => {
-            const driver = drivers.find(
-              (d) => d.driverId === viewingPointHistory,
-            );
-            if (!driver) return null;
-
-            return (
-              <div>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginBottom: "1.5rem",
-                  }}
-                >
-                  <div>
-                    <h2 style={{ margin: 0 }}>
-                      Point History - {driver.userData?.username}
-                    </h2>
-                    <div
-                      style={{
-                        fontSize: "1.5rem",
-                        fontWeight: "700",
-                        color: "#667eea",
-                        marginTop: "0.5rem",
-                      }}
-                    >
-                      Current Balance: {driver.points || 0} Points
-                    </div>
-                  </div>
-                  <button
-                    onClick={handleClosePointHistory}
-                    style={{
-                      padding: "0.5rem 1rem",
-                      backgroundColor: "#6c757d",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "4px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Close
-                  </button>
-                </div>
-
-                {loadingHistory ? (
-                  <p>Loading point history...</p>
-                ) : pointHistory.length === 0 ? (
+      {viewingPointHistory &&
+        (() => {
+          const driver = drivers.find(
+            (d) => d.driverId === viewingPointHistory,
+          );
+          if (!driver) return null;
+          return (
+            <div
+              style={{
+                background: "var(--surface-alt)",
+                padding: "2rem",
+                borderRadius: "10px",
+                border: "1px solid var(--border)",
+                marginTop: "1.5rem",
+                transition: "background 0.3s",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "1.5rem",
+                }}
+              >
+                <div>
+                  <h2 style={{ margin: 0, color: "var(--text-muted)" }}>
+                    Point History — {driver.userData?.username}
+                  </h2>
                   <div
                     style={{
-                      backgroundColor: "#f8f9fa",
-                      padding: "2rem",
-                      borderRadius: "8px",
-                      textAlign: "center",
-                      color: "#666",
+                      fontSize: "1.4rem",
+                      fontWeight: 700,
+                      color: "#667eea",
+                      marginTop: "0.5rem",
                     }}
                   >
-                    <p style={{ margin: 0 }}>No point history yet.</p>
-                    <p style={{ margin: "0.5rem 0 0 0", fontSize: "0.9rem" }}>
-                      Point changes will appear here when sponsors adjust this
-                      driver's points.
-                    </p>
+                    Current Balance: {driver.points || 0} pts
                   </div>
-                ) : (
-                  <div>
-                    <h3 style={{ marginBottom: "1rem" }}>
-                      Transaction History ({pointHistory.length})
-                    </h3>
+                </div>
+                <button
+                  onClick={handleClosePointHistory}
+                  style={{
+                    padding: "0.5rem 1.1rem",
+                    background: "transparent",
+                    color: "var(--text-muted)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "7px",
+                    cursor: "pointer",
+                    fontWeight: 600,
+                    fontSize: "0.875rem",
+                    transition: "all 0.15s",
+                  }}
+                >
+                  Close
+                </button>
+              </div>
 
-                    <div style={{ display: "grid", gap: "0.75rem" }}>
-                      {pointHistory.map((transaction, index) => (
+              {loadingHistory ? (
+                <p style={{ color: "var(--text-alt)" }}>
+                  Loading point history...
+                </p>
+              ) : pointHistory.length === 0 ? (
+                <div
+                  style={{
+                    background: "var(--bg)",
+                    padding: "2rem",
+                    borderRadius: "8px",
+                    textAlign: "center",
+                  }}
+                >
+                  <p style={{ margin: 0, color: "var(--text-alt)" }}>
+                    No point history yet.
+                  </p>
+                  <p
+                    style={{
+                      margin: "0.5rem 0 0 0",
+                      fontSize: "0.9rem",
+                      color: "var(--text-alt)",
+                    }}
+                  >
+                    Point changes will appear here when sponsors adjust this
+                    driver's points.
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <h3
+                    style={{ marginBottom: "1rem", color: "var(--text-muted)" }}
+                  >
+                    Transaction History ({pointHistory.length})
+                  </h3>
+                  <div style={{ display: "grid", gap: "0.75rem" }}>
+                    {pointHistory.map((transaction, index) => {
+                      const positive = transaction.pointChange > 0;
+                      return (
                         <div
                           key={index}
                           style={{
-                            backgroundColor: "#fff",
-                            padding: "1rem",
+                            background: "var(--bg)",
+                            padding: "1rem 1.25rem",
                             borderRadius: "8px",
-                            boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-                            border: "1px solid #e0e0e0",
-                            borderLeft: `4px solid ${transaction.pointChange > 0 ? "#28a745" : "#dc3545"}`,
+                            border: "1px solid var(--border)",
+                            borderLeft: `4px solid ${positive ? "#68d391" : "#fc8181"}`,
                             display: "flex",
                             justifyContent: "space-between",
                             alignItems: "center",
+                            gap: "1rem",
+                            transition: "background 0.3s",
                           }}
                         >
                           <div>
                             <div
                               style={{
-                                fontSize: "1.25rem",
-                                fontWeight: "600",
-                                color:
-                                  transaction.pointChange > 0
-                                    ? "#28a745"
-                                    : "#dc3545",
+                                fontSize: "1.1rem",
+                                fontWeight: 700,
+                                color: positive ? "#276749" : "#c0392b",
                                 marginBottom: "0.25rem",
                               }}
                             >
-                              {transaction.pointChange > 0 ? "+" : ""}
+                              {positive ? "+" : ""}
                               {transaction.pointChange} Points
                             </div>
-
                             {transaction.reason && (
                               <div
                                 style={{
-                                  color: "#666",
-                                  marginBottom: "0.25rem",
+                                  fontSize: "0.875rem",
+                                  color: "var(--text-alt)",
+                                  marginBottom: "0.2rem",
                                 }}
                               >
-                                <strong>Reason:</strong> {transaction.reason}
+                                <strong style={{ color: "var(--text-muted)" }}>
+                                  Reason:
+                                </strong>{" "}
+                                {transaction.reason}
                               </div>
                             )}
-
                             {transaction.sponsorId && (
                               <div
-                                style={{ color: "#999", fontSize: "0.85rem" }}
+                                style={{
+                                  fontSize: "0.8rem",
+                                  color: "var(--text-alt)",
+                                }}
                               >
                                 By Sponsor #{transaction.sponsorId}
                               </div>
                             )}
                           </div>
-
                           <div
                             style={{
                               textAlign: "right",
-                              color: "#999",
+                              color: "var(--text-alt)",
                               fontSize: "0.85rem",
+                              flexShrink: 0,
                             }}
                           >
                             {new Date(transaction.createdAtUtc).toLocaleString(
@@ -761,15 +734,14 @@ function SponsorViewDrivers() {
                             )}
                           </div>
                         </div>
-                      ))}
-                    </div>
+                      );
+                    })}
                   </div>
-                )}
-              </div>
-            );
-          })()}
-        </div>
-      )}
+                </div>
+              )}
+            </div>
+          );
+        })()}
     </div>
   );
 }
