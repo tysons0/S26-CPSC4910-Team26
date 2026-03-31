@@ -172,10 +172,16 @@ public class OrganizationController : ControllerBase
     [HttpDelete("remove-driver/{driverId:int}")]
     public async Task<ActionResult> RemoveDriverFromOrganization(int driverId, [FromQuery] int orgId)
     {
+        Driver? driver = await _driverService.GetDriverByDriverId(driverId);
+        if (driver is null)
+            return NotFound("Driver not found");
+        if (driver.OrganizationId != orgId)
+            return BadRequest("Driver does not belong to the specified organization");
+
         int contextUserId = _contextService.GetUserId(HttpContext);
 
         OrgAccess orgAccess = await _authService.RetrieveUserOrgAccess(contextUserId, orgId);
-        if (orgAccess != OrgAccess.ReadWrite)
+        if (orgAccess != OrgAccess.ReadWrite && contextUserId != driver.UserData.Id)
             return Forbid();
 
         bool removalResult = await _organizationService.RemoveDriverFromOrganization(driverId, orgId);
