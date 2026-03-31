@@ -21,9 +21,11 @@ const normalizeStatus = (status) => {
 function Organizations() {
   const [organizations, setOrganizations] = useState([]);
   const [userApplications, setUserApplications] = useState([]);
+  const [driverData, setDriverData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [applyingOrgId, setApplyingOrgId] = useState(null);
+  const [leavingOrgId, setLeavingOrgId] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -35,6 +37,12 @@ function Organizations() {
           setLoading(false);
           return;
         }
+
+        const userInfo = await apiService.getUserInfo();
+        const driver = await apiService.getDriverByUserId(
+          userInfo?.userData?.id || userInfo?.id,
+        );
+        setDriverData(driver);
 
         const [orgs, applications] = await Promise.all([
           apiService.getOrganizations(),
@@ -79,6 +87,17 @@ function Organizations() {
     );
   }, [activeApp, organizations]);
 
+  const memberOrgIds = useMemo(() => {
+    const ids = new Set();
+    if (driverData?.organizationId) {
+      ids.add(String(driverData.organizationId));
+    }
+    userApplications
+      .filter((a) => (a.status || "").toLowerCase() === "accepted")
+      .forEach((a) => ids.add(String(a.orgId)));
+    return ids;
+  }, [driverData, userApplications]);
+
   const handleApply = async (org) => {
     if (activeApp) {
       setError(
@@ -101,11 +120,9 @@ function Organizations() {
         message || "",
       );
 
-      // If backend returns the created application, add it.
       if (created?.applicationId) {
         setUserApplications((prev) => [created, ...prev]);
       } else {
-        // Otherwise refresh
         const refreshed = await apiService.getMyApplications();
         setUserApplications(
           Array.isArray(refreshed)
@@ -113,21 +130,16 @@ function Organizations() {
             : (refreshed?.applications ?? []),
         );
       }
-    } catch (e) {
-      console.error("Error applying:", e);
-      setError(e?.message || "Failed to apply. Please try again.");
+    } catch (error) {
+      console.error("Error applying:", error);
+      setError(error?.message || "Failed to apply. Please try again.");
     } finally {
       setApplyingOrgId(null);
     }
   };
 
   const handleWithdraw = async (applicationId) => {
-    const confirmed = confirm(
-      "Are you sure you want to withdraw this application?",
-    );
-
-    if (!confirmed) return;
-
+    if (!confirm("Are you sure you want to withdraw this application?")) return;
     setError("");
 
     try {
@@ -136,13 +148,54 @@ function Organizations() {
       setUserApplications((prev) =>
         prev.filter((app) => app.applicationId !== applicationId),
       );
-
       alert("Application withdrawn successfully!");
     } catch (error) {
       console.error("Error withdrawing application:", error);
       setError(
         error.message || "Failed to withdraw application. Please try again.",
       );
+    }
+  };
+
+  const handleLeaveOrg = async (org) => {
+    if (
+      !confirm(
+        `Are you sure you want to leave ${org.name}?\n\n You will lose access to their catalog and any pending points.`,
+      )
+    )
+      return;
+
+    setLeavingOrgId(org.orgId);
+    setError("");
+
+    try {
+      await apiService.leaveOrganization(driverData.driverId, org.orgId);
+
+      setUserApplications((prev) =>
+        prev.filter(
+          (a) =>
+            !(
+              String(a.orgId) === String(org.orgId) &&
+              (a.status || "").toLowerCase() === "accepted"
+            ),
+        ),
+      );
+
+      if (
+        driverData &&
+        String(driverData.organizationId) === String(org.orgId)
+      ) {
+        setDriverData((prev) => ({ ...prev, organizationId: null }));
+      }
+
+      alert(`You have left ${org.name}.`);
+    } catch (error) {
+      console.error("Error leaving organization", error);
+      setError(
+        error.message || "Failed to leave organization. Please try again.",
+      );
+    } finally {
+      setLeavingOrgId(null);
     }
   };
 
@@ -181,7 +234,7 @@ function Organizations() {
               borderLeft: "4px solid #0066cc",
             }}
           >
-            <strong style={{color: "#0f172a"}}>Status:</strong>{" "}
+            <strong style={{ color: "#0f172a" }}>Status:</strong>{" "}
             <span style={{ fontWeight: 700, color: "#0066cc" }}>
               No active application
             </span>
@@ -276,26 +329,83 @@ function Organizations() {
         <p>No organizations available at this time.</p>
       ) : (
         <>
-          <h2>Apply to Join an Organization</h2>
+          <h2>Organizations</h2>
           <div className="sponsor-grid">
             {organizations.map((org) => {
               const appForOrg = appsByOrgId.get(String(org.orgId)) || null;
+              const isMember = memberOrgIds.has(String(org.orgId));
 
-              const canApply = !activeApp; // one active at a time
+              const canApply = !activeApp && !isMember;
               const disabledReason = activeApp
                 ? "You already have an active application. Wait for a decision before applying again."
-                : "";
+                : isMember
+                  ? "You are already a member of this organization."
+                  : "";
 
               return (
-                <OrganizationCard
-                  key={org.orgId}
-                  organization={org}
-                  applicationForOrg={appForOrg}
-                  canApply={canApply}
-                  disabledReason={disabledReason}
-                  isApplying={applyingOrgId === org.orgId}
-                  onApply={handleApply}
-                />
+                <div key={org.orgId} style={{ position: "relative" }}>
+                  {/* Member badge */}
+                  {isMember && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: "0.6rem",
+                        right: "0.6rem",
+                        backgroundColor: "#198754",
+                        color: "white",
+                        fontSize: "0.75rem",
+                        fontWeight: 700,
+                        padding: "0.25rem 0.6rem",
+                        borderRadius: "999px",
+                        zIndex: 1,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.3rem",
+                        boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
+                      }}
+                    >
+                      ✓ Member
+                    </div>
+                  )}
+
+                  <OrganizationCard
+                    organization={org}
+                    applicationForOrg={appForOrg}
+                    canApply={canApply}
+                    disabledReason={disabledReason}
+                    isApplying={applyingOrgId === org.orgId}
+                    onApply={handleApply}
+                  />
+
+                  {/* Leave button — members only */}
+                  {isMember && (
+                    <div style={{ padding: "0 1rem 1rem" }}>
+                      <button
+                        onClick={() => handleLeaveOrg(org)}
+                        disabled={leavingOrgId === org.orgId}
+                        style={{
+                          width: "100%",
+                          padding: "0.5rem",
+                          backgroundColor:
+                            leavingOrgId === org.orgId ? "#aaa" : "#dc3545",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "6px",
+                          cursor:
+                            leavingOrgId === org.orgId
+                              ? "not-allowed"
+                              : "pointer",
+                          fontWeight: 600,
+                          fontSize: "0.9rem",
+                        }}
+                      >
+                        {leavingOrgId === org.orgId
+                          ? "Leaving..."
+                          : "Leave Organization"}
+                      </button>
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>

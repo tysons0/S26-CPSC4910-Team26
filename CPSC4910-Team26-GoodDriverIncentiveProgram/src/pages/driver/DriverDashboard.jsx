@@ -8,8 +8,15 @@ import "../../css/Dashboard.css";
 function DriverDashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [driverData, setDriverData] = useState(null);
+
+  const [memberOrgs, setMemberOrgs] = useState([]);
+  const [activeOrgId, setActiveOrgId] = useState(null);
+  const [activeOrgName, setActiveOrgName] = useState("Organization");
+
   const [organizationId, setOrganizationId] = useState(null);
   const [organizationName, setOrganizationName] = useState("Organization");
+
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState([]);
   const [productLoading, setProductLoading] = useState(false);
@@ -65,33 +72,55 @@ function DriverDashboard() {
         setUser(userData);
         localStorage.setItem("user", JSON.stringify(userData));
 
-        const driverData = await apiService.getDriverByUserId(userData.userData.id);
-        const driverOrgId = driverData?.organizationId;
+        const driver = await apiService.getDriverByUserId(userData.userData.id);
+        setDriverData(driver);
 
-        if (!driverOrgId) {
+        const [allOrgs, myApplications] = await Promise.all([
+          apiService.getOrganizations().catch(() => []),
+          apiService.getMyApplications().catch(() => []),
+        ]);
+
+        const orgsArray = Array.isArray(allOrgs)
+          ? allOrgs
+          : (allOrgs?.organizations ?? []);
+        const appsArray = Array.isArray(myApplications)
+          ? myApplications
+          : (myApplications?.applications ?? []);
+
+        const acceptedOrgIds = new Set();
+
+        if (driver?.organizationId) {
+          acceptedOrgIds.add(String(driver.organizationId));
+        }
+
+        appsArray
+          .filter((a) => (a.status || "").toLowerCase() === "accepted")
+          .forEach((a) => acceptedOrgIds.add(String(a.orgId)));
+
+        const memberships = orgsArray.filter((o) =>
+          acceptedOrgIds.has(String(o.orgId)),
+        );
+
+        setMemberOrgs(memberships);
+
+        if (memberships.length === 0) {
           setError(
-            "You are not currently assigned to an organization. Join an organization to view its catalog.",
+            "You are not currently a member of any organization. Join one to view its catalog.",
           );
-          setProducts([]);
           return;
         }
 
-        setOrganizationId(driverOrgId);
+        const defaultOrgId = driver?.organizationId
+          ? String(driver.organizationId)
+          : String(memberships[0].orgId);
 
-        try {
-          const organizations = await apiService.getOrganizations();
-          const matchingOrg = (
-            Array.isArray(organizations) ? organizations : []
-          ).find((organization) => organization.orgId === driverOrgId);
+        const defaultOrg =
+          memberships.find((o) => String(o.orgId) === defaultOrgId) ||
+          memberships[0];
 
-          if (matchingOrg?.name) {
-            setOrganizationName(matchingOrg.name);
-          }
-        } catch (orgError) {
-          console.error("Error loading organizations:", orgError);
-        }
-
-        await loadCatalogProducts(driverOrgId);
+        setActiveOrgId(String(defaultOrg.orgId));
+        setActiveOrgName(defaultOrg.name || "Organization");
+        await loadCatalogProducts(defaultOrg.orgId);
       } catch (fetchError) {
         console.error("Error loading driver dashboard:", fetchError);
         setError(fetchError.message || "Failed to load dashboard data.");
@@ -103,9 +132,20 @@ function DriverDashboard() {
     fetchDriverCatalog();
   }, [navigate]);
 
-  const handleSearch = (e) => {
-    e.preventDefault();
+  const handleSwitchOrg = async (orgId) => {
+    const org = memberOrgs.find((o) => String(o.orgId) === String(orgId));
+    if (!org) return;
+    setActiveOrgId(String(org.orgId));
+    setActiveOrgName(org.name || "Organization");
+    setSearchKeyword("");
+    setMinPoints("");
+    setMaxPoints("");
+    setAvailability("All");
+    await loadCatalogProducts(org.orgId);
   };
+
+  const handleSearch = (e) => e.preventDefault();
+  const handleApplyFilters = (e) => e.preventDefault();
 
   const handleLogout = () => {
     apiService.logout();
@@ -115,16 +155,17 @@ function DriverDashboard() {
 
   const handleAddToWishlist = async (product) => {
     try {
-      if (!user || !organizationId) {
-        return;
-      }
-      console.log("User id: ", user.userData.id);
-      const driverData = await apiService.getDriverByUserId(user.userData.id);
-      console.log("Adding to wishlist - driver data:", driverData, "product:", product);
-      await apiService.addWishlistItem(driverData.driverId, driverData.organizationId, product.id);
+      if (!user || !activeOrgId) return;
+      const driver =
+        driverData || (await apiService.getDriverByUserId(user.userData.id));
+      await apiService.addWishlistItem(
+        driver.driverId,
+        activeOrgId,
+        product.id,
+      );
       alert(`Added "${product.name}" to your wishlist!`);
-    } catch (error) {
-      console.error("Error adding to wishlist:", error);
+    } catch (err) {
+      console.error("Error adding to wishlist:", err);
       alert("Failed to add product to wishlist. Please try again.");
     }
   };
@@ -154,17 +195,10 @@ function DriverDashboard() {
     });
   }, [products, searchKeyword, minPoints, maxPoints, availability]);
 
-  const handleApplyFilters = (e) => {
-    e.preventDefault();
-  };
-
   const handleViewDetails = (product) => {
     if (product.itemWebUrl) {
       window.open(product.itemWebUrl, "_blank", "noopener,noreferrer");
-      return;
     }
-
-    console.log("No product details URL available", product);
   };
 
   if (loading) {
@@ -184,9 +218,43 @@ function DriverDashboard() {
 
       <header className="catalog-header">
         <div>
-          <h1 className="catalog-title">
-            {organizationName}&apos;s Product Catalog
-          </h1>
+          {memberOrgs.length > 1 ? (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.75rem",
+                flexWrap: "wrap",
+              }}
+            >
+              <h1 className="catalog-title" style={{ margin: 0 }}>
+                Product Catalog
+              </h1>
+              <select
+                value={activeOrgId ?? ""}
+                onChange={(e) => handleSwitchOrg(e.target.value)}
+                style={{
+                  padding: "0.4rem 0.75rem",
+                  borderRadius: "6px",
+                  border: "1px solid #ccc",
+                  fontSize: "1rem",
+                  cursor: "pointer",
+                  background: "white",
+                }}
+              >
+                {memberOrgs.map((org) => (
+                  <option key={org.orgId} value={String(org.orgId)}>
+                    {org.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            <h1 className="catalog-title">
+              {activeOrgName}&apos;s Product Catalog
+            </h1>
+          )}
+
           <div className="catalog-points">
             Points Balance: <strong>{user?.points ?? 0}</strong>
           </div>
@@ -194,16 +262,14 @@ function DriverDashboard() {
             <button className="submit">View Point History</button>
           </Link>
         </div>
-        <div style={{display: "flex", gap: "10px"}}>
+        <div style={{ display: "flex", gap: "10px" }}>
           <button
             className="submit"
             onClick={() => navigate("/DriverWishlist")}
-            >
+          >
             Wishlist
           </button>
-          <button
-            className="submit" onClick={handleLogout}
-          >
+          <button className="submit" onClick={handleLogout}>
             Logout
           </button>
         </div>
@@ -341,7 +407,10 @@ function DriverDashboard() {
                       <strong>{product.availability}</strong>
                     </div>
 
-                    <div className="col action" style={{ display: "flex", gap: "10px" }}>
+                    <div
+                      className="col action"
+                      style={{ display: "flex", gap: "10px" }}
+                    >
                       <button
                         className="linkish"
                         type="button"
