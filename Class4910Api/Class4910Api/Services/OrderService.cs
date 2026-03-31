@@ -69,7 +69,6 @@ namespace Class4910Api.Services
                 updateDriverCmd.Parameters.AddWithValue("@DriverId", request.DriverId);
 
                 await updateDriverCmd.ExecuteNonQueryAsync();
-
                 string orderSql = @"INSERT INTO Orders (DriverId, OrgId, TotalPointsSpent, OrderStatus, ShippingAddressId, CreatedAtUTC) 
                                 VALUES (@DriverId, @OrgId, @TotalPointsSpent, 'Pending', @ShippingAddressId, UTC_TIMESTAMP());
                                 SELECT LAST_INSERT_ID();";
@@ -80,7 +79,6 @@ namespace Class4910Api.Services
                 orderCmd.Parameters.AddWithValue("@ShippingAddressId", request.ShippingAddressId);
 
                 int orderId = Convert.ToInt32(await orderCmd.ExecuteScalarAsync());
-
                 foreach (var item in request.Items)
                 {
                     string itemSql = @"
@@ -112,16 +110,21 @@ namespace Class4910Api.Services
                         throw new Exception("Failed to insert order item.");
                     }
                 }
-
                 PointChangeRequest pointChange = new PointChangeRequest
                 {
                     PointChange = -totalPoints,
                     ChangeReason = $"Order #{orderId} placed"
                 };
-                await _driverService.AddToDriverPointHistory(request.DriverId, null, pointChange);
-
+                string pointHistorySql = @"
+                                    INSERT INTO DriverPointHistory (DriverId, SponsorId, Reason, PointDelta, CreatedAtUTC)
+                                    VALUES (@DriverId, @SponsorId, @Reason, @PointDelta, UTC_TIMESTAMP());";
+                using var phCmd = new MySqlCommand(pointHistorySql, conn , (MySqlTransaction)transaction);
+                phCmd.Parameters.AddWithValue("@DriverId", request.DriverId);
+                phCmd.Parameters.AddWithValue("@SponsorId", DBNull.Value);
+                phCmd.Parameters.AddWithValue("@Reason", pointChange.ChangeReason);
+                phCmd.Parameters.AddWithValue("@PointDelta", pointChange.PointChange);
+                await phCmd.ExecuteNonQueryAsync();
                 await transaction.CommitAsync();
-
 
                 await _notificationService.CreateNotification(request.DriverId,
                     $"Your order #{orderId} has been placed successfully! Total points spent: {totalPoints}.",

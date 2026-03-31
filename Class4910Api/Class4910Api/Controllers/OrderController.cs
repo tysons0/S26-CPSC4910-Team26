@@ -30,7 +30,7 @@ public class OrderController : ControllerBase
     }
 
     [Authorize]
-    [HttpGet("/driver/{driverId}")]
+    [HttpGet("driver/{driverId}")]
     public async Task<IActionResult> GetOrdersByDriver(int driverId)
     {
         try
