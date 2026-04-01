@@ -939,6 +939,28 @@ const apiService = {
     }
   },
 
+  leaveOrganization: async (driverId, orgId) => {
+    try {
+      const token = apiService.getToken();
+      if (!token) throw new Error("No authentication token found.");
+
+      const response = await fetch(
+        `${BASE_URL}/Organization/remove-driver/${driverId}?orgId=${orgId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-type": "application/json",
+          },
+        },
+      );
+      return await handleResponse(response);
+    } catch (error) {
+      console.error("Failed to remove driver from organization.");
+      throw error;
+    }
+  },
+
   /* ============================================
             Catalog-specific API calls
    ============================================ */

@@ -89,7 +89,13 @@ function DriverDashboard() {
 
         const acceptedOrgIds = new Set();
 
-        if (driver?.organizationId) {
+        const hasAcceptedAppForPrimaryOrg = appsArray.some(
+          (a) =>
+            String(a.orgId) === String(driver?.organizationId) &&
+            (a.status || "").toLowerCase() === "accepted",
+        );
+
+        if (driver?.organizationId && hasAcceptedAppForPrimaryOrg) {
           acceptedOrgIds.add(String(driver.organizationId));
         }
 
@@ -237,10 +243,11 @@ function DriverDashboard() {
                 style={{
                   padding: "0.4rem 0.75rem",
                   borderRadius: "6px",
-                  border: "1px solid #ccc",
+                  border: "1px solid var(--border)",
                   fontSize: "1rem",
                   cursor: "pointer",
-                  background: "white",
+                  background: "var(--surface)",
+                  color: "var(--text)",
                 }}
               >
                 {memberOrgs.map((org) => (
@@ -400,12 +407,41 @@ function DriverDashboard() {
 
                     <div className="col points">
                       <div className="muted">Points Price:</div>
-                      <strong>{product.points}</strong>
+                      <strong
+                        style={{
+                          color:
+                            product.points > (user?.points ?? 0)
+                              ? "#dc3545"
+                              : "inherit",
+                        }}
+                      >
+                        {product.points}
+                      </strong>
+                      {product.points > (user?.points ?? 0) && (
+                        <div
+                          style={{
+                            fontSize: "0.75rem",
+                            color: "#dc3545",
+                            marginTop: "0.25rem",
+                          }}
+                        >
+                          Insufficient Points
+                        </div>
+                      )}
                     </div>
 
                     <div className="col avail">
                       <div className="muted">Availability:</div>
-                      <strong>{product.availability}</strong>
+                      <strong
+                        style={{
+                          color:
+                            product.availability === "Unavailable"
+                              ? "#dc3545"
+                              : "#198754",
+                        }}
+                      >
+                        {product.availability}
+                      </strong>
                     </div>
 
                     <div

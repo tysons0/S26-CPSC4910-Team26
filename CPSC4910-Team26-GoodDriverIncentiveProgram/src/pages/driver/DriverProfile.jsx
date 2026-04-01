@@ -568,7 +568,7 @@ function DriverProfile() {
         </h2>
 
         {addresses.length === 0 ? (
-          <p style={{ color: "#666", marginBottom: "1rem" }}>
+          <p style={{ color: "var(--text)", marginBottom: "1rem" }}>
             No addresses added yet.
           </p>
         ) : (
@@ -577,11 +577,13 @@ function DriverProfile() {
               <div
                 key={index}
                 style={{
-                  backgroundColor: "#f8f9fa",
+                  backgroundColor: "var(--surface)",
                   padding: "1rem",
                   borderRadius: "8px",
                   marginBottom: "1rem",
-                  borderLeft: address.primary ? "4px solid #667eea" : "none",
+                  borderLeft: address.primary
+                    ? "4px solid var(--border)"
+                    : "none",
                 }}
               >
                 <div
@@ -598,8 +600,8 @@ function DriverProfile() {
                         style={{
                           marginLeft: "0.5rem",
                           padding: "0.25rem 0.5rem",
-                          backgroundColor: "#667eea",
-                          color: "white",
+                          backgroundColor: "var(--surface)",
+                          color: "var(--text)",
                           borderRadius: "4px",
                           fontSize: "0.75rem",
                         }}
@@ -607,7 +609,7 @@ function DriverProfile() {
                         Primary
                       </span>
                     )}
-                    <div style={{ marginTop: "0.5rem", color: "#666" }}>
+                    <div style={{ marginTop: "0.5rem", color: "var(--text)" }}>
                       <div>{address.addressLine1}</div>
                       {address.addressLine2 && (
                         <div>{address.addressLine2}</div>
@@ -784,7 +786,11 @@ function DriverProfile() {
         </div>
 
         <p
-          style={{ color: "#666", marginBottom: "1.5rem", fontSize: "0.95rem" }}
+          style={{
+            color: "var(--text)",
+            marginBottom: "1.5rem",
+            fontSize: "0.95rem",
+          }}
         >
           A password reset link will be sent to your email address on file.
         </p>

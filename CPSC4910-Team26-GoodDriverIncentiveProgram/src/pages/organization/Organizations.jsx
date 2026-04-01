@@ -171,6 +171,10 @@ function Organizations() {
     try {
       await apiService.leaveOrganization(driverData.driverId, org.orgId);
 
+      if (localStorage.getItem("activeOrgId") === String(org.orgId)) {
+        localStorage.removeItem("activeOrgId");
+      }
+
       setUserApplications((prev) =>
         prev.filter(
           (a) =>
