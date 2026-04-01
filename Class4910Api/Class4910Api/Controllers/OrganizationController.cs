@@ -168,7 +168,7 @@ public class OrganizationController : ControllerBase
         return Ok(organization);
     }
 
-    [Authorize(Roles = $"{ADMIN},{SPONSOR}")]
+    [Authorize]
     [HttpDelete("remove-driver/{driverId:int}")]
     public async Task<ActionResult> RemoveDriverFromOrganization(int driverId, [FromQuery] int orgId)
     {
