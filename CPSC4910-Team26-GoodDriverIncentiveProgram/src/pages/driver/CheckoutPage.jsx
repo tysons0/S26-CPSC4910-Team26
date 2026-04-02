@@ -31,14 +31,14 @@ function CheckoutPage() {
         const fetchData = async () => {
             try {
                 const userData = await apiService.getUserInfo();
-                const orgId = localStorage.getItem("activeOrgId");
 
                 setUser(userData);
-                setActiveOrgId(orgId);
                 const driverData = await apiService.getDriverByUserId(userData.id);
                 setDriver(driverData);
                 console.log("Checkout driver data: ", driverData);
-
+                const orgId = driverData.organizationId;
+                
+                setActiveOrgId(orgId);
                 const addressList = await apiService.getDriverAddresses(driverData.driverId);
                 console.log("Checkout address data: ", addressList);
                 setAddresses(addressList);
