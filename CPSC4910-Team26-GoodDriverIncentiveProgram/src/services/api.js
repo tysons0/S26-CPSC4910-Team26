@@ -1247,7 +1247,7 @@ const apiService = {
       if (!token) {
         throw new Error("No Authentication token found.");
       }
-      const response = await fetch(`${BASE_URL}/driver/${driverId}`, {
+      const response = await fetch(`${BASE_URL}/Order/driver/${driverId}`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,

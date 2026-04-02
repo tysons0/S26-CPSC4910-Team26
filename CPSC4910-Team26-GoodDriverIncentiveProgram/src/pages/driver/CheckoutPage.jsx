@@ -85,7 +85,7 @@ function CheckoutPage() {
 
             alert("Checkout successful!");
             clearCart();
-            navigate("/DriverDashboard");
+            navigate("/OrderHistory");
         }
         catch (err) {
             console.error("Checkout failed: ", err);

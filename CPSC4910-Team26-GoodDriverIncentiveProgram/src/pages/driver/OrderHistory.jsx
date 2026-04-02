@@ -13,6 +13,7 @@ function OrderHistory() {
             try {
                 const userData = await apiService.getUserInfo();
                 const driver = await apiService.getDriverByUserId(userData.id);
+                console.log("OrderHistory driver data: ", driver);
                 const orderData = await apiService.getOrders(driver.driverId);
                 console.log("Raw order data:", orderData);
                 setOrders(orderData);
