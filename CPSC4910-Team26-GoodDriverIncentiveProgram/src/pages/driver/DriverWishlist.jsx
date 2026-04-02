@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PageTitle from "../../components/PageTitle";
 import apiService from "../../services/api";
+import { useCart } from "../../context/CartContext";
 import "../../css/Dashboard.css";
 
 function DriverWishlist() {
@@ -12,6 +13,7 @@ function DriverWishlist() {
   const [user, setUser] = useState(null);
   const [error, setError] = useState("");
 
+  const { addToCart } = useCart();
   const loadWishlist = async () => {
     try {
       const userData = await apiService.getUserInfo();
@@ -91,10 +93,22 @@ function DriverWishlist() {
 
       <header className="catalog-header">
         <h1>Your Wishlist</h1>
+        <div
+        style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.75rem",
+                flexWrap: "wrap",
+              }}>
 
-        <button className="submit" onClick={() => navigate("/DriverDashboard")}>
-          Back to Catalog
-        </button>
+          <button className="submit" onClick={() => navigate("/Cart")}>
+            View Cart
+          </button>
+          <button className="submit" onClick={() => navigate("/DriverDashboard")}>
+            Back to Catalog
+          </button>
+
+        </div>
       </header>
 
       {error && <div className="catalog-error">{error}</div>}
@@ -130,9 +144,9 @@ function DriverWishlist() {
               <div className="col action" style={{ display: "flex", gap: "10px" }}>
                 <button
                   className="submit"
-                  onClick={() => handlePurchase(item.catalogItemId)}
+                  onClick={() => addToCart(item)}
                 >
-                  Purchase
+                  Add to Cart
                 </button>
 
                 <button

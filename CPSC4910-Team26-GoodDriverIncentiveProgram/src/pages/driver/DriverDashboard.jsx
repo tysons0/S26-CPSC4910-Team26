@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import PageTitle from "../../components/PageTitle";
 import apiService from "../../services/api";
 import "../../css/Dashboard.css";
+import { useCart } from "../../context/CartContext";
 
 function DriverDashboard() {
   const navigate = useNavigate();
@@ -25,6 +26,9 @@ function DriverDashboard() {
   const [minPoints, setMinPoints] = useState("");
   const [maxPoints, setMaxPoints] = useState("");
   const [availability, setAvailability] = useState("All");
+
+  const { addToCart, cartItems } = useCart();
+  const isInCart = cartItems.some(item => item.id === products.id);
 
   const loadCatalogProducts = async (orgId) => {
     setProductLoading(true);
@@ -271,14 +275,19 @@ function DriverDashboard() {
           </Link>
         </div>
         <div style={{ display: "flex", gap: "10px" }}>
+          <button className="submit"
+            onClick={() => navigate("/OrderHistory")}
+            >
+            Order History
+          </button>
           <button
             className="submit"
             onClick={() => navigate("/DriverWishlist")}
           >
             Wishlist
           </button>
-          <button className="submit" onClick={handleLogout}>
-            Logout
+          <button className="submit" onClick={() => navigate("/Cart")}>
+            Cart ({cartItems.length})
           </button>
         </div>
       </header>
@@ -461,6 +470,18 @@ function DriverDashboard() {
                         onClick={() => handleAddToWishlist(product)}
                       >
                         Add to Wishlist
+                      </button>
+                      <button
+                        className="linkish"
+                        type="button"
+                        disabled={
+                          product.points > (user?.points ?? 0) ||
+                          product.availability === "Unavailable" ||
+                          isInCart
+                        }
+                        onClick={() => addToCart({...product, catalogItemId: product.id})}
+                      >
+                        {isInCart ? "In Cart" : "Add to Cart"}
                       </button>
                     </div>
                   </div>

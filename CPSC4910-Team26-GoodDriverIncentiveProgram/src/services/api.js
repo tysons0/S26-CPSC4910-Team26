@@ -1220,7 +1220,7 @@ const apiService = {
       if (!token) {
         throw new Error("No Authentication token found.");
       }
-      const repsonse = await fetch(`${BASE_URL}/Order`, {
+      const response = await fetch(`${BASE_URL}/Order`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
