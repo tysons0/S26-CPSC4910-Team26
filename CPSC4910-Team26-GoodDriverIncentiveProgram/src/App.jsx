@@ -29,6 +29,7 @@ import AdminViewAdmins from "./pages/admin/AdminViewAdmins";
 import DriverPointHistory from "./pages/driver/DriverPointHistory";
 import EbayTestDashboard from "./pages/sponsor/EbayTestDashboard";
 import AdminReport from "./pages/admin/AdminReport";
+import SponsorReport from "./pages/sponsor/SponsorReport";
 
 function App() {
   return (
@@ -66,6 +67,7 @@ function App() {
         <Route path="SponsorViewDrivers" element={<SponsorViewDrivers />} />
         <Route path="/SponsorViewSponsors" element={<SponsorViewSponsors />} />
         <Route path="/EbayTest" element={<EbayTestDashboard />} />
+        <Route path="/SponsorReport" element={<SponsorReport />} />
 
         {/* Admin Routes */}
         <Route path="/AdminDashboard" element={<AdminDashboard />} />
