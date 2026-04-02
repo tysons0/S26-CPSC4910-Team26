@@ -5,5 +5,7 @@ namespace Class4910Api.Services.Interfaces;
 
 public interface IReportService
 {
-    Task<List<OrderReportItem>> GetOrderReport(OrderReportRequest request);
+    Task<ReportTable?> GetOrderReport(OrderReportRequest request);
+
+    Task<ReportTable?> GetPointHistoryReport(PointHistoryReportRequest request);
 }
