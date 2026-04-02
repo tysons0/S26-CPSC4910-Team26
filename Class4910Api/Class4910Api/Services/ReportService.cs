@@ -50,7 +50,7 @@ public class ReportService : IReportService
                    orders.CreatedAtUTC as orders_CreatedAtUtc
                    FROM Orders orders
                    JOIN OrderItems items ON orders.OrderId = items.OrderId
-                   WHERE 1=1 ;
+                   WHERE 1=1
                 ";
 
             List<string> conditions = [];
@@ -169,12 +169,12 @@ public class ReportService : IReportService
 
             if (request.DriverId.HasValue)
             {
-                conditions.Add($"{pointHistoryPrefix}_DriverId = @DriverId");
+                conditions.Add($"{pointHistoryPrefix}.DriverId = @DriverId");
                 command.Parameters.Add(DriverIdField.GenerateParameter("@DriverId", request.DriverId));
             }
             if (request.SponsorId.HasValue)
             {
-                conditions.Add($"{pointHistoryPrefix}_SponsorId = @SponsorId");
+                conditions.Add($"{pointHistoryPrefix}.SponsorId = @SponsorId");
                 command.Parameters.Add(SponsorIdField.GenerateParameter("@SponsorId", request.SponsorId));
             }
             if (request.OrgId.HasValue)
@@ -184,17 +184,17 @@ public class ReportService : IReportService
             }
             if (!string.IsNullOrEmpty(request.ReasonLike))
             {
-                conditions.Add($"{pointHistoryPrefix}_Reason LIKE @ReasonLike");
+                conditions.Add($"{pointHistoryPrefix}.Reason LIKE @ReasonLike");
                 command.Parameters.Add(PointHistoryReasonField.GenerateParameter("@ReasonLike", $"%{request.ReasonLike}%"));
             }
             if (request.BeforeUtcDate.HasValue)
             {
-                conditions.Add($"{pointHistoryPrefix}_CreatedAtUtc < @BeforeUtcDate");
+                conditions.Add($"{pointHistoryPrefix}.CreatedAtUtc < @BeforeUtcDate");
                 command.Parameters.Add(PointHistoryCreatedAtUtcField.GenerateParameter("@BeforeUtcDate", request.BeforeUtcDate.Value));
             }
             if (request.AfterUtcDate.HasValue)
             {
-                conditions.Add($"{pointHistoryPrefix}_CreatedAtUtc > @AfterUtcDate");
+                conditions.Add($"{pointHistoryPrefix}.CreatedAtUtc > @AfterUtcDate");
                 command.Parameters.Add(PointHistoryCreatedAtUtcField.GenerateParameter("@AfterUtcDate", request.AfterUtcDate.Value));
             }
 
@@ -208,7 +208,7 @@ public class ReportService : IReportService
                 List<string> orderClauses = [];
                 foreach (PointHistorySortOption sortOption in request.SortOptions)
                 {
-                    orderClauses.Add($"{pointHistoryPrefix}_{sortOption.Field} {sortOption.Direction}");
+                    orderClauses.Add($"{pointHistoryPrefix}.{sortOption.Field} {sortOption.Direction}");
                 }
                 command.CommandText += " ORDER BY " + string.Join(", ", orderClauses);
             }
