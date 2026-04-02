@@ -47,14 +47,14 @@ function OrderHistory() {
                                     <strong>Order # {order.orderId}</strong>
                                     <p>Status: {order.status}</p>
                                     <p>
-                                        Date: {new Date(order.createdAtUtc).toLocaleDateString()}
+                                        Date: {new Date(order.createdAt).toLocaleDateString()}
                                     </p>
                                 </div>
                                 <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
                                     {order.items?.map((item, index) => (
                                         <div key={index} style={{ display: "flex", gap: "0.5rem" }}>
-                                            <p>{item.catalogItemId}</p>
-                                            <p>Points: {item.points}</p>
+                                            <p>{item.itemName}</p>
+                                            <p>Points: {item.pointsAtPurchase}</p>
                                         </div>
                                     ))}
                                 </div>
