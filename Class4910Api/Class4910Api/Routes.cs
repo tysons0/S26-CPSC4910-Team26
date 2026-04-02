@@ -11,7 +11,6 @@ public static class Routes
 
         public const string Login = "login";
         public const string PasswordChange = "password-change";
-        public const string DriverPasswordChange = "driver/password-change";
         public const string ForcePasswordChange = "force-password-change";
 
         public const string RegisterAdmin = "register/admin";
@@ -23,7 +22,6 @@ public static class Routes
         public const string MeTokenInfoFull = Base + "/" + MeTokenInfo;
         public const string LoginFull = Base + "/" + Login;
         public const string PasswordChangeFull = Base + "/" + PasswordChange;
-        public const string DriverPasswordChangeFull = Base + "/" + DriverPasswordChange;
         public const string ForcePasswordChangeFull = Base + "/" + ForcePasswordChange;
         public const string RegisterAdminFull = Base + "/" + RegisterAdmin;
         public const string RegisterDriverFull = Base + "/" + RegisterDriver;
