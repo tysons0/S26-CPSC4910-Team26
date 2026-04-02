@@ -11,6 +11,23 @@ public class PointHistoryReportRequest
     public DateTime? AfterUtcDate { get; init; }
 
     public IEnumerable<PointHistorySortOption> SortOptions { get; init; } = [];
+
+    public override string ToString()
+    {
+        string sortOptionsStr = SortOptions != null
+        ? string.Join(", ", SortOptions.Select(s => s.ToString()))
+        : "null";
+
+        return $"PointHistoryReportRequest[" +
+               $"DriverId: {DriverId?.ToString() ?? "null"}, " +
+               $"SponsorId: {SponsorId?.ToString() ?? "null"}, " +
+               $"OrgId: {OrgId?.ToString() ?? "null"}, " +
+               $"ReasonLike: {ReasonLike ?? "null"}, " +
+               $"BeforeUtcDate: {BeforeUtcDate?.ToString("o") ?? "null"}, " +
+               $"AfterUtcDate: {AfterUtcDate?.ToString("o") ?? "null"}, " +
+               $"SortOptions: [{sortOptionsStr}]" +
+               $"]";
+    }
 }
 
 
