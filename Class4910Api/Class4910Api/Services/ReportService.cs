@@ -223,7 +223,7 @@ public class ReportService : IReportService
                 PointHistoryRecord record = await _driverService.GetPointHistoryRecordFromReader(reader, pointHistoryPrefix);
                 Sponsor? recordSponsor = null;
                 if (record.SponsorId is not null)
-                    await _sponsorService.GetSponsorBySponsorId((int)record.SponsorId);
+                    recordSponsor = await _sponsorService.GetSponsorBySponsorId((int)record.SponsorId);
                 Driver driver = await _driverService.GetDriverByDriverId(record.DriverId)
                     ?? throw new($"Failed to get driver[{record.DriverId}]");
 
