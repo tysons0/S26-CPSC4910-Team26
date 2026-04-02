@@ -126,7 +126,7 @@ public class AuthService : IAuthService
             }
             else
             {
-                _logger.LogWarning("Sponsor UserId {UserId} was denied access to edit Organization[{OrgId}] because they are not a sponsor of the organization.",
+                _logger.LogWarning("Sponsor UserId {UserId} was denied access to Organization[{OrgId}] because they are not a sponsor of the organization.",
                     userId, orgId);
                 return OrgAccess.NoAccess;
             }
