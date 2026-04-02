@@ -179,7 +179,7 @@ public class ReportService : IReportService
             }
             if (request.OrgId.HasValue)
             {
-                conditions.Add($"(SponsorOrgId = @OrgId OR DriverOrgId = @OrgId)");
+                conditions.Add($"(s.OrgId = @OrgId OR d.OrgId = @OrgId)");
                 command.Parameters.Add(OrgIdField.GenerateParameter("@OrgId", request.OrgId));
             }
             if (!string.IsNullOrEmpty(request.ReasonLike))
