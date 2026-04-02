@@ -338,6 +338,9 @@ function SponsorDashboard() {
         <Link to="/SponsorViewDrivers" className="nav-item">
           🚗 View Drivers
         </Link>
+        <Link to="/SponsorReport" className="nav-item">
+          📊 Reports
+        </Link>
         <Link to="/SponsorViewSponsors" className="nav-item">
           🧑‍💼 Our Sponsors
         </Link>

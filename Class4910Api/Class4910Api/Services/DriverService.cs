@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using System.Data.Common;
+using System.IO.Pipelines;
 using Class4910Api.Configuration;
 using Class4910Api.Models;
 using Class4910Api.Models.Requests;
@@ -266,23 +267,41 @@ public class DriverService : IDriverService
         };
     }
 
-    private async Task<PointHistoryRecord> GetPointHistoryRecordFromReader(DbDataReader reader)
+    public async Task<PointHistoryRecord> GetPointHistoryRecordFromReader(DbDataReader reader, string? prefix = null)
     {
-        int driverId = reader.GetInt32(DriverIdField.Name);
-        int sponsorId = reader.GetInt32(SponsorIdField.Name);
-
-        int pointChange = reader.GetInt32(PointHistoryDeltaField.Name);
-        string reason = reader.GetString(PointHistoryReasonField.Name);
-        DateTime createdAtUtc = reader.GetDateTime(PointHistoryCreatedAtUtcField.Name);
-
-        return new PointHistoryRecord()
+        try
         {
-            DriverId = driverId,
-            SponsorId = sponsorId,
-            PointChange = pointChange,
-            Reason = reason,
-            CreatedAtUtc = createdAtUtc,
-        };
+            string pfx = prefix ?? "";
+            if (!string.IsNullOrWhiteSpace(pfx))
+                pfx += "_";
+
+            int driverId = reader.GetInt32($"{pfx}{DriverIdField.Name}");
+
+            string sponsorIdStr = reader[$"{pfx}{SponsorIdField.Name}"].ToString() ?? "";
+            int? sponsorId;
+            if (string.IsNullOrWhiteSpace(sponsorIdStr))
+                sponsorId = null;
+            else
+                sponsorId = reader.GetInt32($"{pfx}{SponsorIdField.Name}");
+
+            int pointChange = reader.GetInt32($"{pfx}{PointHistoryDeltaField.Name}");
+            string reason = reader.GetString($"{pfx}{PointHistoryReasonField.Name}");
+            DateTime createdAtUtc = reader.GetDateTime($"{pfx}{PointHistoryCreatedAtUtcField.Name}");
+
+            return new PointHistoryRecord()
+            {
+                DriverId = driverId,
+                SponsorId = sponsorId,
+                PointChange = pointChange,
+                Reason = reason,
+                CreatedAtUtc = createdAtUtc,
+            };
+        }
+        catch(Exception ex)
+        {
+            _logger.LogError(ex, "Error parsing PointHistoryRecord from reader with prefix[{Prefix}]", prefix);
+            throw;
+        }
     }
 
     public async Task<List<DriverAddress>?> GetDriverAddresses(int driverId)
@@ -313,6 +332,40 @@ public class DriverService : IDriverService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving Driver addresses for driver[{Id}]", driverId);
+            return null;
+        }
+    }
+
+    public async Task<DriverAddress?> GetDriverAddressById(int driverId, int addressId)
+    {
+        try
+        {
+            await using MySqlConnection conn = new(_dbConnection);
+            conn.Open();
+            MySqlCommand command = conn.CreateCommand();
+            command.CommandText =
+                @$"SELECT {DriverAddressesTable.GetFields()}
+                   FROM {DriverAddressesTable.Name}
+                   WHERE {DriverIdField.SelectName} = @DriverId AND
+                         {DriverAddressIdField.SelectName} = @AddressId";
+            command.Parameters.Add(DriverIdField.GenerateParameter("@DriverId", driverId));
+            command.Parameters.Add(DriverAddressIdField.GenerateParameter("@AddressId", addressId));
+            await using DbDataReader reader = await command.ExecuteReaderAsync();
+            if (await reader.ReadAsync())
+            {
+                DriverAddress address = await GetDriverAddressFromReader(reader);
+                _logger.LogInformation("Retrieved Address[{Address}] for driver[{Id}]", address, driverId);
+                return address;
+            }
+            else
+            {
+                _logger.LogInformation("No Address found with id[{AddressId}] for driver[{Id}]", addressId, driverId);
+                return null;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving Driver address with id[{AddressId}] for driver[{Id}]", addressId, driverId);
             return null;
         }
     }

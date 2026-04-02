@@ -133,6 +133,7 @@ public static class Startup
         builder.Services.AddScoped<ICatalogService, CatalogService>();
         builder.Services.AddScoped<IDriverWishlistService, DriverWishlistService>();
         builder.Services.AddScoped<IOrderService, OrderService>();
+        builder.Services.AddScoped<IReportService, ReportService>();
         builder.Services.AddSingleton<IEmailService, EmailService>();
 
         builder.Services.AddHttpClient<IEbayService, EbayService>();
@@ -161,6 +162,7 @@ public static class Startup
         app.UseHttpsRedirection();
         app.UseCors(corsPolicyName);
 
+        app.UseAuthentication();
         app.UseAuthorization();
 
         app.MapGet("/", () => Results.Ok(new
@@ -386,6 +388,20 @@ public static class Startup
 
 	            CONSTRAINT PasswordChanges_PK Primary Key ({PasswordChangeIdField.SelectName}), 
 	            CONSTRAINT PasswordChanges_Users_FK FOREIGN KEY ({UserIdField.SelectName}) REFERENCES Users({UserIdField.SelectName})
+            )
+            ";
+            command.ExecuteNonQuery();
+
+            // PasswordResetTokens Create
+            command.CommandText = @"
+            CREATE TABLE IF NOT EXISTS PasswordResetTokens (
+                TokenHash CHAR(64) NOT NULL,
+                Email varchar(500) NOT NULL,
+                ExpiresAtUtc DATETIME(6) NOT NULL,
+                CreatedAtUtc DATETIME(6) NOT NULL,
+                UsedAtUtc DATETIME(6) NULL,
+
+                CONSTRAINT PasswordResetTokens_PK PRIMARY KEY(TokenHash)
             )
             ";
             command.ExecuteNonQuery();

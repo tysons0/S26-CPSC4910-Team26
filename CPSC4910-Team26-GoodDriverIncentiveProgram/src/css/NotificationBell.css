@@ -30,8 +30,8 @@
 .notification-drawer {
     position: fixed;
     top: 0;
-    right: -350px;
-    width: 350px;
+    right: -100%;
+    width: min(350px, 92vw);
     height: 100%;
     box-shadow: -3px 0 10px rgba(0,0,0,0.2);
     transition: right 0.3s ease;
@@ -93,5 +93,13 @@
     border: none;
     font-size: 18px;
     cursor: pointer;
+}
+
+@media (max-width: 480px) {
+    .notification-drawer {
+        width: 100vw;
+        right: -100vw;
+        border-radius: 0;
+    }
 }
 

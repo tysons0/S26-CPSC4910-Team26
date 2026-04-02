@@ -98,6 +98,9 @@ function AdminDashboard() {
         <Link to="/CreateOrganization" className="nav-item">
           🏢 Organizations
         </Link>
+        <Link to="/AdminReport" className="nav-item">
+          📊 Reports
+        </Link>
 
         <div className="sidebar-bottom">
           <div className="user-chip">

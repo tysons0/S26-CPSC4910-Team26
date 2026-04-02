@@ -33,6 +33,8 @@ import CheckoutPage from "./pages/driver/CheckoutPage";
 import OrderHistory from "./pages/driver/OrderHistory";
 
 import { CartProvider } from "./context/CartContext";
+import AdminReport from "./pages/admin/AdminReport";
+import SponsorReport from "./pages/sponsor/SponsorReport";
 
 function App() {
   return (
@@ -73,6 +75,7 @@ function App() {
         <Route path="SponsorViewDrivers" element={<SponsorViewDrivers />} />
         <Route path="/SponsorViewSponsors" element={<SponsorViewSponsors />} />
         <Route path="/EbayTest" element={<EbayTestDashboard />} />
+        <Route path="/SponsorReport" element={<SponsorReport />} />
 
         {/* Admin Routes */}
         <Route path="/AdminDashboard" element={<AdminDashboard />} />
@@ -81,6 +84,7 @@ function App() {
         <Route path="/AdminViewDrivers" element={<AdminViewDrivers />} />
         <Route path="/AdminViewSponsors" element={<AdminViewSponsors />} />
         <Route path="/AdminViewAdmins" element={<AdminViewAdmins />} />
+        <Route path="/AdminReport" element={<AdminReport />} />
       </Routes>
     </CartProvider>
   );
