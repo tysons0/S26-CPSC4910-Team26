@@ -124,6 +124,13 @@ public class AuthController : ControllerBase
         return Ok(changeResult);
     }
 
+    [Authorize(Roles = DRIVER)]
+    [HttpPost(Routes.Auth.DriverPasswordChange)]
+    public async Task<ActionResult> ChangeDriverPassword([FromBody] PasswordChangeRequest changeRequest)
+    {
+        return await ChangePassword(changeRequest);
+    }
+
     [Authorize(Roles = ADMIN)]
     [HttpPost(Routes.Auth.ForcePasswordChange)]
     public async Task<ActionResult> ForceChangePassword([FromBody] ForcePasswordChangeRequest changeRequest)

@@ -162,6 +162,7 @@ public static class Startup
         app.UseHttpsRedirection();
         app.UseCors(corsPolicyName);
 
+        app.UseAuthentication();
         app.UseAuthorization();
 
         app.MapGet("/", () => Results.Ok(new
