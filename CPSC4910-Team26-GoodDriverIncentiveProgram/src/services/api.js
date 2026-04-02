@@ -1261,6 +1261,56 @@ const apiService = {
       throw error;
     }
   },
+  /* ============================================
+            Order API Calls
+   ============================================ */
+  placeOrder: async (driverId, orgId, shippingAddressId, items) => {
+    try {
+      const token = await apiService.getToken();
+      if (!token) {
+        throw new Error("No Authentication token found.");
+      }
+      const response = await fetch(`${BASE_URL}/Order`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-type": "application/json",
+        },
+        body: JSON.stringify({
+          driverId,
+          orgId,
+          shippingAddressId,
+          items,
+        }),
+      });
+
+      return await handleResponse(response);
+    } catch (error) {
+      console.error("Failed to place order.", error);
+      throw error;
+    }
+  },
+
+  getOrders: async (driverId) => {
+    try {
+      const token = await apiService.getToken();
+      if (!token) {
+        throw new Error("No Authentication token found.");
+      }
+      const response = await fetch(`${BASE_URL}/Order/driver/${driverId}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-type": "application/json",
+        },
+      });
+
+      return await handleResponse(response);
+    } catch (error) {
+      console.error("Failed to get orders.", error);
+      throw error;
+    }
+  },
 };
 
 export default apiService;

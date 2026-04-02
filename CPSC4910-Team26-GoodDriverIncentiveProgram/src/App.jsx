@@ -28,12 +28,17 @@ import AdminViewSponsors from "./pages/admin/AdminViewSponsors";
 import AdminViewAdmins from "./pages/admin/AdminViewAdmins";
 import DriverPointHistory from "./pages/driver/DriverPointHistory";
 import EbayTestDashboard from "./pages/sponsor/EbayTestDashboard";
+import CartPage from "./pages/driver/CartPage";
+import CheckoutPage from "./pages/driver/CheckoutPage";
+import OrderHistory from "./pages/driver/OrderHistory";
+
+import { CartProvider } from "./context/CartContext";
 import AdminReport from "./pages/admin/AdminReport";
 import SponsorReport from "./pages/sponsor/SponsorReport";
 
 function App() {
   return (
-    <>
+    <CartProvider>
       <NavBar />
       <Routes>
         {/* Public Routes */}
@@ -59,6 +64,9 @@ function App() {
         <Route path="/DriverProfile" element={<DriverProfile />} />
         <Route path="/DriverWishlist" element={<DriverWishlist />} />
         <Route path="/DriverPointHistory" element={<DriverPointHistory />} />
+        <Route path="/cart" element={<CartPage />} />
+        <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="/OrderHistory" element={<OrderHistory />} />
 
         {/* Sponsor Routes */}
         <Route path="/SponsorDashboard" element={<SponsorDashboard />} />
@@ -78,7 +86,7 @@ function App() {
         <Route path="/AdminViewAdmins" element={<AdminViewAdmins />} />
         <Route path="/AdminReport" element={<AdminReport />} />
       </Routes>
-    </>
+    </CartProvider>
   );
 }
 
