@@ -1,8 +1,11 @@
-using System.Collections.Concurrent;
+using System.Security.Cryptography;
 using Class4910Api.Models;
 using Class4910Api.Models.Requests;
+using Class4910Api.Configuration;
 using Class4910Api.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using MySql.Data.MySqlClient;
 
 
 namespace Class4910Api.Controllers
@@ -12,18 +15,19 @@ namespace Class4910Api.Controllers
     [Route("[controller]")]
     public class EmailController : ControllerBase
     {
+        private const string PasswordResetTokensTable = "PasswordResetTokens";
         private readonly IEmailService _emailService;
         private readonly IUserService _userService;
         private readonly IAuthService _authService;
+        private readonly string _dbConnection;
 
-        // In-memory token store: token -> (email, expiry)
-        private static readonly ConcurrentDictionary<string, (string Email, DateTime Expiry)> _resetTokens = new();
-
-        public EmailController(IEmailService emailService, IUserService userService, IAuthService authService)
+        public EmailController(IEmailService emailService, IUserService userService, IAuthService authService,
+            IOptions<DatabaseConnection> databaseConnection)
         {
             _emailService = emailService;
             _userService = userService;
             _authService = authService;
+            _dbConnection = databaseConnection.Value.Connection;
         }
 
         [HttpPost("forgot-password")]
@@ -34,10 +38,14 @@ namespace Class4910Api.Controllers
             if (user == null)
                 return NotFound("No account found with that email address.");
 
-            string token = Guid.NewGuid().ToString();
+            byte[] tokenBytes = RandomNumberGenerator.GetBytes(32);
+            string token = Convert.ToHexString(tokenBytes).ToLowerInvariant();
+            string tokenHash = HashToken(token);
             DateTime expiry = DateTime.UtcNow.AddMinutes(30);
 
-            _resetTokens[token] = (request.Email, expiry);
+            bool tokenStored = await SaveResetTokenAsync(request.Email, tokenHash, expiry);
+            if (!tokenStored)
+                return StatusCode(500, "Failed to issue reset token.");
 
             string resetLink = $"https://main.d29jdyt23lpjjz.amplifyapp.com/reset-password?token={token}&username={Uri.EscapeDataString(user.Username)}";
 
@@ -53,12 +61,15 @@ namespace Class4910Api.Controllers
         [HttpPost("reset-password")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
         {
-            if (!_resetTokens.TryGetValue(request.Token, out var entry))
+            string tokenHash = HashToken(request.Token);
+
+            ResetTokenEntry? entry = await GetActiveTokenEntryAsync(tokenHash);
+            if (entry is null)
                 return BadRequest("Invalid or expired reset token.");
 
             if (DateTime.UtcNow > entry.Expiry)
             {
-                _resetTokens.TryRemove(request.Token, out _);
+                await MarkTokenUsedAsync(tokenHash);
                 return BadRequest("Reset token has expired.");
             }
 
@@ -71,8 +82,92 @@ namespace Class4910Api.Controllers
             if (!success)
                 return StatusCode(500, "Failed to update password.");
 
-            _resetTokens.TryRemove(request.Token, out _);
+            await MarkTokenUsedAsync(tokenHash);
             return Ok("Password successfully reset.");
         }
+
+        private static string HashToken(string token)
+        {
+            byte[] hashBytes = SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(token));
+            return Convert.ToHexString(hashBytes).ToLowerInvariant();
+        }
+
+        private async Task<bool> SaveResetTokenAsync(string email, string tokenHash, DateTime expiry)
+        {
+            try
+            {
+                DateTime now = DateTime.UtcNow;
+
+                await using MySqlConnection conn = new(_dbConnection);
+                await conn.OpenAsync();
+
+                await using MySqlCommand cmd = conn.CreateCommand();
+                cmd.CommandText = $@"
+                    UPDATE {PasswordResetTokensTable}
+                    SET UsedAtUtc = @UsedAtUtc
+                    WHERE Email = @Email AND UsedAtUtc IS NULL;
+
+                    INSERT INTO {PasswordResetTokensTable}
+                    (TokenHash, Email, ExpiresAtUtc, CreatedAtUtc, UsedAtUtc)
+                    VALUES
+                    (@TokenHash, @Email, @ExpiresAtUtc, @CreatedAtUtc, NULL);
+                ";
+
+                cmd.Parameters.AddWithValue("@UsedAtUtc", now);
+                cmd.Parameters.AddWithValue("@Email", email);
+                cmd.Parameters.AddWithValue("@TokenHash", tokenHash);
+                cmd.Parameters.AddWithValue("@ExpiresAtUtc", expiry);
+                cmd.Parameters.AddWithValue("@CreatedAtUtc", now);
+
+                await cmd.ExecuteNonQueryAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private async Task<ResetTokenEntry?> GetActiveTokenEntryAsync(string tokenHash)
+        {
+            await using MySqlConnection conn = new(_dbConnection);
+            await conn.OpenAsync();
+
+            await using MySqlCommand cmd = conn.CreateCommand();
+            cmd.CommandText = $@"
+                SELECT Email, ExpiresAtUtc
+                FROM {PasswordResetTokensTable}
+                WHERE TokenHash = @TokenHash AND UsedAtUtc IS NULL
+                LIMIT 1;
+            ";
+            cmd.Parameters.AddWithValue("@TokenHash", tokenHash);
+
+            await using MySqlDataReader reader = (MySqlDataReader)await cmd.ExecuteReaderAsync();
+            if (!await reader.ReadAsync())
+                return null;
+
+            string email = reader.GetString(0);
+            DateTime expiry = reader.GetDateTime(1);
+            return new ResetTokenEntry(email, expiry);
+        }
+
+        private async Task MarkTokenUsedAsync(string tokenHash)
+        {
+            await using MySqlConnection conn = new(_dbConnection);
+            await conn.OpenAsync();
+
+            await using MySqlCommand cmd = conn.CreateCommand();
+            cmd.CommandText = $@"
+                UPDATE {PasswordResetTokensTable}
+                SET UsedAtUtc = @UsedAtUtc
+                WHERE TokenHash = @TokenHash AND UsedAtUtc IS NULL;
+            ";
+            cmd.Parameters.AddWithValue("@UsedAtUtc", DateTime.UtcNow);
+            cmd.Parameters.AddWithValue("@TokenHash", tokenHash);
+
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+        private sealed record ResetTokenEntry(string Email, DateTime Expiry);
     }
 }
