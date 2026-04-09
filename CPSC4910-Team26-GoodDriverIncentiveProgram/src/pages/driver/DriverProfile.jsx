@@ -273,9 +273,8 @@ function DriverProfile() {
     );
   }
 
-  const handleEmailNotifsToggle = async () => {
+  const handleEmailNotifsToggle = async (newValue) => {
     try {
-      const newValue = !emailNotifs;
       await apiService.updateEmailNotifications(user.id, newValue);
       setEmailNotifs(newValue);
       const updatedUser = { ...user, emailNotificationsEnabled: newValue };
@@ -854,28 +853,59 @@ function DriverProfile() {
           <label>Email Notifications</label>
           <div
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "1rem",
+              display: "grid",
+              gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+              gap: "0.75rem",
               marginTop: "0.5rem",
             }}
           >
             <label
               style={{
                 display: "flex",
-                alignItems: "center",
+                flexDirection: "column",
+                alignItems: "flex-start",
                 cursor: "pointer",
-                gap: "0.5rem",
+                gap: "0.35rem",
+                padding: "0.85rem 1rem",
+                borderRadius: "12px",
+                border: emailNotifs ? "1px solid var(--border)" : "2px solid #667eea",
+                backgroundColor: emailNotifs ? "var(--surface)" : "rgba(102, 126, 234, 0.12)",
               }}
             >
               <input
-                type="checkbox"
-                checked={emailNotifs}
-                onChange={handleEmailNotifsToggle}
+                type="radio"
+                name="email-notifications"
+                checked={!emailNotifs}
+                onChange={() => handleEmailNotifsToggle(false)}
               />
-              {emailNotifs
-                ? "Enabled — you will receive email notifications"
-                : "Disabled — you will not receive email notifications"}
+              <strong>Disabled</strong>
+              <span style={{ fontSize: "0.9rem", color: "var(--text)" }}>
+                You will not receive email notifications.
+              </span>
+            </label>
+            <label
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
+                cursor: "pointer",
+                gap: "0.35rem",
+                padding: "0.85rem 1rem",
+                borderRadius: "12px",
+                border: emailNotifs ? "2px solid #667eea" : "1px solid var(--border)",
+                backgroundColor: emailNotifs ? "rgba(102, 126, 234, 0.12)" : "var(--surface)",
+              }}
+            >
+              <input
+                type="radio"
+                name="email-notifications"
+                checked={emailNotifs}
+                onChange={() => handleEmailNotifsToggle(true)}
+              />
+              <strong>Enabled</strong>
+              <span style={{ fontSize: "0.9rem", color: "var(--text)" }}>
+                You will receive email notifications.
+              </span>
             </label>
           </div>
         </div>
