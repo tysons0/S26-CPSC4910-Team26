@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import PageTitle from "../../components/PageTitle";
 import apiService from "../../services/api";
 import "../../css/SponsorDashboard.css";
+import { useImpersonation } from "../../hooks/useImpersonation";
+import PovBanner from "../../components/POVBanner";
 
 function SponsorViewDrivers() {
   const [drivers, setDrivers] = useState([]);
@@ -27,6 +29,10 @@ function SponsorViewDrivers() {
   });
   const [saving, setSaving] = useState(false);
 
+  const { impersonate } = useImpersonation();
+
+  const [sortBy, setSortBy] = useState("name-asc");
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -37,7 +43,6 @@ function SponsorViewDrivers() {
           navigate("/About");
           return;
         }
-
         // Get sponsor's organization ID
         // You'll need to determine how to get this - maybe from user info?
         const sponsorInfo = await apiService.getSponsorInfo();
@@ -66,6 +71,15 @@ function SponsorViewDrivers() {
     };
     fetchDrivers();
   }, [navigate]);
+
+  const handleImpersonateDriver = async (driver) => {
+    await impersonate({
+      userId: driver.userData.id,
+      username: driver.userData.username,
+      role: "driver",
+      targetPath: "/DriverDashboard",
+    });
+  };
 
   const handleAdjustPoints = async (driver) => {
     const pointChangeStr = prompt(
@@ -213,6 +227,40 @@ function SponsorViewDrivers() {
     setPointHistory([]);
   };
 
+  const sortedDrivers = [...drivers].sort((a, b) => {
+    const nameA =
+      `${a.userData?.firstName || ""} ${a.userData?.lastName || ""}`.trim() ||
+      a.userData?.username ||
+      "";
+    const nameB =
+      `${b.userData?.firstName || ""} ${b.userData?.lastName || ""}`.trim() ||
+      b.userData?.username ||
+      "";
+
+    switch (sortBy) {
+      case "name-asc":
+        return nameA.localeCompare(nameB);
+      case "name-desc":
+        return nameB.localeCompare(nameA);
+      case "points-desc":
+        return (b.points || 0) - (a.points || 0);
+      case "points-asc":
+        return (a.points || 0) - (b.points || 0);
+      case "newest":
+        return (
+          new Date(b.userData?.createdAtUtc) -
+          new Date(a.userData?.createdAtUtc)
+        );
+      case "oldest":
+        return (
+          new Date(a.userData?.createdAtUtc) -
+          new Date(b.userData?.createdAtUtc)
+        );
+      default:
+        return 0;
+    }
+  });
+
   if (loading) {
     return (
       <div style={{ padding: "2rem" }}>
@@ -232,6 +280,7 @@ function SponsorViewDrivers() {
         transition: "background 0.3s, color 0.3s",
       }}
     >
+      <PovBanner />
       <PageTitle title="Manage Drivers | Team 26" />
 
       <header className="catalog-header">
@@ -277,8 +326,27 @@ function SponsorViewDrivers() {
             Drivers ({drivers.length})
           </h2>
 
+          <div style={{ marginBottom: "1rem" }}>
+            <label style={{ marginRight: "0.5rem", fontWeight: 600 }}>
+              Sort by:
+            </label>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="view-select"
+              style={{ width: "auto" }}
+            >
+              <option value="name-asc">Name A–Z</option>
+              <option value="name-desc">Name Z–A</option>
+              <option value="points-desc">Points High to Low</option>
+              <option value="points-asc">Points Low to High</option>
+              <option value="newest">Newest Member</option>
+              <option value="oldest">Oldest Member</option>
+            </select>
+          </div>
+
           <div style={{ display: "grid", gap: "1rem" }}>
-            {drivers.map((driver) => (
+            {sortedDrivers.map((driver) => (
               <div
                 key={driver.driverId}
                 style={{
@@ -496,6 +564,23 @@ function SponsorViewDrivers() {
                         flexShrink: 0,
                       }}
                     >
+                      <button
+                        onClick={() => handleImpersonateDriver(driver)}
+                        style={{
+                          padding: "0.5rem 1.1rem",
+                          background: "rgba(102,126,234,0.12)",
+                          color: "#157528",
+                          border: "1px solid rgba(102,126,234,0.3)",
+                          borderRadius: "7px",
+                          cursor: "pointer",
+                          fontWeight: 600,
+                          fontSize: "0.875rem",
+                          transition: "all 0.15s",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        Impersonate
+                      </button>
                       <button
                         onClick={() => handleAdjustPoints(driver)}
                         disabled={adjustingDriver === driver.driverId}

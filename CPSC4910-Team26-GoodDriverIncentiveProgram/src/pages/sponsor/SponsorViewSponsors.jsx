@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import PageTitle from "../../components/PageTitle";
 import apiService from "../../services/api";
 import "../../css/SponsorDashboard.css";
+import PovBanner from "../../components/POVBanner";
 
 function SponsorViewSponsors() {
   const [sponsors, setSponsors] = useState([]);
@@ -144,6 +145,7 @@ function SponsorViewSponsors() {
         transition: "background 0.3s, color 0.3s",
       }}
     >
+      <PovBanner />
       <PageTitle title="Manage Sponsors | Team 26" />
 
       <header className="catalog-header">

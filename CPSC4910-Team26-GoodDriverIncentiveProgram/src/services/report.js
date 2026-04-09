@@ -23,6 +23,13 @@ export const SortDirection = {
   Desc: 1,
 };
 
+export const AuditLogType = {
+  All: 0,
+  PasswordChanges: 1,
+  LoginAttempts: 2,
+  Applications: 3,
+};
+
 const postWithAuth = async (endpoint, data) => {
   const token = apiService.getToken();
   if (!token) {
@@ -67,6 +74,14 @@ export const buildOrderReportRequest = (overrides = {}) => ({
   ...overrides,
 });
 
+export const buildAuditLogReportRequest = (overrides = {}) => ({
+  userId: null,
+  orgId: null,
+  sponsorId: null,
+  type: AuditLogType.All,
+  ...overrides,
+});
+
 const reportService = {
   getPointHistoryReport: async (request) => {
     try {
@@ -88,6 +103,18 @@ const reportService = {
       );
     } catch (error) {
       console.error("Order Report Error:", error);
+      throw error;
+    }
+  },
+
+  getAuditLogReport: async (request) => {
+    try {
+      return await postWithAuth(
+        `${REPORT_ENDPOINT}/audit-log`,
+        request
+      );
+    } catch (error) {
+      console.error("Audit Log Report Error:", error);
       throw error;
     }
   },

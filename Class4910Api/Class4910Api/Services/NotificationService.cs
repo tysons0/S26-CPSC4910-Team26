@@ -17,7 +17,6 @@ public class NotificationService : INotificationService
     private readonly IEmailService _emailService;
     private readonly IUserService _userService;
 
-
     public NotificationService(ILogger<NotificationService> logger,
                                IOptions<DatabaseConnection> databaseConnection,
                                IEmailService emailService,
@@ -29,6 +28,18 @@ public class NotificationService : INotificationService
         _userService = userService;
     }
 
+    public async Task<bool> CreateNotification(int userId, string message, NotificationType type, Driver driver)
+    {
+        if (!driver.NotifyForPointsChanged && type == NotificationType.PointsChange)
+        {
+            _logger.LogInformation("Not sending notification[{Type}:{Message}] to User[{Id}] because driver preferences indicate not to.",
+                type, message, userId);
+            return true;
+        }
+
+        return await CreateNotification(userId, message, type);
+    }
+
     public async Task<bool> CreateNotification(int userId, string message, NotificationType type)
     {
         try
@@ -36,11 +47,20 @@ public class NotificationService : INotificationService
             User user = await _userService.FindUserById(userId)
                 ?? throw new($"Could not find user[{userId}]");
 
+            bool shouldSend = await _userService.ShouldUserReceiveNotification(userId, type);
+
+            if (!shouldSend)
+            {
+                _logger.LogInformation("Not sending notification[{Type}:{Message}] to User[{Id}] because user preferences indicate not to.",
+                    type, message, userId);
+                return true;
+            }
+
             _logger.LogInformation("Creating notification[{Type}:{Message}] for User[{Id}].",
                 type, message, userId);
 
             await using MySqlConnection conn = new(_dbConnection);
-            conn.Open();
+            await conn.OpenAsync();
             MySqlCommand command = conn.CreateCommand();
 
             command.CommandText =
@@ -58,11 +78,15 @@ public class NotificationService : INotificationService
 
             if (!string.IsNullOrEmpty(user.Email) && user.EmailNotificationsEnabled)
             {
-                await _emailService.SendEmailAsync(
+                 bool emailSent = await _emailService.SendEmailAsync(
                     toEmail: user.Email,
                     subject: $"New Notification: {type}",
-                    htmlContent: message
+                    htmlContent: $"<p>{System.Net.WebUtility.HtmlEncode(message)}</p>"
                 );
+                if (!emailSent)
+                {
+                    _logger.LogWarning("Email notification failed for User[{Id}]", userId);
+                }
             }
 
             return true;
@@ -82,7 +106,7 @@ public class NotificationService : INotificationService
             List<Notification> notifications = [];
 
             await using MySqlConnection conn = new(_dbConnection);
-            conn.Open();
+            await conn.OpenAsync();
             MySqlCommand command = conn.CreateCommand();
 
             command.CommandText =
@@ -118,14 +142,14 @@ public class NotificationService : INotificationService
             _logger.LogInformation("Marking Notification[{Id}] as seen", notificationId);
 
             await using MySqlConnection conn = new(_dbConnection);
-            conn.Open();
+            await conn.OpenAsync();
             MySqlCommand command = conn.CreateCommand();
 
             command.CommandText =
                 @$"UPDATE {NotificationsTable.Name}
                    SET {NotificationSeenField.SelectName} = 1
                    WHERE {NotificationIdField.SelectName} = @NotifId";
-            command.Parameters.Add(UserIdField.GenerateParameter("@NotifId", notificationId));
+            command.Parameters.Add(NotificationIdField.GenerateParameter("@NotifId", notificationId));
 
             await command.ExecuteNonQueryAsync();
 
@@ -145,7 +169,8 @@ public class NotificationService : INotificationService
         int notificationId = reader.GetInt32($"{pfx}{NotificationIdField.Name}");
         string message = reader[$"{pfx}{NotificationMessageField.Name}"].ToString() ?? "";
         DateTime createdAtUtc = reader.GetDateTime($"{pfx}{NotificationCreatedAtUtcField.Name}");
-        string type = reader.GetString($"{pfx}{NotificationTypeField.Name}");
+        NotificationType type = Enum.Parse<NotificationType>(
+            reader.GetString($"{pfx}{NotificationTypeField.Name}"), ignoreCase: true);
 
         return new Notification()
         {
@@ -156,5 +181,4 @@ public class NotificationService : INotificationService
             Type = type,
         };
     }
-
 }

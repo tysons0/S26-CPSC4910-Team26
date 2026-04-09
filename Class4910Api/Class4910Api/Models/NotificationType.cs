@@ -2,7 +2,8 @@
 
 public enum NotificationType
 {
+    NoType,
     ApplicationStatusChange,
     PointsChange,
-    NoType
+    Order
 }

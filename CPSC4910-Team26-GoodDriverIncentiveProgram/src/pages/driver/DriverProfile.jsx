@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import PageTitle from "../../components/PageTitle";
 import apiService from "../../services/api";
 import "../../css/Profile.css";
+import PovBanner from "../../components/POVBanner";
 import { ECS_SERVICE_EXTENSIONS_ENABLE_DEFAULT_LOG_DRIVER } from "aws-cdk-lib/cx-api";
 
 function DriverProfile() {
@@ -14,6 +15,7 @@ function DriverProfile() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [emailNotifs, setEmailNotifs] = useState(false);
 
   //Address States
   const [addresses, setAddresses] = useState([]);
@@ -63,6 +65,7 @@ function DriverProfile() {
           const userData = driverInfo.userData;
 
           setUser(userData);
+          setEmailNotifs(userData.emailNotificationsEnabled ?? false);
           setFormData({
             firstName: userData.firstName || "",
             lastName: userData.lastName || "",
@@ -96,7 +99,7 @@ function DriverProfile() {
       setEditing(false);
       setSuccessMessage("Profile Updated Successfully!");
 
-      const refreshedData = await apiService.getDriverrInfo();
+      const refreshedData = await apiService.getDriverInfo();
       if (refreshedData) {
         setDriverData(refreshedData);
         setUser(refreshedData.userData);
@@ -270,8 +273,27 @@ function DriverProfile() {
     );
   }
 
+  const handleEmailNotifsToggle = async () => {
+    try {
+      const newValue = !emailNotifs;
+      await apiService.updateEmailNotifications(user.id, newValue);
+      setEmailNotifs(newValue);
+      const updatedUser = { ...user, emailNotificationsEnabled: newValue };
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      setSuccessMessage(
+        newValue
+          ? "Email notifications enabled."
+          : "Email notifications disabled.",
+      );
+    } catch (err) {
+      setError("Failed to update email notification preference.");
+    }
+  };
+
   return (
     <div className="profile-container">
+      <PovBanner />
       <PageTitle title="Driver Profile | Team 26" />
 
       <header className="catalog-header">
@@ -822,6 +844,41 @@ function DriverProfile() {
         >
           {saving ? "Sending..." : "Send Password Reset Email"}
         </button>
+      </div>
+      {/* Notification Preferences Card */}
+      <div className="profile-card" style={{ marginTop: "2rem" }}>
+        <h2 style={{ marginBottom: "1.5rem", fontSize: "1.25rem" }}>
+          Notification Preferences
+        </h2>
+        <div className="profile-item">
+          <label>Email Notifications</label>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "1rem",
+              marginTop: "0.5rem",
+            }}
+          >
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                cursor: "pointer",
+                gap: "0.5rem",
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={emailNotifs}
+                onChange={handleEmailNotifsToggle}
+              />
+              {emailNotifs
+                ? "Enabled — you will receive email notifications"
+                : "Disabled — you will not receive email notifications"}
+            </label>
+          </div>
+        </div>
       </div>
     </div>
   );

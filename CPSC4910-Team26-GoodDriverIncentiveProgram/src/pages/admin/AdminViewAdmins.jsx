@@ -338,6 +338,22 @@ function AdminViewAdmins() {
                         }}
                       >
                         <button
+                          onClick={() => handleViewDriver(driver)}
+                          style={{
+                            padding: "0.25rem 0.7rem",
+                            background: "rgba(102,126,234,0.12)",
+                            color: "#297512",
+                            border: "1px solid rgba(102,126,234,0.3)",
+                            borderRadius: "6px",
+                            cursor: "pointer",
+                            fontSize: "0.8rem",
+                            fontWeight: 600,
+                            transition: "all 0.15s",
+                          }}
+                        >
+                          Impersonate
+                        </button>
+                        <button
                           onClick={() => handleViewAdmin(admin)}
                           style={{
                             padding: "0.25rem 0.7rem",

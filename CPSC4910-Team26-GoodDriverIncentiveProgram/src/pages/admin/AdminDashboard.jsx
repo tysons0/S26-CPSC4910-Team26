@@ -18,6 +18,8 @@ function AdminDashboard() {
   const [orgs, setOrgs] = useState([]);
   const [applications, setApplications] = useState([]);
 
+  const [povRole, setPovRole] = useState(null);
+
   const handleChange = (e) => {
     const value = e.target.value;
     if (value) {
@@ -68,6 +70,14 @@ function AdminDashboard() {
       status === "pending" || status === "waiting" || status === "submitted"
     );
   });
+
+  const handlePovChange = (e) => {
+    const role = e.target.value;
+    if (role) {
+      sessionStorage.setItem("adminPovRole", role);
+      navigate(role === "driver" ? "/DriverDashboard" : "/SponsorDashboard");
+    }
+  };
 
   return (
     <div className="admin-shell">
@@ -126,6 +136,18 @@ function AdminDashboard() {
               Manage users and organizations here.
             </div>
           </div>
+
+          <select
+            className="view-select pov-switch-select"
+            onChange={handlePovChange}
+            value=""
+          >
+            <option value="" disabled>
+              👁 Switch POV…
+            </option>
+            <option value="driver">🚗 View as Driver</option>
+            <option value="sponsor">🧑‍💼 View as Sponsor</option>
+          </select>
         </header>
         {/* Content */}
         <main className="admin-content">

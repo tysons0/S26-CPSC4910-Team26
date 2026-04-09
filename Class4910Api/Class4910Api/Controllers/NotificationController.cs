@@ -34,12 +34,7 @@ public class NotificationController : ControllerBase
         UserRole userRole = _contextService.GetUserRole(HttpContext);
         int contextUserId = _contextService.GetUserId(HttpContext);
 
-        if (contextUserId == userId)
-        {
-            _logger.LogWarning("User[{Id}] is retrieving notifications for themselves but not using right endpoint",
-                userId);
-        }
-        else if (userRole != UserRole.Admin)
+        if (userRole != UserRole.Admin)
         {
             _logger.LogWarning("User[{Id}] tried to view User[{Id}] notifications but was forbidden.",
                 contextUserId, userId);
@@ -113,7 +108,7 @@ public class NotificationController : ControllerBase
         }
         else
         {
-            return BadRequest($"[{User}] does not have notification[{notificationId}]");
+            return BadRequest($"[{user.Username}] does not have notification[{notificationId}]");
         }
     }
 }

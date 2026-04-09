@@ -10,6 +10,7 @@ public static class Routes
         public const string MeTokenInfo = "me/token-info";
 
         public const string Login = "login";
+        public const string LoginAsOtherUser = "login/{userId:int}";
         public const string PasswordChange = "password-change";
         public const string ForcePasswordChange = "force-password-change";
 
@@ -21,6 +22,7 @@ public static class Routes
         public const string MeFull = Base + "/" + Me;
         public const string MeTokenInfoFull = Base + "/" + MeTokenInfo;
         public const string LoginFull = Base + "/" + Login;
+        public const string LoginAsOtherUserFull = Base + "/" + LoginAsOtherUser;
         public const string PasswordChangeFull = Base + "/" + PasswordChange;
         public const string ForcePasswordChangeFull = Base + "/" + ForcePasswordChange;
         public const string RegisterAdminFull = Base + "/" + RegisterAdmin;

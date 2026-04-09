@@ -3,12 +3,14 @@ import apiService from "../../services/api";
 import PageTitle from "../../components/PageTitle";
 import { useNavigate } from "react-router-dom";
 import "../../css/AdminDashboard.css";
+import { useImpersonation } from "../../hooks/useImpersonation";
 
 function AdminViewDrivers() {
   const [drivers, setDrivers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const [sortBy, setSortBy] = useState("driverId-asc");
 
   // Editing state
   const [editingDriver, setEditingDriver] = useState(null);
@@ -26,6 +28,8 @@ function AdminViewDrivers() {
   const [pointHistory, setPointHistory] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [historyDriverId, setHistoryDriverId] = useState(null);
+
+  const { impersonate } = useImpersonation();
 
   useEffect(() => {
     const fetchDrivers = async () => {
@@ -49,6 +53,15 @@ function AdminViewDrivers() {
 
     fetchDrivers();
   }, []);
+
+  const handleImpersonateDriver = async (driver) => {
+    await impersonate({
+      userId: driver.userData.id,
+      username: driver.userData.username,
+      role: "driver",
+      targetPath: "/DriverDashboard",
+    });
+  };
 
   // Handle view driver details
   const handleViewDriver = async (driver) => {
@@ -201,6 +214,62 @@ function AdminViewDrivers() {
     });
   };
 
+  const sortedDrivers = [...drivers].sort((a, b) => {
+    const nameA =
+      `${a.userData?.firstName || ""} ${a.userData?.lastName || ""}`.trim() ||
+      a.userData?.username ||
+      "";
+    const nameB =
+      `${b.userData?.firstName || ""} ${b.userData?.lastName || ""}`.trim() ||
+      b.userData?.username ||
+      "";
+
+    const usernameA = a.userData?.username || "";
+    const usernameB = b.userData?.username || "";
+
+    const emailA = a.userData?.email || "";
+    const emailB = b.userData?.email || "";
+
+    const orgA = a.organizationId || 0;
+    const orgB = b.organizationId || 0;
+
+    const disabledA = a.userData?.disabled ? 1 : 0;
+    const disabledB = b.userData?.disabled ? 1 : 0;
+
+    switch (sortBy) {
+      case "driverId-asc":
+        return (a.driverId || 0) - (b.driverId || 0);
+      case "driverId-desc":
+        return (b.driverId || 0) - (a.driverId || 0);
+      case "name-asc":
+        return nameA.localeCompare(nameB);
+      case "name-desc":
+        return nameB.localeCompare(nameA);
+      case "username-asc":
+        return usernameA.localeCompare(usernameB);
+      case "username-desc":
+        return usernameB.localeCompare(usernameA);
+      case "email-asc":
+        return emailA.localeCompare(emailB);
+      case "email-desc":
+        return emailB.localeCompare(emailA);
+      case "points-desc":
+        return (b.points || 0) - (a.points || 0);
+      case "points-asc":
+        return (a.points || 0) - (b.points || 0);
+      case "org-asc":
+        return orgA - orgB;
+      case "org-desc":
+        return orgB - orgA;
+      case "status-asc":
+        return disabledA - disabledB; // active first
+      case "status-desc":
+        return disabledB - disabledA; // disabled first
+      default:
+        return 0;
+    }
+  });
+
   if (loading) {
     return (
       <div style={{ padding: "2rem" }}>
@@ -247,6 +316,40 @@ function AdminViewDrivers() {
         Registered Drivers
       </h1>
 
+      <div
+        style={{
+          marginBottom: "1rem",
+          display: "flex",
+          gap: "0.5rem",
+          alignItems: "center",
+        }}
+      >
+        <label style={{ fontWeight: 600, color: "var(--text-muted)" }}>
+          Sort by:
+        </label>
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+          className="view-select"
+          style={{ width: "auto" }}
+        >
+          <option value="driverId-asc">Driver ID ↑</option>
+          <option value="driverId-desc">Driver ID ↓</option>
+          <option value="name-asc">Name A–Z</option>
+          <option value="name-desc">Name Z–A</option>
+          <option value="username-asc">Username A–Z</option>
+          <option value="username-desc">Username Z–A</option>
+          <option value="email-asc">Email A–Z</option>
+          <option value="email-desc">Email Z–A</option>
+          <option value="points-desc">Points High to Low</option>
+          <option value="points-asc">Points Low to High</option>
+          <option value="org-asc">Organization Low to High</option>
+          <option value="org-desc">Organization High to Low</option>
+          <option value="status-asc">Active First</option>
+          <option value="status-desc">Disabled First</option>
+        </select>
+      </div>
+
       {drivers.length === 0 ? (
         <p style={{ color: "var(--text-alt)" }}>No drivers found.</p>
       ) : (
@@ -291,7 +394,7 @@ function AdminViewDrivers() {
               </tr>
             </thead>
             <tbody>
-              {drivers.map((driver, index) => (
+              {sortedDrivers.map((driver, index) => (
                 <Fragment key={driver.driverId || index}>
                   {/* Main row */}
                   <tr
@@ -392,6 +495,22 @@ function AdminViewDrivers() {
                           flexWrap: "wrap",
                         }}
                       >
+                        <button
+                          onClick={() => handleImpersonateDriver(driver)}
+                          style={{
+                            padding: "0.25rem 0.7rem",
+                            background: "rgba(102,126,234,0.12)",
+                            color: "#297512",
+                            border: "1px solid rgba(102,126,234,0.3)",
+                            borderRadius: "6px",
+                            cursor: "pointer",
+                            fontSize: "0.8rem",
+                            fontWeight: 600,
+                            transition: "all 0.15s",
+                          }}
+                        >
+                          Impersonate
+                        </button>
                         <button
                           onClick={() => handleViewDriver(driver)}
                           style={{

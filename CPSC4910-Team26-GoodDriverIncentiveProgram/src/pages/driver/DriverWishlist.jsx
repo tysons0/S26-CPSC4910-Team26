@@ -4,6 +4,7 @@ import PageTitle from "../../components/PageTitle";
 import apiService from "../../services/api";
 import { useCart } from "../../context/CartContext";
 import "../../css/Dashboard.css";
+import PovBanner from "../../components/POVBanner";
 
 function DriverWishlist() {
   const navigate = useNavigate();
@@ -23,17 +24,20 @@ function DriverWishlist() {
 
       const wishlistItems = await apiService.getDriverWishlist(driver.driverId);
       console.log("Raw wishlist data:", wishlistItems);
-      const normalized = (Array.isArray(wishlistItems) ? wishlistItems : []).map((item) => ({
+      const normalized = (
+        Array.isArray(wishlistItems) ? wishlistItems : []
+      ).map((item) => ({
         id: item.catalogItemID || item.CatalogItemID || item.catalogItemId,
         name: item.name || item.Name,
         points: Number(item.points ?? item.Points ?? 0),
-        image: item.imageURL || item.ImageUrl || "https://via.placeholder.com/120?text=No+Image",
-        itemWebUrl: item.itemWebUrl || item.ItemWebUrl || ""
+        image:
+          item.imageURL ||
+          item.ImageUrl ||
+          "https://via.placeholder.com/120?text=No+Image",
+        itemWebUrl: item.itemWebUrl || item.ItemWebUrl || "",
       }));
 
       setWishlist(normalized);
-
-
     } catch (err) {
       console.error("Wishlist load error", err);
       setError("Failed to load wishlist.");
@@ -56,7 +60,7 @@ function DriverWishlist() {
       await apiService.removeWishlistItem(catalogItemId);
 
       setWishlist((prev) =>
-        prev.filter((item) => item.catalogItemId !== catalogItemId)
+        prev.filter((item) => item.catalogItemId !== catalogItemId),
       );
     } catch (err) {
       console.error("Remove failed", err);
@@ -70,7 +74,7 @@ function DriverWishlist() {
       alert("Item purchased successfully");
 
       setWishlist((prev) =>
-        prev.filter((item) => item.catalogItemId !== catalogItemId)
+        prev.filter((item) => item.catalogItemId !== catalogItemId),
       );
     } catch (err) {
       console.error("Purchase failed", err);
@@ -89,25 +93,28 @@ function DriverWishlist() {
 
   return (
     <div className="catalog-page">
+      <PovBanner />
       <PageTitle title="Wishlist | Team 26" />
 
       <header className="catalog-header">
         <h1>Your Wishlist</h1>
         <div
-        style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.75rem",
-                flexWrap: "wrap",
-              }}>
-
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.75rem",
+            flexWrap: "wrap",
+          }}
+        >
           <button className="submit" onClick={() => navigate("/Cart")}>
             View Cart
           </button>
-          <button className="submit" onClick={() => navigate("/DriverDashboard")}>
+          <button
+            className="submit"
+            onClick={() => navigate("/DriverDashboard")}
+          >
             Back to Catalog
           </button>
-
         </div>
       </header>
 
@@ -125,8 +132,12 @@ function DriverWishlist() {
                   alt={item.name}
                   className="catalog-img"
                   onError={(e) => {
-                    if (e.target.src !== "https://via.placeholder.com/120?text=No+Image") {
-                      e.target.src = "https://via.placeholder.com/120?text=No+Image";
+                    if (
+                      e.target.src !==
+                      "https://via.placeholder.com/120?text=No+Image"
+                    ) {
+                      e.target.src =
+                        "https://via.placeholder.com/120?text=No+Image";
                     }
                   }}
                 />
@@ -141,11 +152,11 @@ function DriverWishlist() {
                 <strong>{item.points}</strong>
               </div>
 
-              <div className="col action" style={{ display: "flex", gap: "10px" }}>
-                <button
-                  className="submit"
-                  onClick={() => addToCart(item)}
-                >
+              <div
+                className="col action"
+                style={{ display: "flex", gap: "10px" }}
+              >
+                <button className="submit" onClick={() => addToCart(item)}>
                   Add to Cart
                 </button>
 

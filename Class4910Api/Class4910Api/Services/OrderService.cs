@@ -33,6 +33,9 @@ namespace Class4910Api.Services
 
             try
             {
+                Driver driver = await _driverService.GetDriverByDriverId(request.DriverId)
+                    ?? throw new("Could not find driver");
+
                 string driverSql = @"SELECT Points FROM Drivers WHERE DriverId = @DriverId AND OrgId = @OrgId";
                 using var driverCmd = new MySqlCommand(driverSql, conn, (MySqlTransaction)transaction);
                 driverCmd.Parameters.AddWithValue("@DriverId", request.DriverId);
@@ -126,9 +129,10 @@ namespace Class4910Api.Services
                 await phCmd.ExecuteNonQueryAsync();
                 await transaction.CommitAsync();
 
-                await _notificationService.CreateNotification(request.DriverId,
+                await _notificationService.CreateNotification(driver.UserData.Id,
                     $"Your order #{orderId} has been placed successfully! Total points spent: {totalPoints}.",
-                    NotificationType.PointsChange);
+                    NotificationType.Order,
+                    driver);
 
                 _logger.LogInformation("Order {OrderId} created for Driver {DriverId} with total points {TotalPoints}", orderId, request.DriverId, totalPoints);
                 return orderId;

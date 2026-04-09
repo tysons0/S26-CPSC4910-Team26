@@ -80,6 +80,42 @@ public class AuthController : ControllerBase
         return loginResult;
     }
 
+    [Authorize(Roles = $"{ADMIN},{SPONSOR}")]
+    [HttpPost(Routes.Auth.LoginAsOtherUser)]
+    public async Task<ActionResult<LoginResult>> LoginAsOtherUser(int userId)
+    {
+        int contextUserId = _contextService.GetUserId(HttpContext);
+        RequestData? requestData = _contextService.GetRequestData(HttpContext);
+        if (requestData is null)
+        {
+            string error = $"Could not retrieve Request Data for login as other user attempt on User[{userId}]";
+            _logger.LogWarning("{Error}", error);
+            return BadRequest(error);
+        }
+
+        User? user = await _userService.FindUserById(userId);
+
+        if (user == null)
+            return Forbid();
+
+        bool canEdit = await _authService.CanUserEditOtherUser(contextUserId, userId);
+
+        if (!canEdit)
+        {
+            string error = $"User[{contextUserId}] does not have permission to login as User[{userId}]";
+            _logger.LogWarning("{Error}", error);
+            return Forbid();
+        }
+
+        LoginResult loginResult = await _authService.LoginAsync(user, requestData);
+        if (loginResult.Error is not null)
+        {
+            _logger.LogInformation("Login as other user Failed for User[{UserId}]. {Error}", userId, loginResult.Error);
+            return BadRequest(loginResult.Error);
+        }
+        return loginResult;
+    }
+
     [Authorize]
     [HttpPost(Routes.Auth.PasswordChange)]
     public async Task<ActionResult> ChangePassword([FromBody] PasswordChangeRequest changeRequest)

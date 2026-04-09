@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import PageTitle from "../../components/PageTitle";
 import apiService from "../../services/api";
 import "../../css/SponsorDashboard.css";
+import PovBanner from "../../components/POVBanner";
 
 function SponsorDashboard() {
   const navigate = useNavigate();
@@ -34,6 +35,8 @@ function SponsorDashboard() {
   const [updating, setUpdating] = useState(false);
   const [removing, setRemoving] = useState(null);
 
+  const [povRole, setPovRole] = useState(null);
+
   //Manually add products by ebay item ID
   const [manualFormData, setManualFormData] = useState({
     ebayItemId: "",
@@ -58,7 +61,10 @@ function SponsorDashboard() {
     const fetchDashboardData = async () => {
       try {
         const userRole = apiService.getUserRole();
-        if (userRole?.toLowerCase() !== "sponsor") {
+        if (
+          userRole?.toLowerCase() !== "sponsor" &&
+          userRole?.toLowerCase() !== "admin"
+        ) {
           navigate("/About");
           return;
         }
@@ -306,6 +312,15 @@ function SponsorDashboard() {
     );
   });
 
+  const handlePovChange = (e) => {
+    const role = e.target.value;
+    if (role) {
+      sessionStorage.setItem("adminPovRole", role);
+      sessionStorage.setItem("povSource", "sponsor");
+      navigate("/DriverDashboard");
+    }
+  };
+
   if (loading) {
     return (
       <div style={{ padding: "2rem" }}>
@@ -367,6 +382,7 @@ function SponsorDashboard() {
 
       {/* Main */}
       <div className="sponsor-main">
+        <PovBanner />
         <header className="sponsor-topbar">
           <div>
             <div className="topbar-title">
@@ -376,6 +392,17 @@ function SponsorDashboard() {
               Manage your catalog and organization from here.
             </div>
           </div>
+
+          <select
+            className="view-select pov-switch-select"
+            onChange={handlePovChange}
+            value=""
+          >
+            <option value="" disabled>
+              👁 Switch POV…
+            </option>
+            <option value="driver">🚗 View as Driver</option>
+          </select>
         </header>
 
         <main className="sponsor-content">

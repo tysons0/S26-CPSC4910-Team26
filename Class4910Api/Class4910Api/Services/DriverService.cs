@@ -19,9 +19,9 @@ public class DriverService : IDriverService
     private readonly INotificationService _notificationService;
 
     public DriverService(ILogger<DriverService> logger, 
-                         IOptions<DatabaseConnection> databaseConnection, 
-                         IUserService userService,
-                         INotificationService notificationService)
+                         IOptions<DatabaseConnection> databaseConnection,
+                         INotificationService notificationService,
+                         IUserService userService)
     {
         _logger = logger;
         _dbConnection = databaseConnection.Value.Connection;
@@ -222,6 +222,7 @@ public class DriverService : IDriverService
         }
 
         int points = reader.GetInt32($"{pfx}{DriverPointsField.Name}");
+        bool notifyForPointsChanged = reader.GetBoolean($"{pfx}{DriverNotifyPointsChangedField.Name}");
 
         List<DriverAddress> addresses = await GetDriverAddresses(driverId) ?? [];
 
@@ -233,6 +234,7 @@ public class DriverService : IDriverService
             OrganizationId = orgId,
             UserData = userData.ToReadFormat(),
             Points = points,
+            NotifyForPointsChanged = notifyForPointsChanged,
             Addresses = addresses
         };
     }
@@ -510,10 +512,44 @@ public class DriverService : IDriverService
         }
     }
 
+    public async Task<bool> ChangePointAlertPreference(int driverId, bool enabled)
+    {
+        try
+        {
+            await using MySqlConnection conn = new(_dbConnection);
+            conn.Open();
+            MySqlCommand command = conn.CreateCommand();
+
+            command.CommandText =
+                @$"UPDATE {DriversTable.Name}
+                   SET {DriverNotifyPointsChangedField.SelectName} = @Enabled
+                   WHERE {DriverIdField.SelectName} = @DriverId";
+            command.Parameters.Add(DriverNotifyPointsChangedField.GenerateParameter("@Enabled", enabled));
+            command.Parameters.Add(DriverIdField.GenerateParameter("@DriverId", driverId));
+
+            int rowsUpdated = await command.ExecuteNonQueryAsync();
+            bool updated = rowsUpdated > 0;
+
+            _logger.LogInformation("Updated NotifyForPointsChanged[{Enabled}] for Driver[{DriverId}] changedRows[{Rows}]",
+                enabled, driverId, rowsUpdated);
+
+            return updated;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating NotifyForPointsChanged[{Enabled}] for Driver[{DriverId}]",
+                enabled, driverId);
+            return false;
+        }
+    }
+
     public async Task<bool> AddToDriverPointHistory(int driverId, int? sponsorId, PointChangeRequest pointChangeRequest)
     {
         try
         {
+            Driver driver = await GetDriverByDriverId(driverId)
+                ?? throw new($"Could not find driver");
+
             await using MySqlConnection conn = new(_dbConnection);
             conn.Open();
             MySqlCommand command = conn.CreateCommand();
@@ -532,14 +568,16 @@ public class DriverService : IDriverService
 
             await command.ExecuteNonQueryAsync();
 
-            await _notificationService.CreateNotification(
-                driverId, 
-                $"Your points have been updated by {pointChangeRequest.PointChange} points for the following reason: {pointChangeRequest.ChangeReason}", 
-                NotificationType.PointsChange
-            );
-
             _logger.LogInformation("Created PointHistory Entry for Driver[{Id}]. PointChange[{Change}]",
                 driverId, pointChangeRequest.PointChange);
+
+            await _notificationService.CreateNotification(
+                driver.UserData.Id,
+                $"Your points have been updated by {pointChangeRequest.PointChange} points for the following reason: {pointChangeRequest.ChangeReason}",
+                NotificationType.PointsChange,
+                driver
+            );
+
             return true;
         }
         catch (Exception ex)

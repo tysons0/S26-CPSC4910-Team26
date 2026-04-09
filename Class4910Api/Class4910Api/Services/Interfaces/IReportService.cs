@@ -8,4 +8,6 @@ public interface IReportService
     Task<ReportTable?> GetOrderReport(OrderReportRequest request);
 
     Task<ReportTable?> GetPointHistoryReport(PointHistoryReportRequest request);
+
+    Task<ReportTable?> GetAuditLogReport(AuditLogReportRequest request);
 }

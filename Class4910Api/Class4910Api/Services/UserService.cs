@@ -228,6 +228,11 @@ public class UserService : IUserService
         };
     }
 
+    public async Task<bool> ShouldUserReceiveNotification(int userId, NotificationType notificationType)
+    {
+        return true;
+    }
+
     public async Task<User?> UpdateUser(int userId, UserUpdateRequest userRequest)
     {
         _logger.LogInformation("Updating user[{UserId}] with request[{Request}]", userId, userRequest);

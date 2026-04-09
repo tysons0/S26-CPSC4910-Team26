@@ -249,7 +249,7 @@ public static class ConstantValues
         new() { Name = "NotificationType", Type = MySqlDbType.String, Nullable = false };
 
     public static readonly DatabaseField NotificationCreatedAtUtcField =
-        new() { Name = "CreatedAtUtc", Type = MySqlDbType.String, Nullable = false };
+        new() { Name = "CreatedAtUtc", Type = MySqlDbType.DateTime, Nullable = false };
 
     public static readonly DatabaseTable NotificationsTable = new()
     {
