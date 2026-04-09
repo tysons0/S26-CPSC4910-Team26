@@ -97,6 +97,32 @@ public class AuthService : IAuthService
         }
     }
 
+    public async Task<LoginResult> LoginAsync(User user, RequestData loginData)
+    {
+        _logger.LogInformation("LoginAsync called for user: {UserName}", user.Username);
+
+        bool loginSuccess = false;
+        bool recordLoginAttempt = true;
+        try
+        {
+            string token = GenerateToken(user, _jwtSettings);
+            return new() { Token = token, User = user.ToReadFormat() };
+        }
+        catch (Exception ex)
+        {
+            recordLoginAttempt = false;
+            _logger.LogError(ex, "Error occurred during login for user: {UserName}", user.Username);
+            return new() { Error = "Server Failure" };
+        }
+        finally
+        {
+            if (recordLoginAttempt)
+            {
+                await StoreLoginAttempt(loginSuccess, user.Username, loginData);
+            }
+        }
+    }
+
     public async Task<OrgAccess> RetrieveUserOrgAccess(int userId, int? orgId)
     {
         User? user = await _userService.FindUserById(userId);
@@ -372,7 +398,8 @@ public class AuthService : IAuthService
                 DriverId = (int)command.LastInsertedId,
                 UserData = newUser,
                 Points = 0,
-                Addresses = []
+                Addresses = [],
+                NotifyForPointsChanged = false,
             };
         }
         catch (Exception ex)

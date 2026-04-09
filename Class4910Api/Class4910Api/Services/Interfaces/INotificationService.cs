@@ -4,6 +4,7 @@ namespace Class4910Api.Services.Interfaces;
 
 public interface INotificationService
 {
+    Task<bool> CreateNotification(int userId, string message, NotificationType type, Driver driver);
     Task<bool> CreateNotification(int userId, string message, NotificationType type);
     Task MarkNotificationAsSeen(int notificationId);
     Task<List<Notification>?> GetNotificationsForUser(int userId);

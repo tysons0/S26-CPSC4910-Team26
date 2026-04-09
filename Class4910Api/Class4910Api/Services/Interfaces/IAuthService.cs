@@ -7,6 +7,8 @@ public interface IAuthService
 {
     Task<LoginResult> LoginAsync(UserRequest request, RequestData loginData);
 
+    Task<LoginResult> LoginAsync(User user, RequestData loginData);
+
     Task<Admin?> RegisterAdminUser(UserRequest request, RequestData registerData, int? creatorUserId = null);
 
     Task<Driver?> RegisterDriverUser(UserRequest request, RequestData registerData, int? creatorUserId = null);

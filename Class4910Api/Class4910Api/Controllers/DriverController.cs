@@ -87,6 +87,42 @@ public class DriverController : ControllerBase
         return Ok(driver);
     }
 
+    [Authorize(Roles = DRIVER)]
+    [HttpPatch("me/points-alert")]
+    public async Task<ActionResult<Driver>> UpdateCurrentDriverPointAlertPreference([FromBody] DriverPointsAlertPreferenceRequest request)
+    {
+        int userId = _contextService.GetUserId(HttpContext);
+        Driver? currentDriver = await _driverService.GetDriverByUserId(userId);
+
+        if (currentDriver is null)
+        {
+            string err = $"Driver not found from context using userId[{userId}].";
+            _logger.LogWarning("{Error}", err);
+            return NotFound(err);
+        }
+
+        bool updateResult = await _driverService.ChangePointAlertPreference(currentDriver.DriverId, request.Enabled);
+        if (!updateResult)
+        {
+            string err = $"Failed to update point alert preference for Driver[{currentDriver.DriverId}]";
+            _logger.LogError("{Error}", err);
+            return BadRequest(err);
+        }
+
+        Driver? updatedDriver = await _driverService.GetDriverByDriverId(currentDriver.DriverId);
+        if (updatedDriver is null)
+        {
+            string err = $"Driver could not be loaded after update for Driver[{currentDriver.DriverId}]";
+            _logger.LogError("{Error}", err);
+            return StatusCode(500, err);
+        }
+
+        _logger.LogInformation("Updated points alert preference for Driver[{DriverId}] to [{Enabled}]",
+            updatedDriver.DriverId, request.Enabled);
+
+        return Ok(updatedDriver);
+    }
+
     [HttpGet("{userId:int}")]
     public async Task<ActionResult<Driver>> GetDriver(int userId)
     {

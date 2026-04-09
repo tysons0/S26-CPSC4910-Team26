@@ -40,10 +40,9 @@ jobs:
           VERSION=${{ github.run_number }}
           COMMIT_NAME=${{ github.sha }}
           GIT_TAG=${{ github.ref_type == 'tag' && github.ref_name || 'none' }}
-          
+
           ASPNETCORE_ENVIRONMENT=Production
           EOF'
-
           sudo chmod 644 /etc/team26api.env
           sudo systemctl daemon-reload
           sudo systemctl restart team26api
@@ -57,3 +56,16 @@ jobs:
         script: |
           sleep 5
           sudo systemctl is-active --quiet team26api || exit 1
+
+    - name: Show service logs if deploy failed
+      if: failure()
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USER }}
+        key: ${{ secrets.EC2_SSH_KEY }}
+        script: |
+          echo "===== team26api status ====="
+          sudo systemctl status team26api --no-pager || true
+          echo "===== team26api journal ====="
+          sudo journalctl -u team26api -n 50 --no-pager || true
