@@ -149,7 +149,7 @@ function DriverWishlist() {
 
               <div className="col points">
                 <div className="muted">Points:</div>
-                <strong style={{ color: "black" }}>{item.points}</strong>
+                <strong>{item.points}</strong>
               </div>
 
               <div

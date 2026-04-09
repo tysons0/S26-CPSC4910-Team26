@@ -15,7 +15,7 @@ namespace Class4910Api.Services
         private readonly ILogger<OrderService> _logger;
 
 
-        public OrderService(IOptions<DatabaseConnection> dbConnection, ILogger<OrderService> logger, 
+        public OrderService(IOptions<DatabaseConnection> dbConnection, ILogger<OrderService> logger,
                             IDriverService driverService, INotificationService notificationService)
         {
             _dbConnection = dbConnection.Value.Connection;
@@ -121,7 +121,7 @@ namespace Class4910Api.Services
                 string pointHistorySql = @"
                                     INSERT INTO DriverPointHistory (DriverId, SponsorId, Reason, PointDelta, CreatedAtUTC)
                                     VALUES (@DriverId, @SponsorId, @Reason, @PointDelta, UTC_TIMESTAMP());";
-                using var phCmd = new MySqlCommand(pointHistorySql, conn , (MySqlTransaction)transaction);
+                using var phCmd = new MySqlCommand(pointHistorySql, conn, (MySqlTransaction)transaction);
                 phCmd.Parameters.AddWithValue("@DriverId", request.DriverId);
                 phCmd.Parameters.AddWithValue("@SponsorId", DBNull.Value);
                 phCmd.Parameters.AddWithValue("@Reason", pointChange.ChangeReason);
@@ -199,6 +199,152 @@ namespace Class4910Api.Services
             {
                 _logger.LogError(ex, "Unexpected error while retrieving orders for Driver {DriverId}: {Message}", driverId, ex.Message);
                 return [];
+            }
+        }
+        public async Task<List<OrderResponse>> GetOrdersByOrgIdAsync(int orgId)
+        {
+            var orderDict = new Dictionary<int, OrderResponse>();
+            _logger.LogInformation("Retrieving orders for Org {OrgId}", orgId);
+            try
+            {
+                string sql = @"
+                    SELECT o.OrderId, o.DriverId, o.OrderStatus, o.TotalPointsSpent, o.CreatedAtUTC,
+                           oi.OrderItemId, oi.CatalogItemId, oi.ItemName, oi.ItemImageURL, oi.Quantity, oi.PointsAtPurchase
+                    FROM Orders o
+                    INNER JOIN OrderItems oi ON o.OrderId = oi.OrderId
+                    WHERE o.OrgId = @OrgId
+                    ORDER BY o.CreatedAtUTC DESC";
+                using MySqlConnection conn = new(_dbConnection);
+                using MySqlCommand cmd = new(sql, conn);
+                cmd.Parameters.AddWithValue("@OrgId", orgId);
+                await conn.OpenAsync();
+                using var reader = await cmd.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    int orderId = reader.GetInt32(reader.GetOrdinal("OrderId"));
+                    if (!orderDict.ContainsKey(orderId))
+                    {
+                        orderDict[orderId] = new OrderResponse
+                        {
+                            OrderId = orderId,
+                            DriverId = reader.GetInt32(reader.GetOrdinal("DriverId")),
+                            Status = reader.GetString(reader.GetOrdinal("OrderStatus")),
+                            TotalPoints = reader.GetInt32(reader.GetOrdinal("TotalPointsSpent")),
+                            CreatedAt = reader.GetDateTime(reader.GetOrdinal("CreatedAtUTC")),
+                            Items = new List<OrderItemResponse>()
+                        };
+                    }
+                    orderDict[orderId].Items.Add(new OrderItemResponse
+                    {
+                        OrderItemId = reader.GetInt32(reader.GetOrdinal("OrderItemId")),
+                        CatalogItemId = reader.GetInt32(reader.GetOrdinal("CatalogItemId")),
+                        ItemName = reader.GetString(reader.GetOrdinal("ItemName")),
+                        ItemImageUrl = reader.IsDBNull(reader.GetOrdinal("ItemImageURL")) ? null : reader.GetString(reader.GetOrdinal("ItemImageURL")),
+                        Quantity = reader.GetInt32(reader.GetOrdinal("Quantity")),
+                        PointsAtPurchase = reader.GetInt32(reader.GetOrdinal("PointsAtPurchase"))
+                    });
+                }
+                return orderDict.Values.ToList();
+            }
+            catch (MySqlException ex)
+            {
+                _logger.LogError(ex, "Database error while retrieving orders for Org {OrgId}: {Message}", orgId, ex.Message);
+                return [];
+            }
+        }
+        public async Task<bool> UpdateOrderStatusAsync(int orderId, int driverId, string newStatus)
+        {
+            var validStatuses = new List<string> {"Pending", "Shipped", "Completed", "Cancelled" };
+            if (!validStatuses.Contains(newStatus))
+            {
+                _logger.LogWarning("Invalid order status '{Status}' provided for Order {OrderId} by Driver {DriverId}", newStatus, orderId, driverId);
+                throw new Exception("Invalid order status.");
+            }
+            using MySqlConnection conn = new(_dbConnection);
+            await conn.OpenAsync();
+            using var transaction = await conn.BeginTransactionAsync();
+
+            try
+            {
+                string checkSql = @"SELECT DriverId, OrderStatus, TotalPointsSpent FROM Orders WHERE OrderId = @OrderId";
+                using var checkCmd = new MySqlCommand(checkSql, conn, (MySqlTransaction)transaction);
+                checkCmd.Parameters.AddWithValue("@OrderId", orderId);
+                using var reader = await checkCmd.ExecuteReaderAsync();
+                if (!reader.Read())
+                {
+                    throw new Exception("Order not found.");
+                }
+
+                int orderDriverId = reader.GetInt32(reader.GetOrdinal("DriverId"));
+                string orderStatus = reader.GetString(reader.GetOrdinal("OrderStatus"));
+                int pointsToRefund = reader.GetInt32(reader.GetOrdinal("TotalPointsSpent"));
+
+                await reader.CloseAsync();
+
+                if (orderDriverId != driverId)
+                {
+                    throw new Exception("Unauthorized: Driver does not own this order.");
+                }
+                if (orderStatus == "Cancelled")
+                {
+                    throw new Exception("Order is already cancelled.");
+                }
+                
+                if (orderStatus == "Completed")
+                {
+                    throw new Exception("Cannot modify an order that has already been completed");
+                }
+
+                bool isCancelling = newStatus == "Cancelled";
+
+                string updateOrderSql = @"UPDATE Orders SET OrderStatus = @Status WHERE OrderId = @OrderId";
+                using var updateOrderCmd = new MySqlCommand(updateOrderSql, conn, (MySqlTransaction)transaction);
+                updateOrderCmd.Parameters.AddWithValue("@Status", newStatus);
+                updateOrderCmd.Parameters.AddWithValue("@OrderId", orderId);
+
+                await updateOrderCmd.ExecuteNonQueryAsync();
+
+                if (isCancelling)
+                {
+                    string refundSql = @"UPDATE Drivers SET Points = Points + @Points WHERE DriverId = @DriverId";
+                    using var refundCmd = new MySqlCommand(refundSql, conn, (MySqlTransaction)transaction);
+                    refundCmd.Parameters.AddWithValue("@Points", pointsToRefund);
+                    refundCmd.Parameters.AddWithValue("@DriverId", driverId);
+
+                    await refundCmd.ExecuteNonQueryAsync();
+
+
+                    string pointHistorySql = @"
+                                    INSERT INTO DriverPointHistory (DriverId, SponsorId, Reason, PointDelta, CreatedAtUTC)
+                                    VALUES (@DriverId, @SponsorId, @Reason, @PointDelta, UTC_TIMESTAMP());";
+                    using var phCmd = new MySqlCommand(pointHistorySql, conn, (MySqlTransaction)transaction);
+                    phCmd.Parameters.AddWithValue("@DriverId", driverId);
+                    phCmd.Parameters.AddWithValue("@SponsorId", DBNull.Value);
+                    phCmd.Parameters.AddWithValue("@Reason", $"Order #{orderId} cancelled");
+                    phCmd.Parameters.AddWithValue("@PointDelta", pointsToRefund);
+                    await phCmd.ExecuteNonQueryAsync();
+
+                    await transaction.CommitAsync();
+
+                    await _notificationService.CreateNotification(driverId,
+                        $"Your order #{orderId} has been cancelled. {pointsToRefund} points have been refunded to your account.",
+                        NotificationType.PointsChange);
+
+                        _logger.LogInformation("Order {OrderId} cancelled for Driver {DriverId}, refunded {Points} points", orderId, driverId, pointsToRefund);
+                }
+                else
+                {
+                    await transaction.CommitAsync();
+                    _logger.LogInformation("Order {OrderId} status updated to {Status} for Driver {DriverId}", orderId, newStatus, driverId);
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, "Error updating order {OrderId} for Driver {DriverId}: {Message}", orderId, driverId, ex.Message);
+                return false;
             }
         }
     }

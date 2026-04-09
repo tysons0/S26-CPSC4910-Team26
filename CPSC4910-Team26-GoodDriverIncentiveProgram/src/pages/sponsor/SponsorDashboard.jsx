@@ -340,13 +340,17 @@ function SponsorDashboard() {
           <div className="brand-dot">S</div>
           <span className="brand-name">SponsorDashboard</span>
         </div>
-
+      
         <span className="nav-section-label">Overview</span>
         <Link to="/SponsorDashboard" className="nav-item active">
           ⊞ Dashboard
         </Link>
 
         <span className="nav-section-label">Organization</span>
+        <Link to={`/SponsorOrderHistory/${sponsorOrgId}`} className="nav-item">
+          📝 Order History
+        </Link>
+
         <Link to="/SponsorApplications" className="nav-item">
           📋 Applications
         </Link>
@@ -928,6 +932,15 @@ function SponsorDashboard() {
 
             <div className="section-card">
               <div className="section-title">Manage Organization</div>
+              <Link to={`/SponsorOrderHistory/${sponsorOrgId}`} className="action-row">
+                <div className="action-row-left">
+                  <div className="action-icon" style={{ background: "rgba(102,126,234,0.15)" }}>
+                    📝
+                  </div>{" "}
+                  View Order History
+                </div>
+                <span style={{ color: "var(--text-alt)" }}>›</span>
+              </Link>
               <Link to="/SponsorApplications" className="action-row">
                 <div className="action-row-left">
                   <div
