@@ -1291,7 +1291,7 @@ const apiService = {
     }
   },
 
-  getOrders: async (driverId) => {
+  getOrdersByDriverId: async (driverId) => {
     try {
       const token = await apiService.getToken();
       if (!token) {
@@ -1311,6 +1311,49 @@ const apiService = {
       throw error;
     }
   },
+  getOrdersByOrgId: async (orgId) => {
+    try {
+      const token = await apiService.getToken();
+      if (!token) {
+        throw new Error("No Authentication token found.");
+      }
+      const response = await fetch(`${BASE_URL}/Order/organization/${orgId}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-type": "application/json",
+        },
+      });
+
+      return await handleResponse(response);
+    } catch (error) {
+      console.error("Failed to get orders.", error);
+      throw error;
+    }
+  },
+  updateOrderStatus: async (orderId, Status) => {
+    try {
+      const token = await apiService.getToken();
+      if (!token) {
+        throw new Error("No Authentication token found.");
+      }
+
+      const response = await fetch(`${BASE_URL}/Order/${orderId}`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ Status }),
+      });
+
+      return await handleResponse(response);
+    } catch (error) {
+      console.error("Failed to update order status.", error);
+      throw error;
+    }
+  }
+
 };
 
 export default apiService;

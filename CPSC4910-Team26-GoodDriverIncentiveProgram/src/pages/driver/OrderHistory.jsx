@@ -7,6 +7,7 @@ function OrderHistory() {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
+    const [sortOption, setSortOption] = useState("date_desc");
 
     useEffect(() => {
         const fetchOrders = async () => {
@@ -14,7 +15,7 @@ function OrderHistory() {
                 const userData = await apiService.getUserInfo();
                 const driver = await apiService.getDriverByUserId(userData.id);
                 console.log("OrderHistory driver data: ", driver);
-                const orderData = await apiService.getOrders(driver.driverId);
+                const orderData = await apiService.getOrdersByDriverId(driver.driverId);
                 console.log("Raw order data:", orderData);
                 setOrders(orderData);
             } catch (err) {
@@ -27,6 +28,45 @@ function OrderHistory() {
         fetchOrders();
     }, []);
 
+    const handleCancelOrder = async (orderId) => {
+        try {
+            console.log("Cancelling order:", orderId);
+            await apiService.updateOrderStatus(orderId, "Cancelled");
+            
+            setOrders((prev) => 
+                prev.map((order) =>
+                    order.orderId === orderId ? { ...order, status: "Cancelled" } : order
+                )
+            );
+
+
+            const updatedUser = await apiService.getUserInfo();
+            localStorage.setItem("user", JSON.stringify(updatedUser));  
+
+            alert("Order cancelled successfully.");
+        } catch (err) {
+            console.error("Order cancellation error", err);
+            alert("Failed to cancel order. Please try again.");
+        }
+    }
+
+    const sortedOrders = [...orders].sort((a, b) => {
+        switch (sortOption) {
+            case "points-asc":
+                return (a.totalPoints || 0) - (b.totalPoints || 0);
+            case "points-desc":
+                return (b.totalPoints || 0) - (a.totalPoints || 0);
+            case "status":
+                return a.status.localeCompare(b.status);
+            case "date-asc":
+                return new Date(a.createdAt) - new Date(b.createdAt);
+            case "date-desc":
+            default:
+                return new Date(b.createdAt) - new Date(a.createdAt);
+        }
+    });
+
+
     if (loading) {
         return <div>Loading orders...</div>;
     }
@@ -34,11 +74,24 @@ function OrderHistory() {
         <div className="catalog-page">
             <PageTitle title="Order History | Team 26" />
             <h1>Your Order History</h1>
+            <div style={{ marginBottom: "1rem" }}>
+                <label htmlFor="sort">Sort by: </label>
+                <select
+                    value={sortOption}
+                    onChange={(e) => setSortOption(e.target.value)}
+                >
+                    <option value="date-desc">Date (Newest First)</option>
+                    <option value="date-asc">Date (Oldest First)</option>
+                    <option value="points-desc">Points (Highest First)</option>
+                    <option value="points-asc">Points (Lowest First)</option>
+                    <option value="status">Status</option>
+                </select>
+            </div>
             {orders.length === 0 ? (
                 <p>You have no past orders.</p>
             ) : (
                 <div className="catalog-list">
-                    {orders.map((order) => (
+                    {sortedOrders.map((order) => (
                         <div 
                             key={order.orderId} 
                             className="catalog-row"
@@ -60,6 +113,14 @@ function OrderHistory() {
                                 </div>
                                 <div style={{ marginTop: "0.25rem" }}>
                                     <p>Total Points: {order.totalPoints}</p>
+                                </div>
+
+                                <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.5rem" }}>
+                                    {order.status === "Pending" && (
+                                        <button className="submit" onClick={() => handleCancelOrder(order.orderId)}>
+                                            Cancel Order
+                                        </button>
+                                    )}
                                 </div>
 
                         </div>
