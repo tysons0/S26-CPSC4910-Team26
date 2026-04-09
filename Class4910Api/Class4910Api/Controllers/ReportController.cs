@@ -111,4 +111,13 @@ public class ReportController : ControllerBase
         ReportTable? reportTable = await _reportService.GetOrderReport(reportRequest);
         return Ok(reportTable);
     }
+
+    [Authorize]
+    [HttpPost("audit-log")]
+    public async Task<ActionResult<ReportTable>> GetAuditLogReport([FromBody] AuditLogReportRequest reportRequest)
+    {
+
+
+        return Ok();
+    }
 }

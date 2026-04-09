@@ -250,6 +250,11 @@ public class ReportService : IReportService
         }
     }
 
+    public Task<ReportTable?> GetAuditLogReport(AuditLogReportRequest request)
+    {
+        throw new NotImplementedException();
+    }
+
     private static ReportTable GetReportPointHistoryList(List<PointHistoryReportItem> historyRecords)
     {
         List<string> headers = ["Driver ID", "Driver Name", "Sponsor ID", "Sponsor Name", "Point Change", "Reason", "Created At (UTC)"];
