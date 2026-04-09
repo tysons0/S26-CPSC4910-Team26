@@ -26,6 +26,8 @@ public interface IDriverService
 
     Task<bool> DeleteDriverAddress(int driverId, int addressId);
 
+    Task<bool> ChangePointAlertPreference(int driverId, bool enabled);
+
     Task<bool> AddToDriverPointHistory(int driverId, int? sponsorId, PointChangeRequest pointChangeRequest);
 
     Task<List<PointHistoryRecord>?> GetDriverPointHistory(int driverId);
