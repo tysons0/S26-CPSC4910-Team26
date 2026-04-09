@@ -16,4 +16,6 @@ public interface IUserService
     Task<User?> UpdateUser(int userId, UserUpdateRequest userRequest);
 
     Task<bool> ChangeUserDisableState(int userId, bool disable);
+
+    Task<bool> ShouldUserReceiveNotification(int userId, NotificationType notificationType);
 }

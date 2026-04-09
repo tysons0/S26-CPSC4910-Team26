@@ -16,19 +16,16 @@ public class NotificationService : INotificationService
 
     private readonly IEmailService _emailService;
     private readonly IUserService _userService;
-    private readonly IDriverService _driverService;
 
     public NotificationService(ILogger<NotificationService> logger,
                                IOptions<DatabaseConnection> databaseConnection,
                                IEmailService emailService,
-                               IUserService userService,
-                               IDriverService driverService)
+                               IUserService userService)
     {
         _logger = logger;
         _dbConnection = databaseConnection.Value.Connection;
         _emailService = emailService;
         _userService = userService;
-        _driverService = driverService;
     }
 
     public async Task<bool> CreateNotification(int userId, string message, NotificationType type)
@@ -38,16 +35,13 @@ public class NotificationService : INotificationService
             User user = await _userService.FindUserById(userId)
                 ?? throw new($"Could not find user[{userId}]");
 
-            if (user.Role == UserRole.Driver)
-            {
-                Driver? driver = await _driverService.GetDriverByUserId(userId);
+            bool shouldSend = await _userService.ShouldUserReceiveNotification(userId, type);
 
-                if (type == NotificationType.PointsChange && driver is not null && !driver.NotifyForPointsChanged)
-                {
-                    _logger.LogInformation("Driver[{Id}] has notifications for points change disabled. Skipping notification.",
-                        userId);
-                    return true;
-                }
+            if (!shouldSend)
+            {
+                _logger.LogInformation("Not sending notification[{Type}:{Message}] to User[{Id}] because user preferences indicate not to.",
+                    type, message, userId);
+                return true;
             }
 
             _logger.LogInformation("Creating notification[{Type}:{Message}] for User[{Id}].",
