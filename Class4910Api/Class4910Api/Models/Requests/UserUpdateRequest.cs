@@ -8,4 +8,5 @@ public class UserUpdateRequest
     public string? PhoneNumber { get; init; }
     public string? TimeZone { get; init; }
     public string? Country { get; init; }
+    public bool? EmailNotificationsEnabled { get; init; }
 }
