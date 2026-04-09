@@ -10,6 +10,7 @@ function AdminViewSponsors() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const [sortBy, setSortBy] = useState("sponsorId-asc");
 
   // Editing state
   const [editingSponsor, setEditingSponsor] = useState(null);
@@ -182,6 +183,58 @@ function AdminViewSponsors() {
     });
   };
 
+  const sortedSponsors = [...sponsors].sort((a, b) => {
+    const nameA =
+      `${a.userData?.firstName || ""} ${a.userData?.lastName || ""}`.trim() ||
+      a.userData?.username ||
+      "";
+    const nameB =
+      `${b.userData?.firstName || ""} ${b.userData?.lastName || ""}`.trim() ||
+      b.userData?.username ||
+      "";
+
+    const usernameA = a.userData?.username || "";
+    const usernameB = b.userData?.username || "";
+
+    const emailA = a.userData?.email || "";
+    const emailB = b.userData?.email || "";
+
+    const orgA = a.organizationId || 0;
+    const orgB = b.organizationId || 0;
+
+    const disabledA = a.userData?.disabled ? 1 : 0;
+    const disabledB = b.userData?.disabled ? 1 : 0;
+
+    switch (sortBy) {
+      case "sponsorId-asc":
+        return (a.sponsorId || 0) - (b.sponsorId || 0);
+      case "sponsorId-desc":
+        return (b.sponsorId || 0) - (a.sponsorId || 0);
+      case "name-asc":
+        return nameA.localeCompare(nameB);
+      case "name-desc":
+        return nameB.localeCompare(nameA);
+      case "username-asc":
+        return usernameA.localeCompare(usernameB);
+      case "username-desc":
+        return usernameB.localeCompare(usernameA);
+      case "email-asc":
+        return emailA.localeCompare(emailB);
+      case "email-desc":
+        return emailB.localeCompare(emailA);
+      case "org-asc":
+        return orgA - orgB;
+      case "org-desc":
+        return orgB - orgA;
+      case "status-asc":
+        return disabledA - disabledB; // active first
+      case "status-desc":
+        return disabledB - disabledA; // disabled first
+      default:
+        return 0;
+    }
+  });
+
   if (loading) {
     return (
       <div style={{ padding: "2rem" }}>
@@ -228,6 +281,38 @@ function AdminViewSponsors() {
         Registered Sponsors
       </h1>
 
+      <div
+        style={{
+          marginBottom: "1rem",
+          display: "flex",
+          gap: "0.5rem",
+          alignItems: "center",
+        }}
+      >
+        <label style={{ fontWeight: 600, color: "var(--text-muted)" }}>
+          Sort by:
+        </label>
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+          className="view-select"
+          style={{ width: "auto" }}
+        >
+          <option value="sponsorId-asc">Sponsor ID ↑</option>
+          <option value="sponsorId-desc">Sponsor ID ↓</option>
+          <option value="name-asc">Name A–Z</option>
+          <option value="name-desc">Name Z–A</option>
+          <option value="username-asc">Username A–Z</option>
+          <option value="username-desc">Username Z–A</option>
+          <option value="email-asc">Email A–Z</option>
+          <option value="email-desc">Email Z–A</option>
+          <option value="org-asc">Organization Low to High</option>
+          <option value="org-desc">Organization High to Low</option>
+          <option value="status-asc">Active First</option>
+          <option value="status-desc">Disabled First</option>
+        </select>
+      </div>
+
       {sponsors.length === 0 ? (
         <p style={{ color: "var(--text-alt)" }}>No sponsors found.</p>
       ) : (
@@ -271,7 +356,7 @@ function AdminViewSponsors() {
               </tr>
             </thead>
             <tbody>
-              {sponsors.map((sponsor, index) => (
+              {sortedSponsors.map((sponsor, index) => (
                 <Fragment key={sponsor.sponsorId || index}>
                   {/* Main row */}
                   <tr
