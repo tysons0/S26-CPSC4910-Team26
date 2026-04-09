@@ -49,12 +49,15 @@ namespace Class4910Api.Controllers
 
             string resetLink = $"https://main.d29jdyt23lpjjz.amplifyapp.com/reset-password?token={token}&username={Uri.EscapeDataString(user.Username)}";
 
-            await _emailService.SendEmailAsync(
+            bool sent = await _emailService.SendEmailAsync(
                 request.Email,
                 "Reset Your Password",
                 $"<p>Click the link below to reset your password. This link expires in 30 minutes.</p><a href='{resetLink}'>{resetLink}</a>"
             );
-
+            if (!sent)
+            {
+                return StatusCode(500, "Failed to send reset email.");
+            }
             return Ok("Password reset email sent.");
         }
 

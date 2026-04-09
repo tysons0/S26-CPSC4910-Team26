@@ -1,6 +1,6 @@
 import { ApplicationLoadBalancedServiceRecordType } from "aws-cdk-lib/aws-ecs-patterns";
 
-const BASE_URL = "https://team26api.cpsc4911.com";
+const BASE_URL = "https://team26api.cpsc4911.com";//"http://localhost:5177";
 
 const handleResponse = async (response) => {
   if (!response.ok) {
@@ -773,6 +773,29 @@ const apiService = {
       return response;
     } catch (error) {
       console.error("Failed to mark notification as read", error);
+      throw error;
+    }
+  },
+
+  updateEmailNotifications: async (userId, enabled) => {
+    try {
+      const token = apiService.getToken();
+      if (!token) {
+        throw new Error("No authentication token found!");
+      }
+
+      const response = await fetch(`${BASE_URL}/User/${userId}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ emailNotificationsEnabled: enabled }),
+      });
+
+      return await handleResponse(response);
+    } catch (error) {
+      console.error("Failed to update email notification preference", error);
       throw error;
     }
   },

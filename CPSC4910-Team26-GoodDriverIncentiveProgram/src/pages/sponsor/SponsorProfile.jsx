@@ -11,6 +11,7 @@ function SponsorProfile() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [emailNotifs, setEmailNotifs] = useState(false);
 
   const [changingPassword, setChangingPassword] = useState(false);
   const [passwordData, setPasswordData] = useState({
@@ -43,6 +44,7 @@ function SponsorProfile() {
         const userData = await apiService.getUserInfo();
         if (userData) {
           setUser(userData);
+          setEmailNotifs(userData.emailNotificationsEnabled ?? false);
           setFormData({
             firstName: userData.firstName || "",
             lastName: userData.lastName || "",
@@ -193,6 +195,20 @@ function SponsorProfile() {
       </div>
     );
   }
+
+  const handleEmailNotifsToggle = async () => {
+    try {
+      const newValue = !emailNotifs;
+      await apiService.updateEmailNotifications(user.id, newValue);
+      setEmailNotifs(newValue);
+      const updatedUser = { ...user, emailNotificationsEnabled: newValue };
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      setSuccessMessage(newValue ? "Email notifications enabled." : "Email notifications disabled.");
+    } catch (err) {
+      setError("Failed to update email notification preference.");
+    }
+  };
 
   return (
     <div className="profile-container">
@@ -487,6 +503,25 @@ function SponsorProfile() {
         >
           {saving ? "Sending..." : "Send Password Reset Email"}
         </button>
+      </div>
+      {/* Notification Preferences Card */}
+      <div className="profile-card" style={{ marginTop: "2rem" }}>
+        <h2 style={{ marginBottom: "1.5rem", fontSize: "1.25rem" }}>
+          Notification Preferences
+        </h2>
+        <div className="profile-item">
+          <label>Email Notifications</label>
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginTop: "0.5rem" }}>
+            <label style={{ display: "flex", alignItems: "center", cursor: "pointer", gap: "0.5rem" }}>
+              <input
+                type="checkbox"
+                checked={emailNotifs}
+                onChange={handleEmailNotifsToggle}
+              />
+              {emailNotifs ? "Enabled — you will receive email notifications" : "Disabled — you will not receive email notifications"}
+            </label>
+          </div>
+        </div>
       </div>
     </div>
   );
