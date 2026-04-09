@@ -35,6 +35,7 @@ import OrderHistory from "./pages/driver/OrderHistory";
 import { CartProvider } from "./context/CartContext";
 import AdminReport from "./pages/admin/AdminReport";
 import SponsorReport from "./pages/sponsor/SponsorReport";
+import SponsorOrderHistory from "./pages/sponsor/SponsorOrderHistory";
 
 function App() {
   return (
@@ -76,6 +77,7 @@ function App() {
         <Route path="/SponsorViewSponsors" element={<SponsorViewSponsors />} />
         <Route path="/EbayTest" element={<EbayTestDashboard />} />
         <Route path="/SponsorReport" element={<SponsorReport />} />
+        <Route path="/SponsorOrderHistory/:orgId" element={<SponsorOrderHistory />} />
 
         {/* Admin Routes */}
         <Route path="/AdminDashboard" element={<AdminDashboard />} />
