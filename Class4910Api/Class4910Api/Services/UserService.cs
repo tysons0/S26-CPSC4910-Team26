@@ -228,9 +228,9 @@ public class UserService : IUserService
         };
     }
 
-    public Task<bool> ShouldUserReceiveNotification(int userId, NotificationType notificationType)
+    public async Task<bool> ShouldUserReceiveNotification(int userId, NotificationType notificationType)
     {
-        throw new NotImplementedException();
+        return true;
     }
 
     public async Task<User?> UpdateUser(int userId, UserUpdateRequest userRequest)

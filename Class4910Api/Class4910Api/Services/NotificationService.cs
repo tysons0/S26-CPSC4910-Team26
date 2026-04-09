@@ -28,6 +28,18 @@ public class NotificationService : INotificationService
         _userService = userService;
     }
 
+    public async Task<bool> CreateNotification(int userId, string message, NotificationType type, Driver driver)
+    {
+        if (!driver.NotifyForPointsChanged && type == NotificationType.PointsChange)
+        {
+            _logger.LogInformation("Not sending notification[{Type}:{Message}] to User[{Id}] because driver preferences indicate not to.",
+                type, message, userId);
+            return true;
+        }
+
+        return await CreateNotification(userId, message, type);
+    }
+
     public async Task<bool> CreateNotification(int userId, string message, NotificationType type)
     {
         try
@@ -164,5 +176,4 @@ public class NotificationService : INotificationService
             Type = type,
         };
     }
-
 }

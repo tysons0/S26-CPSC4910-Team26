@@ -547,6 +547,9 @@ public class DriverService : IDriverService
     {
         try
         {
+            Driver driver = await GetDriverByDriverId(driverId)
+                ?? throw new($"Could not find driver");
+
             await using MySqlConnection conn = new(_dbConnection);
             conn.Open();
             MySqlCommand command = conn.CreateCommand();
@@ -569,9 +572,10 @@ public class DriverService : IDriverService
                 driverId, pointChangeRequest.PointChange);
 
             await _notificationService.CreateNotification(
-                driverId,
+                driver.UserData.Id,
                 $"Your points have been updated by {pointChangeRequest.PointChange} points for the following reason: {pointChangeRequest.ChangeReason}",
-                NotificationType.PointsChange
+                NotificationType.PointsChange,
+                driver
             );
 
             return true;
