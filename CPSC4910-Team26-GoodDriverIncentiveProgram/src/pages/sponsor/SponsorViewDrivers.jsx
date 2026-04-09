@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import PageTitle from "../../components/PageTitle";
 import apiService from "../../services/api";
 import "../../css/SponsorDashboard.css";
+import { useImpersonation } from "../../hooks/useImpersonation";
 
 function SponsorViewDrivers() {
   const [drivers, setDrivers] = useState([]);
@@ -27,6 +28,8 @@ function SponsorViewDrivers() {
   });
   const [saving, setSaving] = useState(false);
 
+  const { impersonate } = useImpersonation();
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -37,7 +40,6 @@ function SponsorViewDrivers() {
           navigate("/About");
           return;
         }
-
         // Get sponsor's organization ID
         // You'll need to determine how to get this - maybe from user info?
         const sponsorInfo = await apiService.getSponsorInfo();
@@ -66,6 +68,15 @@ function SponsorViewDrivers() {
     };
     fetchDrivers();
   }, [navigate]);
+
+  const handleImpersonateDriver = async (driver) => {
+    await impersonate({
+      userId: driver.userData.id,
+      username: driver.userData.username,
+      role: "driver",
+      targetPath: "/DriverDashboard",
+    });
+  };
 
   const handleAdjustPoints = async (driver) => {
     const pointChangeStr = prompt(
@@ -496,6 +507,23 @@ function SponsorViewDrivers() {
                         flexShrink: 0,
                       }}
                     >
+                      <button
+                        onClick={() => handleImpersonateDriver(driver)}
+                        style={{
+                          padding: "0.5rem 1.1rem",
+                          background: "rgba(102,126,234,0.12)",
+                          color: "#157528",
+                          border: "1px solid rgba(102,126,234,0.3)",
+                          borderRadius: "7px",
+                          cursor: "pointer",
+                          fontWeight: 600,
+                          fontSize: "0.875rem",
+                          transition: "all 0.15s",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        Impersonate
+                      </button>
                       <button
                         onClick={() => handleAdjustPoints(driver)}
                         disabled={adjustingDriver === driver.driverId}

@@ -1,4 +1,5 @@
 import { ApplicationLoadBalancedServiceRecordType } from "aws-cdk-lib/aws-ecs-patterns";
+import { Authorization } from "aws-cdk-lib/aws-events";
 
 const BASE_URL = "https://team26api.cpsc4911.com";//"http://localhost:5177";
 
@@ -1331,6 +1332,29 @@ const apiService = {
       return await handleResponse(response);
     } catch (error) {
       console.error("Failed to get orders.", error);
+      throw error;
+    }
+  },
+
+  impersonateUser: async (userId) => {
+    try {
+      const token = await apiService.getToken();
+      if (!token) {
+        throw new Error("No authentication token found.");
+      }
+      const response = await fetch(`${BASE_URL}/Auth/Login/${userId}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-type": "application/json",
+        },
+        body: JSON.stringify({
+          userId,
+        }),
+      });
+      return await handleResponse(response);
+    } catch (error) {
+      console.error("Failed to login as user.", error);
       throw error;
     }
   },

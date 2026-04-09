@@ -3,6 +3,7 @@ import apiService from "../../services/api";
 import PageTitle from "../../components/PageTitle";
 import { useNavigate } from "react-router-dom";
 import "../../css/AdminDashboard.css";
+import { useImpersonation } from "../../hooks/useImpersonation";
 
 function AdminViewDrivers() {
   const [drivers, setDrivers] = useState([]);
@@ -27,6 +28,8 @@ function AdminViewDrivers() {
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [historyDriverId, setHistoryDriverId] = useState(null);
 
+  const { impersonate } = useImpersonation();
+
   useEffect(() => {
     const fetchDrivers = async () => {
       try {
@@ -49,6 +52,15 @@ function AdminViewDrivers() {
 
     fetchDrivers();
   }, []);
+
+  const handleImpersonateDriver = async (driver) => {
+    await impersonate({
+      userId: driver.userData.id,
+      username: driver.userData.username,
+      role: "driver",
+      targetPath: "/DriverDashboard",
+    });
+  };
 
   // Handle view driver details
   const handleViewDriver = async (driver) => {
@@ -392,6 +404,22 @@ function AdminViewDrivers() {
                           flexWrap: "wrap",
                         }}
                       >
+                        <button
+                          onClick={() => handleImpersonateDriver(driver)}
+                          style={{
+                            padding: "0.25rem 0.7rem",
+                            background: "rgba(102,126,234,0.12)",
+                            color: "#297512",
+                            border: "1px solid rgba(102,126,234,0.3)",
+                            borderRadius: "6px",
+                            cursor: "pointer",
+                            fontSize: "0.8rem",
+                            fontWeight: 600,
+                            transition: "all 0.15s",
+                          }}
+                        >
+                          Impersonate
+                        </button>
                         <button
                           onClick={() => handleViewDriver(driver)}
                           style={{

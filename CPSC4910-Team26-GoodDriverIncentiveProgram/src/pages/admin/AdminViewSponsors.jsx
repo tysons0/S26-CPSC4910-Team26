@@ -3,6 +3,7 @@ import apiService from "../../services/api";
 import PageTitle from "../../components/PageTitle";
 import { useNavigate } from "react-router-dom";
 import "../../css/AdminDashboard.css";
+import { useImpersonation } from "../../hooks/useImpersonation";
 
 function AdminViewSponsors() {
   const [sponsors, setSponsors] = useState([]);
@@ -22,6 +23,8 @@ function AdminViewSponsors() {
   });
   const [saving, setSaving] = useState(false);
   const [viewingSponsor, setViewingSponsor] = useState(null);
+
+  const { impersonate } = useImpersonation();
 
   useEffect(() => {
     const fetchSponsors = async () => {
@@ -45,6 +48,15 @@ function AdminViewSponsors() {
 
     fetchSponsors();
   }, []);
+
+  const handleImpersonateSponsor = async (sponsor) => {
+    await impersonate({
+      userId: sponsor.userData.id,
+      username: sponsor.userData.username,
+      role: "sponsor",
+      targetPath: "/SponsorDashboard",
+    });
+  };
 
   // Handle view sponsor details
   const handleViewSponsor = async (sponsor) => {
@@ -350,6 +362,22 @@ function AdminViewSponsors() {
                           flexWrap: "wrap",
                         }}
                       >
+                        <button
+                          onClick={() => handleImpersonateSponsor(sponsor)}
+                          style={{
+                            padding: "0.25rem 0.7rem",
+                            background: "rgba(102,126,234,0.12)",
+                            color: "#297512",
+                            border: "1px solid rgba(102,126,234,0.3)",
+                            borderRadius: "6px",
+                            cursor: "pointer",
+                            fontSize: "0.8rem",
+                            fontWeight: 600,
+                            transition: "all 0.15s",
+                          }}
+                        >
+                          Impersonate
+                        </button>
                         <button
                           onClick={() => handleViewSponsor(sponsor)}
                           style={{

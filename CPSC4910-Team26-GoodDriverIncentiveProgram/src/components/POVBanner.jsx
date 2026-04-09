@@ -1,7 +1,32 @@
 import { useNavigate } from "react-router-dom";
+import { useImpersonation } from "../hooks/useImpersonation";
 
 function PovBanner() {
   const navigate = useNavigate();
+  const { exitImpersonation, isImpersonating } = useImpersonation();
+
+  if (isImpersonating()) {
+    const impersonatorRole = sessionStorage.getItem("impersonator_role");
+    const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+
+    const handleExit = () => {
+      const returnPath = exitImpersonation();
+      navigate(returnPath);
+    };
+
+    return (
+      <div className="pov-banner pov-banner--impersonation">
+        <span>
+          🔐 <strong>Impersonating:</strong> {currentUser.username} (
+          {currentUser.role}) — logged in as {impersonatorRole}
+        </span>
+        <button className="pov-exit-btn" onClick={handleExit}>
+          ✕ Exit Impersonation
+        </button>
+      </div>
+    );
+  }
+
   const povRole = sessionStorage.getItem("adminPovRole");
   const povSource = sessionStorage.getItem("povSource"); // "admin" or "sponsor"
 

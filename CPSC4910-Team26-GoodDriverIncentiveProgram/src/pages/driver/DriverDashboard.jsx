@@ -29,7 +29,7 @@ function DriverDashboard() {
   const [availability, setAvailability] = useState("All");
 
   const { addToCart, cartItems } = useCart();
-  const isInCart = cartItems.some(item => item.id === products.id);
+  const isInCart = cartItems.some((item) => item.id === products.id);
 
   const loadCatalogProducts = async (orgId) => {
     setProductLoading(true);
@@ -285,9 +285,7 @@ function DriverDashboard() {
           </Link>
         </div>
         <div style={{ display: "flex", gap: "10px" }}>
-          <button className="submit"
-            onClick={() => navigate("/OrderHistory")}
-            >
+          <button className="submit" onClick={() => navigate("/OrderHistory")}>
             Order History
           </button>
           <button
@@ -489,7 +487,9 @@ function DriverDashboard() {
                           product.availability === "Unavailable" ||
                           isInCart
                         }
-                        onClick={() => addToCart({...product, catalogItemId: product.id})}
+                        onClick={() =>
+                          addToCart({ ...product, catalogItemId: product.id })
+                        }
                       >
                         {isInCart ? "In Cart" : "Add to Cart"}
                       </button>
