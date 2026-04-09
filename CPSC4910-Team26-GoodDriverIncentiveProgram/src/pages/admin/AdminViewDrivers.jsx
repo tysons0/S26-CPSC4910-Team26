@@ -196,6 +196,49 @@ function AdminViewDrivers() {
     }
   };
 
+  const handleEnableDriver = async (driver) => {
+    const userId = driver.userData?.id;
+
+    if (!userId) {
+      alert("Could not find user ID for this driver.");
+      return;
+    }
+
+    if (!driver.userData?.disabled) {
+      alert("This driver is already active.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Are you sure you want to enable ${driver.userData?.username || "this driver"}?`,
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await apiService.enableUser(userId);
+
+      setDrivers((prevDrivers) =>
+        prevDrivers.map((d) =>
+          d.driverId === driver.driverId
+            ? {
+                ...d,
+                userData: {
+                  ...d.userData,
+                  disabled: false,
+                },
+              }
+            : d,
+        ),
+      );
+
+      alert("Driver enabled successfully.");
+    } catch (error) {
+      console.error("Error enabling driver:", error);
+      alert("Failed to enable driver: " + (error.message || "Unknown error"));
+    }
+  };
+
   // Cancel editing
   const handleCancelEdit = () => {
     setEditingDriver(null);
@@ -544,12 +587,22 @@ function AdminViewDrivers() {
                           Edit
                         </button>
                         <button
-                          onClick={() => handleDisableDriver(driver)}
+                          onClick={() =>
+                            driver.userData?.disabled
+                              ? handleEnableDriver(driver)
+                              : handleDisableDriver(driver)
+                          }
                           style={{
                             padding: "0.25rem 0.7rem",
-                            background: "rgba(231,76,60,0.1)",
-                            color: "#c0392b",
-                            border: "1px solid rgba(231,76,60,0.25)",
+                            background: driver.userData?.disabled
+                              ? "rgba(72,187,120,0.12)"
+                              : "rgba(231,76,60,0.1)",
+                            color: driver.userData?.disabled
+                              ? "#276749"
+                              : "#c0392b",
+                            border: driver.userData?.disabled
+                              ? "1px solid rgba(72,187,120,0.3)"
+                              : "1px solid rgba(231,76,60,0.25)",
                             borderRadius: "6px",
                             cursor: "pointer",
                             fontSize: "0.8rem",
@@ -557,7 +610,7 @@ function AdminViewDrivers() {
                             transition: "all 0.15s",
                           }}
                         >
-                          Disable
+                          {driver.userData?.disabled ? "Enable" : "Disable"}
                         </button>
                       </div>
                     </td>

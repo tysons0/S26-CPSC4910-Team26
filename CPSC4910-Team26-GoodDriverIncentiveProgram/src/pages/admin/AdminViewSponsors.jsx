@@ -168,6 +168,49 @@ function AdminViewSponsors() {
     }
   };
 
+  const handleEnableSponsor = async (sponsor) => {
+    const userId = sponsor.userData?.id;
+
+    if (!userId) {
+      alert("Could not find user ID for this sponsor.");
+      return;
+    }
+
+    if (!sponsor.userData?.disabled) {
+      alert("This sponsor is already active.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Are you sure you want to enable ${sponsor.userData?.username || "this sponsor"}?`,
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await apiService.enableUser(userId);
+
+      setSponsors((prevSponsors) =>
+        prevSponsors.map((s) =>
+          s.sponsorId === sponsor.sponsorId
+            ? {
+                ...s,
+                userData: {
+                  ...s.userData,
+                  disabled: false,
+                },
+              }
+            : s,
+        ),
+      );
+
+      alert("Sponsor enabled successfully.");
+    } catch (error) {
+      console.error("Error enabling sponsor:", error);
+      alert("Failed to enable sponsor: " + (error.message || "Unknown error"));
+    }
+  };
+
   // Cancel editing
   const handleCancelEdit = () => {
     setEditingSponsor(null);
@@ -496,12 +539,22 @@ function AdminViewSponsors() {
                           Edit
                         </button>
                         <button
-                          onClick={() => handleDisableSponsor(sponsor)}
+                          onClick={() =>
+                            sponsor.userData?.disabled
+                              ? handleEnableSponsor(sponsor)
+                              : handleDisableSponsor(sponsor)
+                          }
                           style={{
                             padding: "0.25rem 0.7rem",
-                            background: "rgba(231,76,60,0.1)",
-                            color: "#c0392b",
-                            border: "1px solid rgba(231,76,60,0.25)",
+                            background: sponsor.userData?.disabled
+                              ? "rgba(72,187,120,0.12)"
+                              : "rgba(231,76,60,0.1)",
+                            color: sponsor.userData?.disabled
+                              ? "#276749"
+                              : "#c0392b",
+                            border: sponsor.userData?.disabled
+                              ? "1px solid rgba(72,187,120,0.3)"
+                              : "1px solid rgba(231,76,60,0.25)",
                             borderRadius: "6px",
                             cursor: "pointer",
                             fontSize: "0.8rem",
@@ -509,7 +562,7 @@ function AdminViewSponsors() {
                             transition: "all 0.15s",
                           }}
                         >
-                          Disable
+                          {sponsor.userData?.disabled ? "Enable" : "Disable"}
                         </button>
                       </div>
                     </td>

@@ -1,7 +1,7 @@
 import { ApplicationLoadBalancedServiceRecordType } from "aws-cdk-lib/aws-ecs-patterns";
 import { Authorization } from "aws-cdk-lib/aws-events";
 
-const BASE_URL = "https://team26api.cpsc4911.com";//"http://localhost:5177";
+const BASE_URL = "https://team26api.cpsc4911.com"; //"http://localhost:5177";
 
 const handleResponse = async (response) => {
   if (!response.ok) {
@@ -271,6 +271,26 @@ const apiService = {
     } catch (error) {
       console.error("Update Profile Error:", error);
       throw error;
+    }
+  },
+
+  enableUser: async (userId, userData) => {
+    try {
+      const token = apiService.getToken();
+      if (!token) {
+        throw new Error("No authentication token found.");
+      }
+
+      const response = await fetch(`${BASE_URL}/User/${userId}/enable`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(userData),
+      });
+    } catch (error) {
+      console.error("Failed to enable user", error);
     }
   },
 
