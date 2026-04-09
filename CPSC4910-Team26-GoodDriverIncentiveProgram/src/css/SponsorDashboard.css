@@ -193,6 +193,43 @@ body.dark {
    MAIN AREA
    ============================================ */
 
+.pov-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+  background: linear-gradient(
+    135deg,
+    rgba(102, 126, 234, 0.15) 0%,
+    rgba(118, 75, 162, 0.15) 100%
+  );
+  border-bottom: 2px solid rgba(102, 126, 234, 0.4);
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.pov-banner strong {
+  color: var(--accent);
+}
+
+.pov-exit-btn {
+  margin-left: auto;
+  padding: 5px 14px;
+  border-radius: 6px;
+  border: 1px solid rgba(102, 126, 234, 0.5);
+  background: transparent;
+  color: var(--accent);
+  font-size: 0.825rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.pov-exit-btn:hover {
+  background: rgba(102, 126, 234, 0.12);
+}
 .sponsor-main {
   flex: 1;
   display: flex;

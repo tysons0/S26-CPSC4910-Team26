@@ -39,9 +39,14 @@ function Organizations() {
         }
 
         const userInfo = await apiService.getUserInfo();
+        //const driver = await apiService.getDriverByUserId(
+        //  userInfo?.userData?.id || userInfo?.id,
+        //);
         const driver = await apiService.getDriverByUserId(
           userInfo?.userData?.id || userInfo?.id,
         );
+        console.log("Full driver object:", driver);
+        console.log("Driver Org:", driver.organizationId);
         setDriverData(driver);
 
         const [orgs, applications] = await Promise.all([

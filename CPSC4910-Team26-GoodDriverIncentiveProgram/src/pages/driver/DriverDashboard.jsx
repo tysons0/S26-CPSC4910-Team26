@@ -4,7 +4,11 @@ import { useNavigate } from "react-router-dom";
 import PageTitle from "../../components/PageTitle";
 import apiService from "../../services/api";
 import "../../css/Dashboard.css";
+<<<<<<< HEAD
 import { useCart } from "../../context/CartContext";
+=======
+import PovBanner from "../../components/POVBanner";
+>>>>>>> bf8f6a4 (Added feature for Admins and Sponsors to let them switch POV.)
 
 function DriverDashboard() {
   const navigate = useNavigate();
@@ -76,29 +80,36 @@ function DriverDashboard() {
         setUser(userData);
         localStorage.setItem("user", JSON.stringify(userData));
 
+        //Fetches drivers data
         const driver = await apiService.getDriverByUserId(userData.userData.id);
         setDriverData(driver);
 
+        // Fetches Organizations and Drivers Applications
         const [allOrgs, myApplications] = await Promise.all([
           apiService.getOrganizations().catch(() => []),
           apiService.getMyApplications().catch(() => []),
         ]);
 
+        //Creates array for Orgs
         const orgsArray = Array.isArray(allOrgs)
           ? allOrgs
           : (allOrgs?.organizations ?? []);
+        //Creates array for Drivers applications
         const appsArray = Array.isArray(myApplications)
           ? myApplications
           : (myApplications?.applications ?? []);
 
+        //Set of acceptedOrgs
         const acceptedOrgIds = new Set();
 
+        //Checks if the Driver has been accepeted to an Org based on their applicationStatus
         const hasAcceptedAppForPrimaryOrg = appsArray.some(
           (a) =>
             String(a.orgId) === String(driver?.organizationId) &&
             (a.status || "").toLowerCase() === "accepted",
         );
 
+        //If an OrgId is in AccepetedApp then the OrgId is added into accepetedOrgs
         if (driver?.organizationId && hasAcceptedAppForPrimaryOrg) {
           acceptedOrgIds.add(String(driver.organizationId));
         }
@@ -107,6 +118,7 @@ function DriverDashboard() {
           .filter((a) => (a.status || "").toLowerCase() === "accepted")
           .forEach((a) => acceptedOrgIds.add(String(a.orgId)));
 
+        //Creates a membership for the Driver of the Orgs they are accepted to
         const memberships = orgsArray.filter((o) =>
           acceptedOrgIds.has(String(o.orgId)),
         );
@@ -225,6 +237,7 @@ function DriverDashboard() {
 
   return (
     <div className="catalog-page">
+      <PovBanner />
       <PageTitle title="Driver Catalog | Team 26" />
 
       <header className="catalog-header">
