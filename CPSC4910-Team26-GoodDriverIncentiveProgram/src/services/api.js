@@ -1,6 +1,6 @@
 import { ApplicationLoadBalancedServiceRecordType } from "aws-cdk-lib/aws-ecs-patterns";
 
-const BASE_URL = "http://localhost:5177";//"https://team26api.cpsc4911.com";
+const BASE_URL = "https://team26api.cpsc4911.com";//"http://localhost:5177";
 
 const handleResponse = async (response) => {
   if (!response.ok) {
