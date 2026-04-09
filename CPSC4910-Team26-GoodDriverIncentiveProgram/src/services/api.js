@@ -1385,7 +1385,11 @@ const apiService = {
       }
       const response = await fetch(`${BASE_URL}/Auth/Login/${userId}`, {
         method: "POST",
-	      body: JSON.stringify({
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-type": "application/json",
+        },
+        body: JSON.stringify({
           userId,
         }),
       });
