@@ -112,12 +112,19 @@ public class ReportController : ControllerBase
         return Ok(reportTable);
     }
 
-    [Authorize]
+    [Authorize (Roles = ADMIN)]
     [HttpPost("audit-log")]
     public async Task<ActionResult<ReportTable>> GetAuditLogReport([FromBody] AuditLogReportRequest reportRequest)
     {
+        int userId = _contextService.GetUserId(HttpContext);
+        User? user = await _userService.FindUserById(userId);
+        if (user is null)
+            return NotFound("User not found");
 
+        _logger.LogInformation("User {UserId} requested audit log report with parameters: {ReportRequest}",
+            userId, reportRequest);
 
-        return Ok();
+        ReportTable? reportTable = await _reportService.GetAuditLogReport(reportRequest);
+        return Ok(reportTable);
     }
 }

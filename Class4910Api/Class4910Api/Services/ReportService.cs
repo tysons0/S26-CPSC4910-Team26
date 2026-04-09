@@ -250,9 +250,143 @@ public class ReportService : IReportService
         }
     }
 
-    public Task<ReportTable?> GetAuditLogReport(AuditLogReportRequest request)
+    public async Task<ReportTable?> GetAuditLogReport(AuditLogReportRequest request)
     {
-        throw new NotImplementedException();
+        try
+        {
+            await using MySqlConnection conn = new(_dbConnection);
+            await conn.OpenAsync();
+
+            MySqlCommand command = conn.CreateCommand();
+
+            List<string> unionQueries = [];
+
+            bool includePasswordChanges = request.Type == LogType.All || request.Type == LogType.PasswordChanges;
+            bool includeLoginAttempts = request.Type == LogType.All || request.Type == LogType.LoginAttempts;
+            bool includeApplications = request.Type == LogType.All || request.Type == LogType.Applications;
+
+            if (includePasswordChanges)
+            {
+                unionQueries.Add(
+                    @"SELECT
+                    'Password Change' AS LogCategory,
+                    pc.ChangeDateUtc AS EventUtc,
+                    u.UserId AS UserId,
+                    u.UserName AS UserName,
+                    NULL AS OrgId,
+                    NULL AS SponsorId,
+                    'Password changed' AS Details
+                  FROM PasswordChanges pc
+                  JOIN Users u ON u.UserId = pc.UserId
+                  WHERE 1=1
+                    AND (@UserId IS NULL OR u.UserId = @UserId)");
+            }
+
+            if (includeLoginAttempts)
+            {
+                unionQueries.Add(
+                    @"SELECT
+                    'Login Attempt' AS LogCategory,
+                    la.LoginDate AS EventUtc,
+                    u.UserId AS UserId,
+                    la.UserName AS UserName,
+                    NULL AS OrgId,
+                    NULL AS SponsorId,
+                    CONCAT('Status: ', la.LoginStatus, ', IP: ', la.LoginIP) AS Details
+                  FROM LoginAttempts la
+                  LEFT JOIN Users u ON u.UserName = la.UserName
+                  WHERE 1=1
+                    AND (@UserId IS NULL OR u.UserId = @UserId)");
+            }
+
+            if (includeApplications)
+            {
+                unionQueries.Add(
+                    @"SELECT
+                    'Application' AS LogCategory,
+                    da.CreatedAtUtc AS EventUtc,
+                    du.UserId AS UserId,
+                    uu.UserName AS UserName,
+                    da.OrgId AS OrgId,
+                    da.SponsorId AS SponsorId,
+                    CONCAT(
+                        'Status: ', da.ApplicationStatus,
+                        CASE
+                            WHEN da.ChangeReason IS NOT NULL AND da.ChangeReason <> ''
+                                THEN CONCAT(', Reason: ', da.ChangeReason)
+                            WHEN da.DriverMessage IS NOT NULL AND da.DriverMessage <> ''
+                                THEN CONCAT(', Message: ', da.DriverMessage)
+                            ELSE ''
+                        END
+                    ) AS Details
+                  FROM DriverApplications da
+                  JOIN Drivers du ON du.DriverId = da.DriverId
+                  JOIN Users uu ON uu.UserId = du.UserId
+                  WHERE 1=1
+                    AND (@UserId IS NULL OR du.UserId = @UserId)
+                    AND (@OrgId IS NULL OR da.OrgId = @OrgId)
+                    AND (@SponsorId IS NULL OR da.SponsorId = @SponsorId)");
+            }
+
+            if (unionQueries.Count == 0)
+            {
+                _logger.LogWarning("No audit log query sections were selected for request[{Request}]", request);
+                return new ReportTable
+                {
+                    Headers = ["Category", "Event UTC", "User ID", "Username", "Org ID", "Sponsor ID", "Details"],
+                    Rows = []
+                };
+            }
+
+            command.CommandText = string.Join(" UNION ALL ", unionQueries) + " ORDER BY EventUtc DESC";
+
+            command.Parameters.AddWithValue("@UserId", request.UserId.HasValue ? request.UserId.Value : DBNull.Value);
+            command.Parameters.AddWithValue("@OrgId", request.OrgId.HasValue ? request.OrgId.Value : DBNull.Value);
+            command.Parameters.AddWithValue("@SponsorId", request.SponsorId.HasValue ? request.SponsorId.Value : DBNull.Value);
+
+            _logger.LogInformation("Executing Audit Log report query for request[{Request}]: {Query}",
+                request, command.CommandText);
+
+            await using DbDataReader reader = await command.ExecuteReaderAsync();
+
+            List<List<object>> rows = [];
+            while (await reader.ReadAsync())
+            {
+                rows.Add(
+                [
+                    reader["LogCategory"]?.ToString() ?? "N/A",
+                    reader["EventUtc"] is DBNull ? "N/A" : Convert.ToDateTime(reader["EventUtc"]),
+                    reader["UserId"] is DBNull ? "N/A" : Convert.ToInt32(reader["UserId"]),
+                    reader["UserName"]?.ToString() ?? "N/A",
+                    reader["OrgId"] is DBNull ? "N/A" : Convert.ToInt32(reader["OrgId"]),
+                    reader["SponsorId"] is DBNull ? "N/A" : Convert.ToInt32(reader["SponsorId"]),
+                    reader["Details"]?.ToString() ?? "N/A"
+                ]);
+            }
+
+            _logger.LogInformation("Found {Count} audit log records for request[{Request}]",
+                rows.Count, request);
+
+            return new ReportTable
+            {
+                Headers =
+                [
+                    "Category",
+                    "Event UTC",
+                    "User ID",
+                    "Username",
+                    "Org ID",
+                    "Sponsor ID",
+                    "Details"
+                ],
+                Rows = rows
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving Audit Log records for request[{Request}]", request);
+            return null;
+        }
     }
 
     private static ReportTable GetReportPointHistoryList(List<PointHistoryReportItem> historyRecords)

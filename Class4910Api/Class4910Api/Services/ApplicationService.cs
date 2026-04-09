@@ -291,7 +291,7 @@ public class ApplicationService : IApplicationService
                     command.Parameters.Clear();
                     command.CommandText =
                     @$"UPDATE {DriversTable.Name} 
-                       SET {OrgIdField.SelectName} = @OrgId
+                       SET {OrgIdField.SelectName} = @OrgId, {DriverPointsField.SelectName} = 0
                        WHERE {DriverIdField.SelectName} = @Driverid";
 
                     command.Parameters.Add(OrgIdField.GenerateParameter("@OrgId", application.OrgId));

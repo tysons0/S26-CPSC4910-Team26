@@ -41,7 +41,7 @@ function SponsorReport() {
           buildOrderReportRequest({
             driverId: driverId ? Number(driverId) : null,
             organizationId: orgId ? Number(orgId) : null,
-            ebayItemId: ebayItemId ? Number(ebayItemId) : null,
+            ebayItemId: ebayItemId ? ebayItemId : null,
             afterUtcDate: afterDate || null,
             beforeUtcDate: beforeDate || null,
             sortOptions: [

@@ -4,9 +4,11 @@ import PageTitle from "../../components/PageTitle";
 import reportService, {
   buildOrderReportRequest,
   buildPointHistoryRequest,
+  buildAuditLogReportRequest,
   OrderSortBy,
   PointHistorySortBy,
   SortDirection,
+  AuditLogType,
 } from "../../services/report";
 import ReportViewer from "../../components/ReportViewer";
 
@@ -18,7 +20,8 @@ function AdminReport() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // 🔽 Filters
+  // Filters
+  const [userId, setUserId] = useState("");
   const [driverId, setDriverId] = useState("");
   const [orgId, setOrgId] = useState("");
   const [sponsorId, setSponsorId] = useState("");
@@ -26,6 +29,7 @@ function AdminReport() {
   const [reasonLike, setReasonLike] = useState("");
   const [afterDate, setAfterDate] = useState("");
   const [beforeDate, setBeforeDate] = useState("");
+  const [auditLogType, setAuditLogType] = useState(AuditLogType.All);
 
   const runReport = async () => {
     try {
@@ -40,7 +44,7 @@ function AdminReport() {
           buildOrderReportRequest({
             driverId: driverId ? Number(driverId) : null,
             organizationId: orgId ? Number(orgId) : null,
-            ebayItemId: ebayItemId ? Number(ebayItemId) : null,
+            ebayItemId: ebayItemId ? ebayItemId : null,
             afterUtcDate: afterDate || null,
             beforeUtcDate: beforeDate || null,
             sortOptions: [
@@ -51,7 +55,7 @@ function AdminReport() {
             ],
           })
         );
-      } else {
+      } else if (reportType === "point") {
         result = await reportService.getPointHistoryReport(
           buildPointHistoryRequest({
             driverId: driverId ? Number(driverId) : null,
@@ -66,6 +70,15 @@ function AdminReport() {
                 direction: SortDirection.Desc,
               },
             ],
+          })
+        );
+      } else if (reportType === "audit") {
+        result = await reportService.getAuditLogReport(
+          buildAuditLogReportRequest({
+            userId: userId ? Number(userId) : null,
+            orgId: orgId ? Number(orgId) : null,
+            sponsorId: sponsorId ? Number(sponsorId) : null,
+            type: Number(auditLogType),
           })
         );
       }
@@ -83,22 +96,18 @@ function AdminReport() {
     <div className="profile-container">
       <PageTitle title="Admin Reports | Team 26" />
 
-      {/* Header */}
       <header className="catalog-header">
         <button onClick={() => navigate("/AdminDashboard")}>Back</button>
       </header>
 
-      {/* Title */}
       <div className="profile-header">
         <h1>Reports</h1>
         <div className="user-badge">Admin</div>
       </div>
 
-      {/* Controls */}
       <div className="profile-card">
         <h2 style={{ marginBottom: "1rem" }}>Run Report</h2>
 
-        {/* Report Type */}
         <div style={{ marginBottom: "1rem" }}>
           <select
             value={reportType}
@@ -106,10 +115,10 @@ function AdminReport() {
           >
             <option value="order">Order Report</option>
             <option value="point">Point History Report</option>
+            <option value="audit">Audit Log Report</option>
           </select>
         </div>
 
-        {/* Filters */}
         <div
           style={{
             display: "grid",
@@ -118,11 +127,21 @@ function AdminReport() {
             marginBottom: "1rem",
           }}
         >
-          <input
-            placeholder="Driver ID"
-            value={driverId}
-            onChange={(e) => setDriverId(e.target.value)}
-          />
+          {reportType === "audit" && (
+            <input
+              placeholder="User ID"
+              value={userId}
+              onChange={(e) => setUserId(e.target.value)}
+            />
+          )}
+
+          {(reportType === "order" || reportType === "point") && (
+            <input
+              placeholder="Driver ID"
+              value={driverId}
+              onChange={(e) => setDriverId(e.target.value)}
+            />
+          )}
 
           <input
             placeholder="Organization ID"
@@ -130,7 +149,7 @@ function AdminReport() {
             onChange={(e) => setOrgId(e.target.value)}
           />
 
-          {reportType === "point" && (
+          {(reportType === "point" || reportType === "audit") && (
             <input
               placeholder="Sponsor ID"
               value={sponsorId}
@@ -154,17 +173,33 @@ function AdminReport() {
             />
           )}
 
-          <input
-            type="date"
-            value={afterDate}
-            onChange={(e) => setAfterDate(e.target.value)}
-          />
+          {reportType === "audit" && (
+            <select
+              value={auditLogType}
+              onChange={(e) => setAuditLogType(Number(e.target.value))}
+            >
+              <option value={AuditLogType.All}>All Audit Logs</option>
+              <option value={AuditLogType.PasswordChanges}>Password Changes</option>
+              <option value={AuditLogType.LoginAttempts}>Login Attempts</option>
+              <option value={AuditLogType.Applications}>Applications</option>
+            </select>
+          )}
 
-          <input
-            type="date"
-            value={beforeDate}
-            onChange={(e) => setBeforeDate(e.target.value)}
-          />
+          {(reportType === "order" || reportType === "point") && (
+            <>
+              <input
+                type="date"
+                value={afterDate}
+                onChange={(e) => setAfterDate(e.target.value)}
+              />
+
+              <input
+                type="date"
+                value={beforeDate}
+                onChange={(e) => setBeforeDate(e.target.value)}
+              />
+            </>
+          )}
         </div>
 
         <button className="btn btn-primary" onClick={runReport}>
@@ -179,7 +214,6 @@ function AdminReport() {
         )}
       </div>
 
-      {/* Report Output */}
       <ReportViewer report={report} loading={loading} error={error} />
     </div>
   );
