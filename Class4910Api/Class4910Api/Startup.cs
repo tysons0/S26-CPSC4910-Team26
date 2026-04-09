@@ -545,11 +545,6 @@ public static class Startup
                         'AfterUpdateTrigger'
                     );
 
-                    INSERT INTO Notifications
-                    (CreatedAtUtc, NotificationMessage, NotificationSeen, NotificationType, UserId)
-                    VALUES
-                    (UTC_TIMESTAMP(), notificationMsg, 0, 'ApplicationStatusChanged', notificationUserId);
-
                 END IF;
             END;";
             command.ExecuteNonQuery();
@@ -572,11 +567,6 @@ public static class Startup
                 (`LogMessage`, `LogSource`, `LogType`)
                 VALUES
                 (logMsg, 'Password_Changes_AFTER_INSERT', 'AfterInsertTrigger');
-
-                INSERT INTO Notifications 
-                (UserId, NotificationMessage, NotificationType, CreatedAtUtc) 
-                VALUES 
-                (NEW.UserId, 'Your Password has changed.', 'PasswordChange', CURRENT_TIMESTAMP);
             END;";
             command.ExecuteNonQuery();
 
@@ -648,16 +638,6 @@ public static class Startup
                     (`LogMessage`, `LogSource`, `LogType`)
                     VALUES
                     (logMsg, 'Driver_PointHistory_AFTER_INSERT', 'AfterInsertTrigger');
-
-                    INSERT INTO Notifications
-                    (UserId, NotificationMessage, NotificationType, CreatedAtUtc)
-                    VALUES
-                    (
-                        driverUserId,
-                        CONCAT('Your points changed by ', NEW.PointDelta, '. Reason: ', NEW.Reason),
-                        'DriverPointsChanged',
-                        UTC_TIMESTAMP()
-                    );
 
                 END IF;
 
