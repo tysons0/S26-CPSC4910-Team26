@@ -16,14 +16,17 @@ public class DriverService : IDriverService
     private readonly ILogger<DriverService> _logger;
     private readonly string _dbConnection;
     private readonly IUserService _userService;
+    private readonly INotificationService _notificationService;
 
     public DriverService(ILogger<DriverService> logger, 
-                         IOptions<DatabaseConnection> databaseConnection, 
+                         IOptions<DatabaseConnection> databaseConnection,
+                         INotificationService notificationService,
                          IUserService userService)
     {
         _logger = logger;
         _dbConnection = databaseConnection.Value.Connection;
         _userService = userService;
+        _notificationService = notificationService;
     }
 
     public async Task<Driver?> GetDriverByDriverId(int driverId)
@@ -564,6 +567,13 @@ public class DriverService : IDriverService
 
             _logger.LogInformation("Created PointHistory Entry for Driver[{Id}]. PointChange[{Change}]",
                 driverId, pointChangeRequest.PointChange);
+
+            await _notificationService.CreateNotification(
+                driverId,
+                $"Your points have been updated by {pointChangeRequest.PointChange} points for the following reason: {pointChangeRequest.ChangeReason}",
+                NotificationType.PointsChange
+            );
+
             return true;
         }
         catch (Exception ex)

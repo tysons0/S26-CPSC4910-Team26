@@ -398,7 +398,8 @@ public class AuthService : IAuthService
                 DriverId = (int)command.LastInsertedId,
                 UserData = newUser,
                 Points = 0,
-                Addresses = []
+                Addresses = [],
+                NotifyForPointsChanged = false,
             };
         }
         catch (Exception ex)
