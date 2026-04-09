@@ -1,4 +1,4 @@
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import apiService from "../../services/api";
 import PageTitle from "../../components/PageTitle";
 import { useNavigate } from "react-router-dom";
@@ -131,16 +131,8 @@ function OrderHistory() {
             <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem" }}>
                 <button className="submit" onClick={() => navigate("/DriverDashboard")}>Back to Dashboard</button>
             </div>
-          ))}
         </div>
-      )}
-      <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem" }}>
-        <button className="submit" onClick={() => navigate("/DriverDashboard")}>
-          Back to Dashboard
-        </button>
-      </div>
-    </div>
-  );
+    );
 }
 
 export default OrderHistory;
