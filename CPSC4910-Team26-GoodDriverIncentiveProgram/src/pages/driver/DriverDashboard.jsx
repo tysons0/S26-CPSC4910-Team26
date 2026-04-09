@@ -4,11 +4,8 @@ import { useNavigate } from "react-router-dom";
 import PageTitle from "../../components/PageTitle";
 import apiService from "../../services/api";
 import "../../css/Dashboard.css";
-<<<<<<< HEAD
 import { useCart } from "../../context/CartContext";
-=======
 import PovBanner from "../../components/POVBanner";
->>>>>>> bf8f6a4 (Added feature for Admins and Sponsors to let them switch POV.)
 
 function DriverDashboard() {
   const navigate = useNavigate();
