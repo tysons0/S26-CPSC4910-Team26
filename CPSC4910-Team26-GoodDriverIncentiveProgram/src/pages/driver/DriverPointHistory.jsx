@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import PageTitle from "../../components/PageTitle";
 import apiService from "../../services/api";
 import "../../css/Dashboard.css";
+import PovBanner from "../../components/POVBanner";
 
 function DriverPointHistory() {
   const [pointHistory, setPointHistory] = useState([]);
@@ -66,6 +67,7 @@ function DriverPointHistory() {
 
   return (
     <div style={{ padding: "2rem" }}>
+      <PovBanner />
       <PageTitle title="Point History | Team 26" />
 
       <header className="catalog-header">

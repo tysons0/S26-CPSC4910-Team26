@@ -1,5 +1,28 @@
 /* ===== Wireframe-style Product Catalog Layout ===== */
+.pov-banner-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
 
+.pov-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+
+  background: #eef0ff;
+  border: 1px solid #cfd4ff;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 20px 0;
+}
+
+.pov-banner--impersonation {
+  background: #eef0ff;
+}
 .catalog-page {
   padding: 2rem;
 }

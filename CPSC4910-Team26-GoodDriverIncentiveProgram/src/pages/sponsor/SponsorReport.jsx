@@ -9,6 +9,7 @@ import reportService, {
   SortDirection,
 } from "../../services/report";
 import ReportViewer from "../../components/ReportViewer";
+import PovBanner from "../../components/POVBanner";
 
 function SponsorReport() {
   const navigate = useNavigate();
@@ -49,7 +50,7 @@ function SponsorReport() {
                 direction: SortDirection.Desc,
               },
             ],
-          })
+          }),
         );
       } else {
         result = await reportService.getPointHistoryReport(
@@ -66,7 +67,7 @@ function SponsorReport() {
                 direction: SortDirection.Desc,
               },
             ],
-          })
+          }),
         );
       }
 
@@ -81,6 +82,7 @@ function SponsorReport() {
 
   return (
     <div className="profile-container">
+      <PovBanner />
       <PageTitle title="Sponsor Reports | Team 26" />
 
       {/* Header */}

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import PageTitle from "../../components/PageTitle";
 import apiService from "../../services/api";
 import "../../css/SponsorDashboard.css";
+import PovBanner from "../../components/POVBanner";
 
 function SponsorApplications() {
   const [applications, setApplications] = useState([]);
@@ -118,6 +119,7 @@ function SponsorApplications() {
         transition: "background 0.3s, color 0.3s",
       }}
     >
+      <PovBanner />
       <PageTitle title="Manage Applications | Team 26" />
 
       <header className="catalog-header">

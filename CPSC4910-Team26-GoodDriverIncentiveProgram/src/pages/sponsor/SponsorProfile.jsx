@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import PageTitle from "../../components/PageTitle";
 import apiService from "../../services/api";
 import "../../css/Profile.css";
+import PovBanner from "../../components/POVBanner";
 
 function SponsorProfile() {
   const [user, setUser] = useState(null);
@@ -204,7 +205,11 @@ function SponsorProfile() {
       const updatedUser = { ...user, emailNotificationsEnabled: newValue };
       setUser(updatedUser);
       localStorage.setItem("user", JSON.stringify(updatedUser));
-      setSuccessMessage(newValue ? "Email notifications enabled." : "Email notifications disabled.");
+      setSuccessMessage(
+        newValue
+          ? "Email notifications enabled."
+          : "Email notifications disabled.",
+      );
     } catch (err) {
       setError("Failed to update email notification preference.");
     }
@@ -212,6 +217,7 @@ function SponsorProfile() {
 
   return (
     <div className="profile-container">
+      <PovBanner />
       <PageTitle title="Driver Profile | Team 26" />
 
       <header className="catalog-header">
@@ -511,14 +517,30 @@ function SponsorProfile() {
         </h2>
         <div className="profile-item">
           <label>Email Notifications</label>
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginTop: "0.5rem" }}>
-            <label style={{ display: "flex", alignItems: "center", cursor: "pointer", gap: "0.5rem" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "1rem",
+              marginTop: "0.5rem",
+            }}
+          >
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                cursor: "pointer",
+                gap: "0.5rem",
+              }}
+            >
               <input
                 type="checkbox"
                 checked={emailNotifs}
                 onChange={handleEmailNotifsToggle}
               />
-              {emailNotifs ? "Enabled — you will receive email notifications" : "Disabled — you will not receive email notifications"}
+              {emailNotifs
+                ? "Enabled — you will receive email notifications"
+                : "Disabled — you will not receive email notifications"}
             </label>
           </div>
         </div>

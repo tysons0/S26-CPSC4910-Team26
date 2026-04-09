@@ -4,6 +4,7 @@ import PageTitle from "../../components/PageTitle";
 import apiService from "../../services/api";
 import "../../css/SponsorDashboard.css";
 import { useImpersonation } from "../../hooks/useImpersonation";
+import PovBanner from "../../components/POVBanner";
 
 function SponsorViewDrivers() {
   const [drivers, setDrivers] = useState([]);
@@ -243,6 +244,7 @@ function SponsorViewDrivers() {
         transition: "background 0.3s, color 0.3s",
       }}
     >
+      <PovBanner />
       <PageTitle title="Manage Drivers | Team 26" />
 
       <header className="catalog-header">
