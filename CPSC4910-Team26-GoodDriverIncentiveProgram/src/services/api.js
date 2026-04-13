@@ -4,29 +4,28 @@ import { Authorization } from "aws-cdk-lib/aws-events";
 const BASE_URL = "https://team26api.cpsc4911.com"; //"http://localhost:5177";
 
 const handleResponse = async (response) => {
+  if (response.status === 401) {
+    window.dispatchEvent(new CustomEvent("session:expired"));
+    throw new Error("Session expired");
+  }
+
   if (!response.ok) {
     let errorText = "";
-
     try {
-      errorText = await response.text(); // try to read backend error
+      errorText = await response.text();
     } catch (e) {
       errorText = "Could not read error response";
     }
-
     console.error("API Error:", response.status, errorText);
-
     throw new Error(
       errorText || `Request failed with status ${response.status}`,
     );
   }
 
-  // Handle different response types safely
   const contentType = response.headers.get("content-type");
-
   if (contentType && contentType.includes("application/json")) {
     return await response.json();
   }
-
   return await response.text();
 };
 
@@ -1419,7 +1418,6 @@ const apiService = {
       throw error;
     }
   },
-
 };
 
 export default apiService;

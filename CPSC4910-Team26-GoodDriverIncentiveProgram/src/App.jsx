@@ -36,10 +36,12 @@ import { CartProvider } from "./context/CartContext";
 import AdminReport from "./pages/admin/AdminReport";
 import SponsorReport from "./pages/sponsor/SponsorReport";
 import SponsorOrderHistory from "./pages/sponsor/SponsorOrderHistory";
+import SessionGuard from "./components/SessionGuard";
 
 function App() {
   return (
     <CartProvider>
+      <SessionGuard />
       <NavBar />
       <Routes>
         {/* Public Routes */}
@@ -77,7 +79,10 @@ function App() {
         <Route path="/SponsorViewSponsors" element={<SponsorViewSponsors />} />
         <Route path="/EbayTest" element={<EbayTestDashboard />} />
         <Route path="/SponsorReport" element={<SponsorReport />} />
-        <Route path="/SponsorOrderHistory/:orgId" element={<SponsorOrderHistory />} />
+        <Route
+          path="/SponsorOrderHistory/:orgId"
+          element={<SponsorOrderHistory />}
+        />
 
         {/* Admin Routes */}
         <Route path="/AdminDashboard" element={<AdminDashboard />} />
