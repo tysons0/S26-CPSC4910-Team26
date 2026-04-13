@@ -26,6 +26,7 @@ export function useImpersonation() {
       localStorage.setItem("user", JSON.stringify(data.user));
       localStorage.setItem("userRole", data.user.role);
 
+      window.dispatchEvent(new Event("authChange"));
       navigate(targetPath);
     } catch (err) {
       console.error("Impersonation failed:", err);

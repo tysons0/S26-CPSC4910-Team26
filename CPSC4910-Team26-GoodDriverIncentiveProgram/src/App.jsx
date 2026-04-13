@@ -46,6 +46,7 @@ function App() {
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<About />} />
+        <Route path="/About" element={<About />} />
         <Route path="/Login" element={<Login />} />
         <Route path="/DriverSignUp" element={<DriverSignUp />} />
         <Route path="/Organizations" element={<Organizations />} />
