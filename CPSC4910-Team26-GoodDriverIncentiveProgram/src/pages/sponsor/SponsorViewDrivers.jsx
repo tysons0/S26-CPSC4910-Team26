@@ -227,6 +227,27 @@ function SponsorViewDrivers() {
     setPointHistory([]);
   };
 
+  const handleRemoveDriver = async (driver) => {
+    const username = driver.userData?.username || `Driver #${driver.driverId}`;
+
+    const confirmed = window.confirm(
+      `Are you sure you want to remove ${username} from your organization?`,
+    );
+    if (!confirmed) return;
+
+    try {
+      await apiService.leaveOrganization(driver.driverId, orgId);
+
+      // Remove driver from local state so the UI updates immediately
+      setDrivers((prev) => prev.filter((d) => d.driverId !== driver.driverId));
+
+      alert(`${username} has been removed from your organization.`);
+    } catch (error) {
+      console.error("Error removing driver:", error);
+      alert("Failed to remove driver: " + (error.message || "Unknown error"));
+    }
+  };
+
   const sortedDrivers = [...drivers].sort((a, b) => {
     const nameA =
       `${a.userData?.firstName || ""} ${a.userData?.lastName || ""}`.trim() ||
@@ -640,6 +661,24 @@ function SponsorViewDrivers() {
                         }}
                       >
                         Point History
+                      </button>
+
+                      <button
+                        onClick={() => handleRemoveDriver(driver)}
+                        style={{
+                          padding: "0.5rem 1.1rem",
+                          background: "rgba(231,76,60,0.10)",
+                          color: "#c0392b",
+                          border: "1px solid rgba(231,76,60,0.3)",
+                          borderRadius: "7px",
+                          cursor: "pointer",
+                          fontWeight: 600,
+                          fontSize: "0.875rem",
+                          transition: "all 0.15s",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        Remove from Org
                       </button>
                     </div>
                   </div>
