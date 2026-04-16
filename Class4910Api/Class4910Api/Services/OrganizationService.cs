@@ -177,7 +177,7 @@ public class OrganizationService : IOrganizationService
             await command.ExecuteNonQueryAsync();
 
             _logger.LogInformation("Updated Organization[{Id}] for Driver[{Id}] to NULL", orgId, driver.DriverId);
-            await _notificationService.CreateNotification(driver.UserData.Id, $"You have been removed from Organization[{orgId}]", NotificationType.RemovalFromOrganization);
+            await _notificationService.CreateNotification(driver.UserData.Id, $"You have been removed from {GetOrganizationById}", NotificationType.RemovalFromOrganization);
 
 
             return true;
