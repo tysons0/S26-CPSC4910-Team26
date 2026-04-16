@@ -134,6 +134,7 @@ public static class Startup
         builder.Services.AddScoped<IDriverWishlistService, DriverWishlistService>();
         builder.Services.AddScoped<IOrderService, OrderService>();
         builder.Services.AddScoped<IReportService, ReportService>();
+        builder.Services.AddScoped<IBulkUploadService, BulkUploadService>();
         builder.Services.AddSingleton<IEmailService, EmailService>();
 
         builder.Services.AddHttpClient<IEbayService, EbayService>();
