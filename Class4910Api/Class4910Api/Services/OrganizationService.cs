@@ -225,6 +225,8 @@ public class OrganizationService : IOrganizationService
     public async Task<Organization> GetOrganizationFromReader(DbDataReader reader, string? readPrefix = null)
     {
         string pfx = readPrefix ?? "";
+        if (!string.IsNullOrWhiteSpace(pfx))
+            pfx += "_";
 
         int id = reader.GetInt32($"{pfx}{OrgIdField.Name}");
         string name = reader.GetString($"{pfx}{OrgNameField.Name}");
