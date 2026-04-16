@@ -149,8 +149,9 @@ public class DriverService : IDriverService
                 @$"SELECT {UsersTable.GetFields(userAlias)} , {DriversTable.GetFields(driverAlias)} 
                    FROM {UsersTable.Name} {userAlias}
                    JOIN {DriversTable.Name} {driverAlias} ON {userAlias}.{UserIdField.SelectName} = {driverAlias}.{UserIdField.SelectName}
-                   WHERE {driverAlias}.{OrgIdField.SelectName} = @DriverId";
-            command.Parameters.Add(OrgIdField.GenerateParameter("@DriverId", orgId));
+                   JOIN {OrgDriverMappingTable.Name} orgDriver ON orgDriver.{MappingDriverIdField.SelectName} = {driverAlias}.{DriverIdField.SelectName}
+                   WHERE orgDriver.{MappingOrgIdField.SelectName} = @OrgId";
+            command.Parameters.Add(MappingOrgIdField.GenerateParameter("@OrgId", orgId));
 
             await using DbDataReader reader = await command.ExecuteReaderAsync();
 
