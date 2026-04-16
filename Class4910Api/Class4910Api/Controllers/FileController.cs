@@ -31,13 +31,25 @@ public class FileController : ControllerBase
     [HttpPost("bulk-upload")]
     public async Task<ActionResult<BulkUploadResult>> BulkUpload([FromForm] BulkUploadRequest request, CancellationToken cancellationToken)
     {
+        UserRead? user = await _contextService.GetUserFromRequest(HttpContext);
+        if (user is null)
+        {
+            return Unauthorized();
+        }
+
+        _logger.LogInformation("Received bulk upload request from user {User}. File Size: {FileSize} bytes", user, request.File?.Length);
+
         UserRole userRole = _contextService.GetUserRole(HttpContext);
+
         if (request.File is null || request.File.Length == 0)
         {
             return BadRequest("A file is required.");
         }
 
         BulkUploadResult result = await _bulkUploadService.ProcessFileAsync(request.File, userRole, cancellationToken);
+
+        _logger.LogInformation("Bulk upload result for user {User}: {Result}", user, result);
+
         return Ok(result);
     }
 }
