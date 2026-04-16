@@ -5,5 +5,6 @@ public enum NotificationType
     NoType,
     ApplicationStatusChange,
     PointsChange,
-    Order
+    Order,
+    RemovalFromOrganization,
 }

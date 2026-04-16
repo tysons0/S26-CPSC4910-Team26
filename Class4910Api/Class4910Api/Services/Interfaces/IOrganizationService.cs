@@ -16,7 +16,7 @@ public interface IOrganizationService
 
     Task<List<Organization>?> GetOrganizations();
 
-    Task<bool> RemoveDriverFromOrganization(int driverId, int orgId);
+    Task<bool> RemoveDriverFromOrganization(Driver driver, int orgId);
 
     Task<Organization> GetOrganizationFromReader(DbDataReader reader, string? readPrefix = null);
 }

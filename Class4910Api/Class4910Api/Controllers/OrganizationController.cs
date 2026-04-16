@@ -168,7 +168,7 @@ public class OrganizationController : ControllerBase
         if (orgAccess != OrgAccess.ReadWrite && contextUserId != driver.UserData.Id)
             return Forbid();
 
-        bool removalResult = await _organizationService.RemoveDriverFromOrganization(driverId, orgId);
+        bool removalResult = await _organizationService.RemoveDriverFromOrganization(driver, orgId);
 
         if (!removalResult)
             return BadRequest();

@@ -14,11 +14,15 @@ public class OrganizationService : IOrganizationService
 {
     private readonly ILogger<OrganizationService> _logger;
     private readonly string _dbConnection;
+    private readonly INotificationService _notificationService;
 
-    public OrganizationService(ILogger<OrganizationService> logger, IOptions<DatabaseConnection> databaseConnection)
+    public OrganizationService(ILogger<OrganizationService> logger, 
+        IOptions<DatabaseConnection> databaseConnection, 
+        INotificationService notificationService)
     {
         _logger = logger;
         _dbConnection = databaseConnection.Value.Connection;
+        _notificationService = notificationService;
     }
 
     public async Task<Organization?> CreateOrganization(OrganizationCreationRequest creationRequest, int creatorUserId)
@@ -154,7 +158,7 @@ public class OrganizationService : IOrganizationService
         }
     }
 
-    public async Task<bool> RemoveDriverFromOrganization(int driverId, int orgId)
+    public async Task<bool> RemoveDriverFromOrganization(Driver driver, int orgId)
     {
         try
         {
@@ -167,17 +171,20 @@ public class OrganizationService : IOrganizationService
                    WHERE {MappingDriverIdField.SelectName} = @DriverId
                    AND {MappingOrgIdField.SelectName} = @OrgId
                 ";
-            command.Parameters.Add(MappingDriverIdField.GenerateParameter("@DriverId", driverId));
+            command.Parameters.Add(MappingDriverIdField.GenerateParameter("@DriverId", driver.DriverId));
             command.Parameters.Add(MappingOrgIdField.GenerateParameter("@OrgId", orgId));
 
             await command.ExecuteNonQueryAsync();
 
-            _logger.LogInformation("Updated Organization[{Id}] for Driver[{Id}] to NULL", orgId, driverId);
+            _logger.LogInformation("Updated Organization[{Id}] for Driver[{Id}] to NULL", orgId, driver.DriverId);
+            await _notificationService.CreateNotification(driver.UserData.Id, $"You have been removed from Organization[{orgId}]", NotificationType.RemovalFromOrganization);
+
+
             return true;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error removing driver[{Id}] from organization[{Id}]", driverId, orgId);
+            _logger.LogError(ex, "Error removing driver[{Id}] from organization[{Id}]", driver.DriverId, orgId);
             return false;
         }
     }
