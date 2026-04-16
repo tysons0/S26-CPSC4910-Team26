@@ -647,7 +647,7 @@ public static class Startup
                 (logMsg, 'Driver_PointHistory_AFTER_INSERT', 'AfterInsertTrigger');
 
                 UPDATE {OrgDriverMappingTable.Name}
-                SET {MappingDriverPointsField} = {MappingDriverPointsField} + NEW.PointDelta
+                SET {MappingDriverPointsField.SelectName} = {MappingDriverPointsField.SelectName} + NEW.PointDelta
                 WHERE {MappingDriverIdField.SelectName} = NEW.DriverId
                 AND   {MappingOrgIdField.SelectName} = NEW.OrgId;
 

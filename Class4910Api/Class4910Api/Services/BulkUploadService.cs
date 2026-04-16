@@ -24,6 +24,11 @@ public class BulkUploadService : IBulkUploadService
         _userService = userService;
         _organizationService = organizationService;
         _driverService = driverService;
+        _blankRequestData = new RequestData
+        {
+            ClientIP = System.Net.IPAddress.None,
+            UserAgent = "BulkUpload"
+        };
     }
 
     public async Task<BulkUploadResult> ProcessFileAsync(IFormFile file, UserRole uploadingUserRole,
@@ -115,6 +120,11 @@ public class BulkUploadService : IBulkUploadService
         {
             errors.Add($"Invalid Type '{row.Type}'. Must be 'O', 'D', or 'S'.");
             return errors;
+        }
+
+        if (row.UserName is null)
+        {
+            errors.Add("UserName is required for type 'D' and 'S'.");
         }
 
         if (row.Points.HasValue && string.IsNullOrWhiteSpace(row.ReasonForPoints))
@@ -214,8 +224,10 @@ public class BulkUploadService : IBulkUploadService
     {
         UserRequest driverRequest = new()
         {
-            UserName = row.UserName,
+            UserName = row.UserName ?? "",
             Password = "newPassword"
         };
+
+        
     }
 }

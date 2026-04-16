@@ -586,6 +586,7 @@ public class DriverService : IDriverService
 
     public async Task<bool> AddToDriverPointHistory(int driverId, int? sponsorId, PointChangeRequest pointChangeRequest)
     {
+        MySqlCommand command;
         try
         {
             Driver driver = await GetDriverByDriverId(driverId)
@@ -593,7 +594,7 @@ public class DriverService : IDriverService
 
             await using MySqlConnection conn = new(_dbConnection);
             conn.Open();
-            MySqlCommand command = conn.CreateCommand();
+            command = conn.CreateCommand();
 
             command.CommandText =
                 @$"INSERT INTO {DriverPointHistoryTable.Name}

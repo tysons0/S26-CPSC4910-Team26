@@ -10,7 +10,7 @@ public class PipeDelimitRow
 
     public string? LastName { get; set; } = string.Empty;
 
-    public string UserName => FirstName + LastName;
+    public string? UserName { get; set; }
 
     public string? Email { get; set; }
 
@@ -20,7 +20,7 @@ public class PipeDelimitRow
 
     public static PipeDelimitRow ParseLine(string line)
     {
-        var parts = line.Split('|');
+        string[] parts = line.Split('|');
 
         return new PipeDelimitRow
         {
@@ -28,9 +28,10 @@ public class PipeDelimitRow
             OrganizationName = parts.ElementAtOrDefault(1),
             FirstName = parts.ElementAtOrDefault(2),
             LastName = parts.ElementAtOrDefault(3),
-            Email = parts.ElementAtOrDefault(4),
-            Points = int.TryParse(parts.ElementAtOrDefault(5), out var p) ? p : null,
-            ReasonForPoints = parts.ElementAtOrDefault(6)
+            UserName = parts.ElementAtOrDefault(4),
+            Email = parts.ElementAtOrDefault(5),
+            Points = int.TryParse(parts.ElementAtOrDefault(6), out var p) ? p : null,
+            ReasonForPoints = parts.ElementAtOrDefault(7)
         };
     }
 }
