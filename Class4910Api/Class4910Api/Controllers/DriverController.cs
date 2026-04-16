@@ -240,14 +240,14 @@ public class DriverController : ControllerBase
             return Unauthorized();
         }
 
-        int oldPoints = driver.DriverOrgsAndPoints.FirstOrDefault(o => o.Org.OrgId == pointChangeRequest.OrgId).Points;
+        int oldPoints = driver.DriverOrgsAndPoints.FirstOrDefault(o => o.OrgId == pointChangeRequest.OrgId)!.Points;
         await _driverService.AddToDriverPointHistory(driverId, sponsor.SponsorId, pointChangeRequest);
         driver = await _driverService.GetDriverByDriverId(driverId);
 
         bool changeMatches = 
             (oldPoints + pointChangeRequest.PointChange) 
             == 
-            driver!.DriverOrgsAndPoints.FirstOrDefault(o => o.Org.OrgId == pointChangeRequest.OrgId).Points;
+            driver!.DriverOrgsAndPoints.FirstOrDefault(o => o.OrgId == pointChangeRequest.OrgId)!.Points;
 
         if (changeMatches)
         {
@@ -255,7 +255,7 @@ public class DriverController : ControllerBase
         }
         else
         {
-            string err = $"Driver Point Update Failed [{oldPoints}]+[{pointChangeRequest.PointChange}] != [{driver!.DriverOrgsAndPoints.FirstOrDefault(o => o.Org.OrgId == pointChangeRequest.OrgId).Points}]";
+            string err = $"Driver Point Update Failed [{oldPoints}]+[{pointChangeRequest.PointChange}] != [{driver!.DriverOrgsAndPoints.FirstOrDefault(o => o.OrgId == pointChangeRequest.OrgId)!.Points}]";
             _logger.LogError("{Error}", err);
             return StatusCode(500, err);
         }

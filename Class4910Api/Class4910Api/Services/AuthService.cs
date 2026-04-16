@@ -186,7 +186,7 @@ public class AuthService : IAuthService
         }
     }
 
-    public async Task<OrgAccess> RetrieveUserOrgAccess(int userId, List<(Organization Org, int Points)> driverOrganizations)
+    public async Task<OrgAccess> RetrieveUserOrgAccess(int userId, List<DriverOrgRelationship> driverOrganizations)
     {
         User? user = await _userService.FindUserById(userId);
 
@@ -201,7 +201,7 @@ public class AuthService : IAuthService
 
         foreach (var orgPair in driverOrganizations)
         {
-            int orgId = orgPair.Org.OrgId;
+            int orgId = orgPair.OrgId;
 
             if (user.Role == UserRole.Admin)
             {

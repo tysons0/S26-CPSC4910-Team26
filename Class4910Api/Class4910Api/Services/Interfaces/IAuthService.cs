@@ -16,7 +16,7 @@ public interface IAuthService
     Task<Sponsor?> RegisterSponsorUser(UserRequest request, int orgId, int creatorUserId, RequestData registerData);
 
     Task<OrgAccess> RetrieveUserOrgAccess(int userId, int? orgId);
-    Task<OrgAccess> RetrieveUserOrgAccess(int userId, List<(Organization Org, int Points)> driverOrganizations);
+    Task<OrgAccess> RetrieveUserOrgAccess(int userId, List<DriverOrgRelationship> driverOrganizations);
 
 
     Task<bool> CanUserEditOtherUser(int editorUserId, int userId);

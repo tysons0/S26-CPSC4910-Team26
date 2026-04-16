@@ -223,7 +223,7 @@ public class DriverService : IDriverService
 
         User userData = await _userService.GetUserFromReader(reader, userReadPrefix);
 
-        List<(Organization Org, int Points)>? driverOrgsAndPoints = await GetDriverOrgAndPoints(driverId);
+        List<DriverOrgRelationship>? driverOrgsAndPoints = await GetDriverOrgAndPoints(driverId);
 
 
         return new Driver()
@@ -266,7 +266,7 @@ public class DriverService : IDriverService
         };
     }
 
-    private async Task<List<(Organization Org, int Points)>?> GetDriverOrgAndPoints(int driverId)
+    private async Task<List<DriverOrgRelationship>?> GetDriverOrgAndPoints(int driverId)
     {
         string mappingPfx = "orgDriverMapping";
         string orgPfx = "org";
@@ -285,7 +285,7 @@ public class DriverService : IDriverService
 
             command.Parameters.Add(DriverIdField.GenerateParameter("@DriverId", driverId));
 
-            List<(Organization Org, int Points)> driverOrgsAndPoints = [];
+            List<DriverOrgRelationship> driverOrgsAndPoints = [];
             await using DbDataReader reader = await command.ExecuteReaderAsync();
 
             while (await reader.ReadAsync()) 
@@ -298,7 +298,7 @@ public class DriverService : IDriverService
                     _logger.LogWarning("Could not find Org with id[{OrgId}] for driver[{DriverId}] when retrieving org and points", orgId, driverId);
                     continue;
                 }
-                driverOrgsAndPoints.Add((org, points));
+                driverOrgsAndPoints.Add(new DriverOrgRelationship { OrgId = orgId, Points = points });
             }
             return driverOrgsAndPoints;
         }
