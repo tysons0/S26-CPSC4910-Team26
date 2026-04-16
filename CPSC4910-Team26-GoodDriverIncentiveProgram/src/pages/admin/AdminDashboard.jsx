@@ -20,6 +20,9 @@ function AdminDashboard() {
 
   const [povRole, setPovRole] = useState(null);
 
+  const [uploading, setUploading] = useState(false);
+  const [uploadResult, setUploadResult] = useState("");
+
   const handleChange = (e) => {
     const value = e.target.value;
     if (value) {
@@ -76,6 +79,24 @@ function AdminDashboard() {
     if (role) {
       sessionStorage.setItem("adminPovRole", role);
       navigate(role === "driver" ? "/DriverDashboard" : "/SponsorDashboard");
+    }
+  };
+
+  const handleUploadUsers = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploading(true);
+    setUploadResult("");
+
+    try {
+      await apiService.uploadUsers(file);
+      setUploadResult("Users uploaded successfully!");
+    } catch (error) {
+      setUploadResult("Upload failed: " + (error.message || "Unknown error"));
+    } finally {
+      setUploading(false);
+      e.target.value = ""; // reset file input
     }
   };
 
@@ -220,18 +241,68 @@ function AdminDashboard() {
                     label: "Create Organization",
                     bg: "rgba(118,75,162,0.15)",
                   },
-                ].map(({ to, icon, label, bg }) => (
-                  <Link key={to} to={to} className="action-row">
-                    <div className="action-row-left">
-                      <div className="action-icon" style={{ background: bg }}>
-                        {icon}
+                  {
+                    icon: "📤",
+                    label: "Upload Users",
+                    bg: "rgba(102,126,234,0.15)",
+                    isUpload: true,
+                  },
+                ].map(({ to, icon, label, bg, isUpload }) =>
+                  isUpload ? (
+                    <div
+                      key="upload"
+                      className="action-row"
+                      onClick={() =>
+                        document.getElementById("admin-upload-input").click()
+                      }
+                      style={{
+                        cursor: uploading ? "not-allowed" : "pointer",
+                        opacity: uploading ? 0.6 : 1,
+                      }}
+                    >
+                      <div className="action-row-left">
+                        <div className="action-icon" style={{ background: bg }}>
+                          {icon}
+                        </div>
+                        {label}
                       </div>
-                      {label}
+                      <span style={{ color: "var(--text-alt)" }}>›</span>
                     </div>
-                    <span style={{ color: "var(--text-alt)" }}>›</span>
-                  </Link>
-                ))}
+                  ) : (
+                    <Link key={to} to={to} className="action-row">
+                      <div className="action-row-left">
+                        <div className="action-icon" style={{ background: bg }}>
+                          {icon}
+                        </div>
+                        {label}
+                      </div>
+                      <span style={{ color: "var(--text-alt)" }}>›</span>
+                    </Link>
+                  ),
+                )}
               </div>
+
+              <input
+                id="admin-upload-input"
+                type="file"
+                accept=".txt,.csv,.psv"
+                style={{ display: "none" }}
+                onChange={handleUploadUsers}
+              />
+
+              {uploadResult && (
+                <p
+                  style={{
+                    marginTop: "0.75rem",
+                    fontSize: "0.85rem",
+                    color: uploadResult.startsWith("Upload failed")
+                      ? "#fc8181"
+                      : "#68d391",
+                  }}
+                >
+                  {uploadResult}
+                </p>
+              )}
             </div>
 
             {/* View Users + Activity */}

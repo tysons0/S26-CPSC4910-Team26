@@ -97,27 +97,14 @@ function DriverDashboard() {
           : (myApplications?.applications ?? []);
 
         //Set of acceptedOrgs
-        const acceptedOrgIds = new Set();
-
-        //Checks if the Driver has been accepeted to an Org based on their applicationStatus
-        const hasAcceptedAppForPrimaryOrg = appsArray.some(
-          (a) =>
-            String(a.orgId) === String(driver?.organizationId) &&
-            (a.status || "").toLowerCase() === "accepted",
+        const memberOrgIdSet = new Set(
+          (driver?.driverOrgsAndPoints || [])
+            .map((entry) => String(entry.orgId))
+            .filter(Boolean),
         );
 
-        //If an OrgId is in AccepetedApp then the OrgId is added into accepetedOrgs
-        if (driver?.organizationId && hasAcceptedAppForPrimaryOrg) {
-          acceptedOrgIds.add(String(driver.organizationId));
-        }
-
-        appsArray
-          .filter((a) => (a.status || "").toLowerCase() === "accepted")
-          .forEach((a) => acceptedOrgIds.add(String(a.orgId)));
-
-        //Creates a membership for the Driver of the Orgs they are accepted to
         const memberships = orgsArray.filter((o) =>
-          acceptedOrgIds.has(String(o.orgId)),
+          memberOrgIdSet.has(String(o.orgId)),
         );
 
         setMemberOrgs(memberships);
@@ -362,12 +349,8 @@ function DriverDashboard() {
           </form>
 
           <button
-            onClick={() =>
-              organizationId && loadCatalogProducts(organizationId)
-            }
-            className="submit"
-            style={{ width: "100%", marginTop: "1rem" }}
-            disabled={productLoading || !organizationId}
+            onClick={() => activeOrgId && loadCatalogProducts(activeOrgId)}
+            disabled={productLoading || !activeOrgId}
           >
             {productLoading ? "Refreshing..." : "Refresh Catalog"}
           </button>

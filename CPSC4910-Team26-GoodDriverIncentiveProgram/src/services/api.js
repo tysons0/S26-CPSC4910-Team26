@@ -1418,6 +1418,30 @@ const apiService = {
       throw error;
     }
   },
+
+  uploadUsers: async (file) => {
+    try {
+      const token = await apiService.getToken();
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      const formData = new FormData();
+      formData.append("File", file);
+
+      const response = await fetch(`${BASE_URL}/File/bulk-upload`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+      return await handleResponse(response);
+    } catch (error) {
+      console.error("Failed to upload file.", error);
+      throw error;
+    }
+  },
 };
 
 export default apiService;

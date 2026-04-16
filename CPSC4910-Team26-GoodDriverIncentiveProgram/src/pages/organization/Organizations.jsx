@@ -46,7 +46,7 @@ function Organizations() {
           userInfo?.userData?.id || userInfo?.id,
         );
         console.log("Full driver object:", driver);
-        console.log("Driver Org:", driver.organizationId);
+        console.log("Driver org memberships:", driver.driverOrgsAndPoints);
         setDriverData(driver);
 
         const [orgs, applications] = await Promise.all([
@@ -94,14 +94,16 @@ function Organizations() {
 
   const memberOrgIds = useMemo(() => {
     const ids = new Set();
-    if (driverData?.organizationId) {
-      ids.add(String(driverData.organizationId));
+
+    if (Array.isArray(driverData?.driverOrgsAndPoints)) {
+      driverData.driverOrgsAndPoints.forEach((entry) => {
+        const orgId = entry?.organizationId ?? entry?.orgId ?? entry?.id;
+        if (orgId) ids.add(String(orgId));
+      });
     }
-    userApplications
-      .filter((a) => (a.status || "").toLowerCase() === "accepted")
-      .forEach((a) => ids.add(String(a.orgId)));
+
     return ids;
-  }, [driverData, userApplications]);
+  }, [driverData]);
 
   const handleApply = async (org) => {
     if (activeApp) {
@@ -190,12 +192,24 @@ function Organizations() {
         ),
       );
 
+      /*
       if (
         driverData &&
         String(driverData.organizationId) === String(org.orgId)
       ) {
         setDriverData((prev) => ({ ...prev, organizationId: null }));
       }
+        */
+
+      setDriverData((prev) => ({
+        ...prev,
+        driverOrgsAndPoints: Array.isArray(prev?.driverOrgsAndPoints)
+          ? prev.driverOrgsAndPoints.filter((entry) => {
+              const orgId = entry?.organizationId ?? entry?.orgId ?? entry?.id;
+              return String(orgId) !== String(org.orgId);
+            })
+          : [],
+      }));
 
       alert(`You have left ${org.name}.`);
     } catch (error) {
@@ -207,6 +221,14 @@ function Organizations() {
       setLeavingOrgId(null);
     }
   };
+
+  const memberOrganizations = useMemo(() => {
+    return organizations.filter((org) => memberOrgIds.has(String(org.orgId)));
+  }, [organizations, memberOrgIds]);
+
+  const availableOrganizations = useMemo(() => {
+    return organizations.filter((org) => !memberOrgIds.has(String(org.orgId)));
+  }, [organizations, memberOrgIds]);
 
   if (loading) {
     return (
@@ -338,86 +360,98 @@ function Organizations() {
         <p>No organizations available at this time.</p>
       ) : (
         <>
-          <h2>Organizations</h2>
-          <div className="sponsor-grid">
-            {organizations.map((org) => {
-              const appForOrg = appsByOrgId.get(String(org.orgId)) || null;
-              const isMember = memberOrgIds.has(String(org.orgId));
-
-              const canApply = !activeApp && !isMember;
-              const disabledReason = activeApp
-                ? "You already have an active application. Wait for a decision before applying again."
-                : isMember
-                  ? "You are already a member of this organization."
-                  : "";
-
-              return (
+          <h2 style={{ marginTop: "2rem" }}>My Organizations</h2>
+          {memberOrganizations.length === 0 ? (
+            <p>You are not currently in any organizations.</p>
+          ) : (
+            <div className="sponsor-grid">
+              {memberOrganizations.map((org) => (
                 <div key={org.orgId} style={{ position: "relative" }}>
-                  {/* Member badge */}
-                  {isMember && (
-                    <div
-                      style={{
-                        position: "absolute",
-                        top: "0.6rem",
-                        right: "0.6rem",
-                        backgroundColor: "#198754",
-                        color: "white",
-                        fontSize: "0.75rem",
-                        fontWeight: 700,
-                        padding: "0.25rem 0.6rem",
-                        borderRadius: "999px",
-                        zIndex: 1,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.3rem",
-                        boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
-                      }}
-                    >
-                      ✓ Member
-                    </div>
-                  )}
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "0.6rem",
+                      right: "0.6rem",
+                      backgroundColor: "#198754",
+                      color: "white",
+                      fontSize: "0.75rem",
+                      fontWeight: 700,
+                      padding: "0.25rem 0.6rem",
+                      borderRadius: "999px",
+                      zIndex: 1,
+                    }}
+                  >
+                    ✓ Member
+                  </div>
 
                   <OrganizationCard
                     organization={org}
-                    applicationForOrg={appForOrg}
-                    canApply={canApply}
-                    disabledReason={disabledReason}
-                    isApplying={applyingOrgId === org.orgId}
+                    applicationForOrg={null}
+                    canApply={false}
+                    disabledReason="You are already a member of this organization."
+                    isApplying={false}
                     onApply={handleApply}
                   />
 
-                  {/* Leave button — members only */}
-                  {isMember && (
-                    <div style={{ padding: "0 1rem 1rem" }}>
-                      <button
-                        onClick={() => handleLeaveOrg(org)}
-                        disabled={leavingOrgId === org.orgId}
-                        style={{
-                          width: "100%",
-                          padding: "0.5rem",
-                          backgroundColor:
-                            leavingOrgId === org.orgId ? "#aaa" : "#dc3545",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "6px",
-                          cursor:
-                            leavingOrgId === org.orgId
-                              ? "not-allowed"
-                              : "pointer",
-                          fontWeight: 600,
-                          fontSize: "0.9rem",
-                        }}
-                      >
-                        {leavingOrgId === org.orgId
-                          ? "Leaving..."
-                          : "Leave Organization"}
-                      </button>
-                    </div>
-                  )}
+                  <div style={{ padding: "0 1rem 1rem" }}>
+                    <button
+                      onClick={() => handleLeaveOrg(org)}
+                      disabled={leavingOrgId === org.orgId}
+                      style={{
+                        width: "100%",
+                        padding: "0.5rem",
+                        backgroundColor:
+                          leavingOrgId === org.orgId ? "#aaa" : "#dc3545",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "6px",
+                        cursor:
+                          leavingOrgId === org.orgId
+                            ? "not-allowed"
+                            : "pointer",
+                        fontWeight: 600,
+                        fontSize: "0.9rem",
+                      }}
+                    >
+                      {leavingOrgId === org.orgId
+                        ? "Leaving..."
+                        : "Leave Organization"}
+                    </button>
+                  </div>
                 </div>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+          )}
+
+          <h2 style={{ marginTop: "2rem" }}>Available Organizations</h2>
+          {availableOrganizations.length === 0 ? (
+            <p>No additional organizations available to apply to right now.</p>
+          ) : (
+            <div className="sponsor-grid">
+              {availableOrganizations.map((org) => {
+                const appForOrg = appsByOrgId.get(String(org.orgId)) || null;
+                const hasPendingForThisOrg =
+                  appForOrg && isActiveStatus(appForOrg.status);
+
+                return (
+                  <div key={org.orgId}>
+                    <OrganizationCard
+                      organization={org}
+                      applicationForOrg={appForOrg}
+                      canApply={!hasPendingForThisOrg}
+                      disabledReason={
+                        hasPendingForThisOrg
+                          ? "You have a pending application for this organization."
+                          : ""
+                      }
+                      isApplying={applyingOrgId === org.orgId}
+                      onApply={handleApply}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </>
       )}
     </div>

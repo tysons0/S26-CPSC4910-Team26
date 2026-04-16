@@ -25,6 +25,9 @@ function AdminViewSponsors() {
   const [saving, setSaving] = useState(false);
   const [viewingSponsor, setViewingSponsor] = useState(null);
 
+  const [uploading, setUploading] = useState(false);
+  const [uploadResult, setUploadResult] = useState("");
+
   const { impersonate } = useImpersonation();
 
   useEffect(() => {
@@ -211,6 +214,24 @@ function AdminViewSponsors() {
     }
   };
 
+  const handleUploadSponsors = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploading(true);
+    setUploadResult("");
+
+    try {
+      await apiService.uploadUsers(file);
+      setUploadResult("Sponsors uploaded successfully!");
+    } catch (error) {
+      setUploadResult("Upload failed: " + (error.message || "Unknown error"));
+    } finally {
+      setUploading(false);
+      e.target.value = ""; // reset file input
+    }
+  };
+
   // Cancel editing
   const handleCancelEdit = () => {
     setEditingSponsor(null);
@@ -354,7 +375,60 @@ function AdminViewSponsors() {
           <option value="status-asc">Active First</option>
           <option value="status-desc">Disabled First</option>
         </select>
+
+        {/* Upload Sponsors button */}
+        <input
+          id="upload-sponsors-input"
+          type="file"
+          accept=".txt,.csv,.psv"
+          style={{ display: "none" }}
+          onChange={handleUploadSponsors}
+        />
+        <button
+          style={{
+            marginLeft: "auto",
+            padding: "0.6rem 1rem",
+            borderRadius: "8px",
+            border: "1px solid rgba(102,126,234,0.3)",
+            background: "rgba(102,126,234,0.12)",
+            color: "#667eea",
+            fontWeight: 600,
+            fontSize: "0.9rem",
+            cursor: uploading ? "not-allowed" : "pointer",
+            opacity: uploading ? 0.6 : 1,
+            transition: "all 0.15s",
+          }}
+          disabled={uploading}
+          onClick={() =>
+            document.getElementById("upload-sponsors-input").click()
+          }
+          onMouseEnter={(e) => {
+            if (!uploading) {
+              e.currentTarget.style.background = "rgba(102,126,234,0.22)";
+              e.currentTarget.style.borderColor = "#667eea";
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "rgba(102,126,234,0.12)";
+            e.currentTarget.style.borderColor = "rgba(102,126,234,0.3)";
+          }}
+        >
+          {uploading ? "Uploading..." : "Upload Sponsors"}
+        </button>
       </div>
+
+      {uploadResult && (
+        <p
+          style={{
+            color: uploadResult.startsWith("Upload failed")
+              ? "#fc8181"
+              : "#68d391",
+            marginBottom: "0.5rem",
+          }}
+        >
+          {uploadResult}
+        </p>
+      )}
 
       {sponsors.length === 0 ? (
         <p style={{ color: "var(--text-alt)" }}>No sponsors found.</p>

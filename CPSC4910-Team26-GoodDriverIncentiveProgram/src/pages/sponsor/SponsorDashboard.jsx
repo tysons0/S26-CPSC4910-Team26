@@ -35,6 +35,9 @@ function SponsorDashboard() {
   const [updating, setUpdating] = useState(false);
   const [removing, setRemoving] = useState(null);
 
+  const [uploading, setUploading] = useState(false);
+  const [uploadResult, setUploadResult] = useState("");
+
   const [povRole, setPovRole] = useState(null);
 
   //Manually add products by ebay item ID
@@ -312,6 +315,24 @@ function SponsorDashboard() {
     );
   });
 
+  const handleUploadUsers = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploading(true);
+    setUploadResult("");
+
+    try {
+      await apiService.uploadUsers(file);
+      setUploadResult("Users uploaded successfully!");
+    } catch (error) {
+      setUploadResult("Upload failed: " + (error.message || "Unknown error"));
+    } finally {
+      setUploading(false);
+      e.target.value = ""; // reset file input
+    }
+  };
+
   const handlePovChange = (e) => {
     const role = e.target.value;
     if (role) {
@@ -340,7 +361,7 @@ function SponsorDashboard() {
           <div className="brand-dot">S</div>
           <span className="brand-name">SponsorDashboard</span>
         </div>
-      
+
         <span className="nav-section-label">Overview</span>
         <Link to="/SponsorDashboard" className="nav-item active">
           ⊞ Dashboard
@@ -932,9 +953,15 @@ function SponsorDashboard() {
 
             <div className="section-card">
               <div className="section-title">Manage Organization</div>
-              <Link to={`/SponsorOrderHistory/${sponsorOrgId}`} className="action-row">
+              <Link
+                to={`/SponsorOrderHistory/${sponsorOrgId}`}
+                className="action-row"
+              >
                 <div className="action-row-left">
-                  <div className="action-icon" style={{ background: "rgba(102,126,234,0.15)" }}>
+                  <div
+                    className="action-icon"
+                    style={{ background: "rgba(102,126,234,0.15)" }}
+                  >
                     📝
                   </div>{" "}
                   View Order History
