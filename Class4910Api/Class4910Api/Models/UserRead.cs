@@ -25,8 +25,6 @@ public class UserRead
 
     public required bool EmailNotificationsEnabled { get; init; }
 
-    public List<int> AssociatedOrgIds { get; set; } = [];
-
     public override string ToString()
     {
 
