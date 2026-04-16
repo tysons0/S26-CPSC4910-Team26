@@ -1,4 +1,5 @@
-﻿using Class4910Api.Models;
+﻿using System.Data.Common;
+using Class4910Api.Models;
 using Class4910Api.Models.Requests;
 
 namespace Class4910Api.Services.Interfaces;
@@ -16,4 +17,6 @@ public interface IOrganizationService
     Task<List<Organization>?> GetOrganizations();
 
     Task<bool> RemoveDriverFromOrganization(int driverId, int orgId);
+
+    Task<Organization> GetOrganizationFromReader(DbDataReader reader, string? readPrefix = null);
 }

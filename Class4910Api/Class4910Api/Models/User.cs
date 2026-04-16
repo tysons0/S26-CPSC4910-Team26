@@ -23,8 +23,6 @@ public class User
 
     public required bool EmailNotificationsEnabled { get; init; }
 
-    public List<int> AssociatedOrgIds { get; set; } = [];
-
     public override string ToString()
     {
         return this.ToReadFormat().ToString() ?? "";
@@ -46,7 +44,6 @@ public class User
             TimeZone = TimeZone,
             Country = Country,
             LastLoginUtc = LastLoginUtc,
-            AssociatedOrgIds = AssociatedOrgIds,
             Disabled = Disabled,
             EmailNotificationsEnabled = EmailNotificationsEnabled,
         };

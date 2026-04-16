@@ -268,7 +268,6 @@ public static class Startup
 	            {UserIdField.SelectName} int NOT NULL,
 	            {OrgIdField.SelectName} int NULL,
 
-	            {DriverPointsField.SelectName} int DEFAULT 0 NOT NULL,
 	            {DriverNotifyPointsChangedField.SelectName} BOOLEAN DEFAULT 1 NOT NULL,
 	            {DriverNotifyOrdersAddedField.SelectName} BOOLEAN DEFAULT 1 NOT NULL,
 	            {DriverStatusField.SelectName} varchar(50) DEFAULT '' NOT NULL,
@@ -470,6 +469,32 @@ public static class Startup
             )
             ";
             command.ExecuteNonQuery();
+
+            // TeamInformation Create
+            command.CommandText = $@"
+            CREATE TABLE IF NOT EXISTS {TeamInformationTable.Name} (
+	            {TeamInfoNumberField.SelectName} int NOT NULL,
+	            {TeamInfoVersionField.SelectName} varchar(100) NOT NULL,
+	            {TeamInfoReleaseDateField.SelectName} DATETIME(6) NOT NULL,
+
+	            {TeamInfoProductNameField.SelectName} varchar(100) NOT NULL,
+                {TeamInfoProductDescriptionField.SelectName} varchar(500) NOT NULL
+            )
+            ";
+            command.ExecuteNonQuery();
+
+            // OrgDriverMappingTable Create
+            command.CommandText = $@"
+            CREATE TABLE IF NOT EXISTS {OrgDriverMappingTable.Name} (
+                {MappingOrgIdField.SelectName} int NOT NULL,
+                {MappingDriverIdField.SelectName} int NOT NULL,
+                {MappingDriverPointsField.SelectName} int NOT NULL,
+                {MappingCreatedAtUtcField.SelectName} DATETIME(6) NOT NULL,
+
+                PRIMARY KEY ({MappingOrgIdField.SelectName}, {MappingDriverIdField.SelectName})
+            )
+            ";
+            command.ExecuteNonQuery();
         }
         catch (Exception ex)
         {
@@ -604,7 +629,7 @@ public static class Startup
             command.CommandText = "DROP TRIGGER IF EXISTS Driver_PointHistory_AFTER_INSERT;";
             command.ExecuteNonQuery();
 
-            command.CommandText = @"
+            command.CommandText = @$"
             CREATE TRIGGER Driver_PointHistory_AFTER_INSERT
             AFTER INSERT ON DriverPointHistory
             FOR EACH ROW
@@ -620,9 +645,10 @@ public static class Startup
                 VALUES
                 (logMsg, 'Driver_PointHistory_AFTER_INSERT', 'AfterInsertTrigger');
 
-                UPDATE Drivers
-                SET Points = Points + NEW.PointDelta
-                WHERE DriverId = NEW.DriverId;
+                UPDATE {OrgDriverMappingTable.Name}
+                SET {MappingDriverPointsField} = {MappingDriverPointsField} + NEW.PointDelta
+                WHERE {MappingDriverIdField.SelectName} = NEW.DriverId
+                AND   {MappingOrgIdField.SelectName} = NEW.OrgId;
 
                 SELECT UserId, NotifyForPointsChanged
                 INTO driverUserId, notifyEnabled

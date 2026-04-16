@@ -163,13 +163,12 @@ public class OrganizationService : IOrganizationService
             MySqlCommand command = conn.CreateCommand();
 
             command.CommandText =
-                @$"UPDATE {DriversTable.Name}
-                   SET {DriverOrgIdField.SelectName} = NULL
-                   WHERE {DriverIdField.SelectName} = @DriverId
-                   AND {DriverOrgIdField.SelectName} = @OrgId
+                @$"DELETE FROM {OrgDriverMappingTable.Name}
+                   WHERE {MappingDriverIdField.SelectName} = @DriverId
+                   AND {MappingOrgIdField.SelectName} = @OrgId
                 ";
-            command.Parameters.Add(DriverIdField.GenerateParameter("@DriverId", driverId));
-            command.Parameters.Add(DriverOrgIdField.GenerateParameter("@OrgId", orgId));
+            command.Parameters.Add(MappingDriverIdField.GenerateParameter("@DriverId", driverId));
+            command.Parameters.Add(MappingOrgIdField.GenerateParameter("@OrgId", orgId));
 
             await command.ExecuteNonQueryAsync();
 
@@ -223,7 +222,7 @@ public class OrganizationService : IOrganizationService
         }
     }
 
-    private async Task<Organization> GetOrganizationFromReader(DbDataReader reader, string? readPrefix = null)
+    public async Task<Organization> GetOrganizationFromReader(DbDataReader reader, string? readPrefix = null)
     {
         string pfx = readPrefix ?? "";
 

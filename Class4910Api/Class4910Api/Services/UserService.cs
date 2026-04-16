@@ -249,7 +249,7 @@ public class UserService : IUserService
                        {UserPhoneField.SelectName} = @PhoneNumber,
                        {UserTimeZoneField.SelectName} = @TimeZone,
                        {UserCountryField.SelectName} = @Country,
-                       {UserEmailNotificationsEnabled.SelectName} = COALESCE(@EmailNotificationsEnabled, {UserEmailNotificationsEnabled.SelectName})
+                       {UserEmailNotificationsEnabled.SelectName} = @EmailNotificationsEnabled
                    WHERE {UserIdField.SelectName} = @UserId";
         command.Parameters.Add(UserIdField.GenerateParameter("@UserId", userId));
         command.Parameters.Add(UserFirstNameField.GenerateParameter("@FirstName", userRequest.FirstName));
@@ -258,7 +258,7 @@ public class UserService : IUserService
         command.Parameters.Add(UserPhoneField.GenerateParameter("@PhoneNumber", userRequest.PhoneNumber));
         command.Parameters.Add(UserTimeZoneField.GenerateParameter("@TimeZone", userRequest.TimeZone));
         command.Parameters.Add(UserCountryField.GenerateParameter("@Country", userRequest.Country));
-        command.Parameters.AddWithValue("@EmailNotificationsEnabled", userRequest.EmailNotificationsEnabled.HasValue ? userRequest.EmailNotificationsEnabled.Value : DBNull.Value);
+        command.Parameters.Add(UserEmailNotificationsEnabled.GenerateParameter("@EmailNotificationsEnabled", userRequest.EmailNotificationsEnabled ?? false));
 
         int result = await command.ExecuteNonQueryAsync();
 

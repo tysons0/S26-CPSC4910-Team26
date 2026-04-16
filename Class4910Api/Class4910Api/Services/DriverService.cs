@@ -17,16 +17,18 @@ public class DriverService : IDriverService
     private readonly string _dbConnection;
     private readonly IUserService _userService;
     private readonly INotificationService _notificationService;
-
+    private readonly IOrganizationService _organizationService;
     public DriverService(ILogger<DriverService> logger, 
                          IOptions<DatabaseConnection> databaseConnection,
                          INotificationService notificationService,
-                         IUserService userService)
+                         IUserService userService,
+                         IOrganizationService organizationService)
     {
         _logger = logger;
         _dbConnection = databaseConnection.Value.Connection;
         _userService = userService;
         _notificationService = notificationService;
+        _organizationService = organizationService;
     }
 
     public async Task<Driver?> GetDriverByDriverId(int driverId)
@@ -213,27 +215,21 @@ public class DriverService : IDriverService
             pfx += "_";
 
         int driverId = reader.GetInt32($"{pfx}{DriverIdField.Name}");
-        string? orgIdBeforeParse = reader[$"{pfx}{OrgIdField.Name}"].ToString();
 
-        int? orgId = null;
-        if (!string.IsNullOrWhiteSpace(orgIdBeforeParse))
-        {
-            orgId = int.Parse(orgIdBeforeParse);
-        }
-
-        int points = reader.GetInt32($"{pfx}{DriverPointsField.Name}");
         bool notifyForPointsChanged = reader.GetBoolean($"{pfx}{DriverNotifyPointsChangedField.Name}");
 
         List<DriverAddress> addresses = await GetDriverAddresses(driverId) ?? [];
 
         User userData = await _userService.GetUserFromReader(reader, userReadPrefix);
 
+        List<(Organization Org, int Points)>? driverOrgsAndPoints = await GetDriverOrgAndPoints(driverId);
+
+
         return new Driver()
         {
             DriverId = driverId,
-            OrganizationId = orgId,
+            DriverOrgsAndPoints = driverOrgsAndPoints ?? [],
             UserData = userData.ToReadFormat(),
-            Points = points,
             NotifyForPointsChanged = notifyForPointsChanged,
             Addresses = addresses
         };
@@ -267,6 +263,49 @@ public class DriverService : IDriverService
             AddressLine2 = addressLine2,
             Primary = primary
         };
+    }
+
+    private async Task<List<(Organization Org, int Points)>?> GetDriverOrgAndPoints(int driverId)
+    {
+        string mappingPfx = "orgDriverMapping";
+        string orgPfx = "org";
+        try
+        {
+            await using MySqlConnection conn = new(_dbConnection);
+            await conn.OpenAsync();
+
+            MySqlCommand command = conn.CreateCommand();
+
+            command.CommandText =
+                @$"SELECT {OrgDriverMappingTable.GetFields(mappingPfx)} , {OrgsTable.GetFields(orgPfx)}
+                   FROM {OrgDriverMappingTable.Name} {mappingPfx}
+                   JOIN {OrgsTable.Name} {orgPfx} ON {orgPfx}.{OrgIdField.SelectName} = {mappingPfx}.{MappingOrgIdField.SelectName}
+                   WHERE {MappingDriverIdField.SelectName} = @DriverId";
+
+            command.Parameters.Add(DriverIdField.GenerateParameter("@DriverId", driverId));
+
+            List<(Organization Org, int Points)> driverOrgsAndPoints = [];
+            await using DbDataReader reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync()) 
+            {
+                int orgId = reader.GetInt32($"{mappingPfx}_{MappingOrgIdField.Name}");
+                int points = reader.GetInt32($"{mappingPfx}_{MappingDriverPointsField.Name}");
+                Organization? org = await _organizationService.GetOrganizationFromReader(reader, orgPfx);
+                if (org == null)
+                {
+                    _logger.LogWarning("Could not find Org with id[{OrgId}] for driver[{DriverId}] when retrieving org and points", orgId, driverId);
+                    continue;
+                }
+                driverOrgsAndPoints.Add((org, points));
+            }
+            return driverOrgsAndPoints;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving org and points for driver[{Id}]", driverId);
+            return null;
+        }
     }
 
     public async Task<PointHistoryRecord> GetPointHistoryRecordFromReader(DbDataReader reader, string? prefix = null)
@@ -556,12 +595,13 @@ public class DriverService : IDriverService
 
             command.CommandText =
                 @$"INSERT INTO {DriverPointHistoryTable.Name}
-                   ({DriverIdField.SelectName}, {SponsorIdField.SelectName}, 
+                   ({DriverIdField.SelectName}, {SponsorIdField.SelectName}, {OrgIdField.SelectName},
                     {PointHistoryReasonField.SelectName}, {PointHistoryDeltaField.SelectName}, {PointHistoryCreatedAtUtcField.SelectName})
                    VALUES
-                   (@DriverId, @SponsorId, @Reason, @PointChange, @UtcNow)";
+                   (@DriverId, @SponsorId, @OrgId, @Reason, @PointChange, @UtcNow)";
             command.Parameters.Add(DriverIdField.GenerateParameter("@DriverId", driverId));
             command.Parameters.Add(SponsorIdField.GenerateParameter("@SponsorId", sponsorId));
+            command.Parameters.Add(OrgIdField.GenerateParameter("@OrgId", pointChangeRequest.OrgId));
             command.Parameters.Add(PointHistoryReasonField.GenerateParameter("@Reason", pointChangeRequest.ChangeReason));
             command.Parameters.Add(PointHistoryDeltaField.GenerateParameter("@PointChange", pointChangeRequest.PointChange));
             command.Parameters.Add(PointHistoryCreatedAtUtcField.GenerateParameter("@UtcNow", DateTime.UtcNow));

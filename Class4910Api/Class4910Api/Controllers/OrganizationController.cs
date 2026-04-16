@@ -108,23 +108,12 @@ public class OrganizationController : ControllerBase
     public async Task<ActionResult<Organization>> GetOrganizationById(int orgId)
     {
         int userId = _contextService.GetUserId(HttpContext);
-        UserRole role = _contextService.GetUserRole(HttpContext);
 
-        if (role == UserRole.Sponsor)
+        OrgAccess access = await _authService.RetrieveUserOrgAccess(userId, orgId);
+
+        if (access == OrgAccess.NoAccess)
         {
-            Sponsor? sponsor = await _sponsorService.GetSponsorByUserId(userId);
-            if (sponsor is null || sponsor.OrganizationId != orgId)
-            {
-                return BadRequest("You do not have access to this organization");
-            }
-        }
-        else if (role == UserRole.Driver)
-        {
-            Driver? driver = await _driverService.GetDriverByUserId(userId);
-            if (driver is null || driver.OrganizationId != orgId)
-            {
-                return BadRequest("You do not have access to this organization");
-            }
+            return Forbid();
         }
 
         Organization? organization = await _organizationService.GetOrganizationById(orgId);
@@ -148,11 +137,6 @@ public class OrganizationController : ControllerBase
             Sponsor? sponsor = await _sponsorService.GetSponsorByUserId(userId);
             orgId = sponsor?.OrganizationId;
         }
-        else if (role == UserRole.Driver)
-        {
-            Driver? driver = await _driverService.GetDriverByUserId(userId);
-            orgId = driver?.OrganizationId;
-        }
 
         if (orgId is null)
         {
@@ -175,8 +159,8 @@ public class OrganizationController : ControllerBase
         Driver? driver = await _driverService.GetDriverByDriverId(driverId);
         if (driver is null)
             return NotFound("Driver not found");
-        if (driver.OrganizationId != orgId)
-            return BadRequest("Driver does not belong to the specified organization");
+        if (driver.IsInOrg(orgId) == false)
+            return BadRequest("Driver is not part of the specified organization");
 
         int contextUserId = _contextService.GetUserId(HttpContext);
 

@@ -113,20 +113,17 @@ namespace Class4910Api.Services
                         throw new Exception("Failed to insert order item.");
                     }
                 }
-                PointChangeRequest pointChange = new PointChangeRequest
+                PointChangeRequest pointChange = new()
                 {
                     PointChange = -totalPoints,
+                    OrgId = request.OrgId,
                     ChangeReason = $"Order #{orderId} placed"
                 };
-                string pointHistorySql = @"
-                                    INSERT INTO DriverPointHistory (DriverId, SponsorId, Reason, PointDelta, CreatedAtUTC)
-                                    VALUES (@DriverId, @SponsorId, @Reason, @PointDelta, UTC_TIMESTAMP());";
-                using var phCmd = new MySqlCommand(pointHistorySql, conn, (MySqlTransaction)transaction);
-                phCmd.Parameters.AddWithValue("@DriverId", request.DriverId);
-                phCmd.Parameters.AddWithValue("@SponsorId", DBNull.Value);
-                phCmd.Parameters.AddWithValue("@Reason", pointChange.ChangeReason);
-                phCmd.Parameters.AddWithValue("@PointDelta", pointChange.PointChange);
-                await phCmd.ExecuteNonQueryAsync();
+
+                bool addedToPointHistory = await _driverService.AddToDriverPointHistory(request.DriverId, null, pointChange);
+                if (addedToPointHistory == false)
+                    throw new Exception("Failed to add to driver point history.");
+
                 await transaction.CommitAsync();
 
                 await _notificationService.CreateNotification(driver.UserData.Id,

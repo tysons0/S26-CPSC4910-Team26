@@ -2,6 +2,7 @@
 
 public class PointChangeRequest
 {
-    public int PointChange { get; set; }
+    public required int OrgId { get; set; }
+    public required int PointChange { get; set; }
     public string ChangeReason { get; set; } = string.Empty;
 }

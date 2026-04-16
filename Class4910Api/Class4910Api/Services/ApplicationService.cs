@@ -290,9 +290,9 @@ public class ApplicationService : IApplicationService
                 {
                     command.Parameters.Clear();
                     command.CommandText =
-                    @$"UPDATE {DriversTable.Name} 
-                       SET {OrgIdField.SelectName} = @OrgId, {DriverPointsField.SelectName} = 0
-                       WHERE {DriverIdField.SelectName} = @Driverid";
+                    @$"INSERT INTO {OrgDriverMappingTable.Name} 
+                       ({MappingOrgIdField.SelectName}, {MappingDriverIdField.SelectName}, {MappingDriverPointsField.SelectName}, {MappingCreatedAtUtcField.SelectName})
+                       VALUES (@OrgId, @DriverId, 0, UTC_TIMESTAMP())";
 
                     command.Parameters.Add(OrgIdField.GenerateParameter("@OrgId", application.OrgId));
                     command.Parameters.Add(DriverIdField.GenerateParameter("@DriverId", application.DriverId));

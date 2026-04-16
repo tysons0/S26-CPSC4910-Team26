@@ -116,12 +116,6 @@ public static class ConstantValues
     public static readonly DatabaseField DriverIdField =
         new() { Name = "DriverId", Type = MySqlDbType.Int32, Nullable = false };
 
-    public static readonly DatabaseField DriverOrgIdField =
-        new() { Name = "OrgId", Type = MySqlDbType.Int32, Nullable = true };
-
-    public static readonly DatabaseField DriverPointsField =
-        new() { Name = "Points", Type = MySqlDbType.Int32, Nullable = false };
-
     public static readonly DatabaseField DriverNotifyPointsChangedField =
         new() { Name = "NotifyForPointsChanged", Type = MySqlDbType.Bit, Nullable = false };
 
@@ -138,14 +132,32 @@ public static class ConstantValues
         [
             DriverIdField,
             UserIdField,
-            DriverOrgIdField,
-            DriverPointsField,
             DriverNotifyPointsChangedField,
             DriverNotifyOrdersAddedField,
             DriverStatusField
         ]
     };
 
+    #endregion
+
+    #region OrgDriverMapping
+    public static readonly DatabaseField MappingOrgIdField =
+        new() { Name = OrgIdField.Name, Type = MySqlDbType.Int32, Nullable = false };
+
+    public static readonly DatabaseField MappingDriverIdField =
+        new() { Name = DriverIdField.Name, Type = MySqlDbType.Int32, Nullable = false };
+
+    public static readonly DatabaseField MappingDriverPointsField =
+        new() { Name = "Points", Type = MySqlDbType.Int32, Nullable = false };
+
+    public static readonly DatabaseField MappingCreatedAtUtcField =
+        new() { Name = "CreatedAtUtc", Type = MySqlDbType.DateTime, Nullable = false };
+
+    public static readonly DatabaseTable OrgDriverMappingTable = new()
+    {
+        Name = "OrgDriverMapping",
+        Fields = [MappingOrgIdField, MappingDriverIdField, MappingDriverPointsField, MappingCreatedAtUtcField]
+    };
     #endregion
 
     #region DriverAddresses
@@ -224,6 +236,7 @@ public static class ConstantValues
         Fields =
         [
             PointHistoryIdField,
+            OrgIdField,
             DriverIdField,
             SponsorIdField,
             PointHistoryReasonField,
@@ -478,7 +491,8 @@ public static class ConstantValues
         PasswordChangesTable,
         LoginAttemptsTable,
         SqlLoggingTable,
-        ApiLoggingTable
+        ApiLoggingTable,
+        OrgDriverMappingTable
     ];
 
     #endregion

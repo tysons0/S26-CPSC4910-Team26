@@ -134,7 +134,7 @@ public class DriverController : ControllerBase
             return NotFound($"No driver found with ID {userId}");
         }
 
-        OrgAccess orgAccess = await _authService.RetrieveUserOrgAccess(contextUserId, driver.OrganizationId);
+        OrgAccess orgAccess = await _authService.RetrieveUserOrgAccess(contextUserId, driver.DriverOrgsAndPoints);
 
         if (driver.UserData.Id != contextUserId && orgAccess is not OrgAccess.ReadWrite)
         {
@@ -231,7 +231,7 @@ public class DriverController : ControllerBase
             return BadRequest($"Could not find Driver with DriverId[{driverId}]");
         }
 
-        OrgAccess orgAccess = await _authService.RetrieveUserOrgAccess(contextUserId, driver?.OrganizationId);
+        OrgAccess orgAccess = await _authService.RetrieveUserOrgAccess(contextUserId, pointChangeRequest.OrgId);
 
         if (sponsor is null || orgAccess != OrgAccess.ReadWrite)
         {
@@ -240,11 +240,14 @@ public class DriverController : ControllerBase
             return Unauthorized();
         }
 
-        int oldPoints = driver!.Points;
+        int oldPoints = driver.DriverOrgsAndPoints.FirstOrDefault(o => o.Org.OrgId == pointChangeRequest.OrgId).Points;
         await _driverService.AddToDriverPointHistory(driverId, sponsor.SponsorId, pointChangeRequest);
         driver = await _driverService.GetDriverByDriverId(driverId);
 
-        bool changeMatches = (oldPoints + pointChangeRequest.PointChange) == driver!.Points;
+        bool changeMatches = 
+            (oldPoints + pointChangeRequest.PointChange) 
+            == 
+            driver!.DriverOrgsAndPoints.FirstOrDefault(o => o.Org.OrgId == pointChangeRequest.OrgId).Points;
 
         if (changeMatches)
         {
@@ -252,7 +255,7 @@ public class DriverController : ControllerBase
         }
         else
         {
-            string err = $"Driver Point Update Failed [{oldPoints}]+[{pointChangeRequest.PointChange}] != [{driver!.Points}]";
+            string err = $"Driver Point Update Failed [{oldPoints}]+[{pointChangeRequest.PointChange}] != [{driver!.DriverOrgsAndPoints.FirstOrDefault(o => o.Org.OrgId == pointChangeRequest.OrgId).Points}]";
             _logger.LogError("{Error}", err);
             return StatusCode(500, err);
         }
@@ -269,7 +272,7 @@ public class DriverController : ControllerBase
             return BadRequest($"Could not find Driver with DriverId[{driverId}]");
         }
 
-        OrgAccess orgAccess = await _authService.RetrieveUserOrgAccess(contextUserId, driver?.OrganizationId);
+        OrgAccess orgAccess = await _authService.RetrieveUserOrgAccess(contextUserId, driver.DriverOrgsAndPoints);
 
         if (orgAccess == OrgAccess.NoAccess)
         {

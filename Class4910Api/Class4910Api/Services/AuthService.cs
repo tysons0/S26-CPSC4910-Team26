@@ -134,6 +134,11 @@ public class AuthService : IAuthService
             return OrgAccess.NoAccess;
         }
 
+        if (orgId is null)
+        {
+            return OrgAccess.NoAccess;
+        }
+
         if (user.Role == UserRole.Admin)
         {
             _logger.LogInformation("Admin UserId {UserId} was granted access to edit Organization[{OrgId}].",
@@ -160,7 +165,7 @@ public class AuthService : IAuthService
         else if (user.Role == UserRole.Driver)
         {
             Driver? driver = await _driverService.GetDriverByUserId(userId);
-            bool hasAccess = (driver is not null && orgId == driver.OrganizationId);
+            bool hasAccess = (driver is not null && driver.IsInOrg((int)orgId));
             if (hasAccess)
             {
                 _logger.LogInformation("Driver UserId {UserId} was granted access to read Organization[{OrgId}].",
@@ -179,6 +184,73 @@ public class AuthService : IAuthService
             _logger.LogWarning("User: {UserData} was denied access to Organization[{OrgId}]", user, orgId);
             return OrgAccess.NoAccess;
         }
+    }
+
+    public async Task<OrgAccess> RetrieveUserOrgAccess(int userId, List<(Organization Org, int Points)> driverOrganizations)
+    {
+        User? user = await _userService.FindUserById(userId);
+
+        if (user is null)
+        {
+            _logger.LogWarning("UserId {UserId} attempted to access an Org, but could not find the user.",
+                userId);
+            return OrgAccess.NoAccess;
+        }
+
+        List<OrgAccess> accessLevels = [];
+
+        foreach (var orgPair in driverOrganizations)
+        {
+            int orgId = orgPair.Org.OrgId;
+
+            if (user.Role == UserRole.Admin)
+            {
+                _logger.LogInformation("Admin UserId {UserId} was granted access to edit Organization[{OrgId}].",
+                    userId, orgId);
+                return OrgAccess.ReadWrite;
+            }
+            else if (user.Role == UserRole.Sponsor)
+            {
+                Sponsor? sponsor = await _sponserService.GetSponsorByUserId(userId);
+                bool hasAccess = (sponsor is not null && orgId == sponsor.OrganizationId);
+                if (hasAccess)
+                {
+                    _logger.LogInformation("Sponsor UserId {UserId} was granted access to edit Organization[{OrgId}].",
+                        userId, orgId);
+                    accessLevels.Add(OrgAccess.ReadWrite);
+                }
+                else
+                {
+                    _logger.LogWarning("Sponsor UserId {UserId} was denied access to Organization[{OrgId}] because they are not a sponsor of the organization.",
+                        userId, orgId);
+                    accessLevels.Add(OrgAccess.ReadWrite);
+                }
+            }
+            else if (user.Role == UserRole.Driver)
+            {
+                Driver? driver = await _driverService.GetDriverByUserId(userId);
+                bool hasAccess = (driver is not null && driver.IsInOrg(orgId));
+                if (hasAccess)
+                {
+                    _logger.LogInformation("Driver UserId {UserId} was granted access to read Organization[{OrgId}].",
+                        userId, orgId);
+                    accessLevels.Add(OrgAccess.Read);
+                }
+                else
+                {
+                    _logger.LogWarning("Driver UserId {UserId} was denied access to read Organization[{OrgId}] because they are not a driver of the organization.",
+                        userId, orgId);
+                    accessLevels.Add(OrgAccess.NoAccess);
+                }
+            }
+            else
+            {
+                _logger.LogWarning("User: {UserData} was denied access to Organization[{OrgId}]", user, orgId);
+                accessLevels.Add(OrgAccess.NoAccess);
+            }
+        }
+
+        return accessLevels.Count != 0 ? accessLevels.Max() : OrgAccess.NoAccess;
     }
 
     public async Task<bool> CanUserEditOtherUser(int editorUserId, int userId)
@@ -203,7 +275,7 @@ public class AuthService : IAuthService
                     ?? throw new("Editor User was identified as a sponsor but could not be found");
                 Driver? editeeDriver = await _driverService.GetDriverByUserId(editeeUser.Id);
 
-                if (editingSponsor.OrganizationId == editeeDriver?.OrganizationId)
+                if (editeeDriver is not null && editeeDriver.IsInOrg(editingSponsor.OrganizationId))
                     return true;
             }
             else if (editorUser.Role == UserRole.Admin && editeeUser.Role != UserRole.Admin)
@@ -397,9 +469,9 @@ public class AuthService : IAuthService
             {
                 DriverId = (int)command.LastInsertedId,
                 UserData = newUser,
-                Points = 0,
                 Addresses = [],
                 NotifyForPointsChanged = false,
+                DriverOrgsAndPoints = []
             };
         }
         catch (Exception ex)
