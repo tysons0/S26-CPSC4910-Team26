@@ -6,9 +6,11 @@ public class PipeDelimitRow
 
     public string? OrganizationName { get; set; }
 
-    public string? FirstName { get; set; }
+    public string? FirstName { get; set; } = string.Empty;
 
-    public string? LastName { get; set; }
+    public string? LastName { get; set; } = string.Empty;
+
+    public string UserName => FirstName + LastName;
 
     public string? Email { get; set; }
 

@@ -11,6 +11,7 @@ public class BulkUploadService : IBulkUploadService
     private readonly IUserService _userService;
     private readonly IOrganizationService _organizationService;
     private readonly IDriverService _driverService;
+    private readonly RequestData _blankRequestData;
 
     public BulkUploadService(ILogger<BulkUploadService> logger,
                              IAuthService authService,
@@ -211,5 +212,10 @@ public class BulkUploadService : IBulkUploadService
 
     private async Task ProcessDriverRowAsync(PipeDelimitRow row, CancellationToken cancelToken)
     {
+        UserRequest driverRequest = new()
+        {
+            UserName = row.UserName,
+            Password = "newPassword"
+        };
     }
 }

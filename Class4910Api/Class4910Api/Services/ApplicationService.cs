@@ -288,19 +288,7 @@ public class ApplicationService : IApplicationService
                 // Update driver organization if approved
                 if (approve)
                 {
-                    command.Parameters.Clear();
-                    command.CommandText =
-                    @$"INSERT INTO {OrgDriverMappingTable.Name} 
-                       ({MappingOrgIdField.SelectName}, {MappingDriverIdField.SelectName}, {MappingDriverPointsField.SelectName}, {MappingCreatedAtUtcField.SelectName})
-                       VALUES (@OrgId, @DriverId, 0, UTC_TIMESTAMP())";
-
-                    command.Parameters.Add(OrgIdField.GenerateParameter("@OrgId", application.OrgId));
-                    command.Parameters.Add(DriverIdField.GenerateParameter("@DriverId", application.DriverId));
-
-                    _logger.LogInformation("Put Driver[{DriverId}] in Organization[{OrgId}]",
-                        application.DriverId, application.OrgId);
-
-                    await command.ExecuteNonQueryAsync();
+                    await _driverService.AddDriverToOrg(application.DriverId, application.OrgId);
                 }
 
                 // Send notification to driver about application status update

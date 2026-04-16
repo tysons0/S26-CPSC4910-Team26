@@ -1,13 +1,14 @@
-﻿using System.Data;
-using System.Data.Common;
-using System.IO.Pipelines;
-using Class4910Api.Configuration;
+﻿using Class4910Api.Configuration;
 using Class4910Api.Models;
 using Class4910Api.Models.Requests;
 using Class4910Api.Services.Interfaces;
 using Microsoft.Extensions.Options;
 using MySql.Data.MySqlClient;
+using System.Data;
+using System.Data.Common;
+using System.IO.Pipelines;
 using static Class4910Api.ConstantValues;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Class4910Api.Services;
 
@@ -658,6 +659,35 @@ public class DriverService : IDriverService
         {
             _logger.LogError(ex, "Error retrieving Driver point history records for driver[{Id}]", driverId);
             return null;
+        }
+    }
+
+    public async Task AddDriverToOrg(int driverId, int orgId)
+    {
+        try
+        {
+            await using MySqlConnection connection = new(_dbConnection);
+            await connection.OpenAsync();
+
+            MySqlCommand command = connection.CreateCommand();
+
+            command.CommandText =
+            @$"INSERT INTO {OrgDriverMappingTable.Name} 
+            ({MappingOrgIdField.SelectName}, {MappingDriverIdField.SelectName}, {MappingDriverPointsField.SelectName}, {MappingCreatedAtUtcField.SelectName})
+            VALUES (@OrgId, @DriverId, 0, UTC_TIMESTAMP())";
+
+            command.Parameters.Add(OrgIdField.GenerateParameter("@OrgId", orgId));
+            command.Parameters.Add(DriverIdField.GenerateParameter("@DriverId", driverId));
+
+            _logger.LogInformation("Put Driver[{DriverId}] in Organization[{OrgId}]",
+                driverId, orgId);
+
+            await command.ExecuteNonQueryAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error adding driver[{DriverId}] to Org[{OrgId}]", driverId, orgId);
+            throw;
         }
     }
 }

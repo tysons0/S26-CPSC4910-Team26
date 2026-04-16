@@ -33,4 +33,6 @@ public interface IDriverService
     Task<List<PointHistoryRecord>?> GetDriverPointHistory(int driverId);
 
     Task<PointHistoryRecord> GetPointHistoryRecordFromReader(DbDataReader reader, string? prefix = null);
+
+    Task AddDriverToOrg(int driverId, int orgId);
 }
