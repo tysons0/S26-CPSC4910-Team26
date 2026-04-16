@@ -27,6 +27,27 @@ function CheckoutPage() {
   const { cartItems, clearCart } = useCart();
   const totalPoints = cartItems.reduce((sum, item) => sum + item.points, 0);
 
+  const getDriverPointsForOrg = (driverData, currentOrgId) => {
+    if (!Array.isArray(driverData?.driverOrgsAndPoints) || !currentOrgId) {
+      return 0;
+    }
+
+    const orgEntry = driverData.driverOrgsAndPoints.find(
+      (entry) =>
+        String(entry?.orgId ?? entry?.organizationId ?? entry?.id) ===
+        String(currentOrgId),
+    );
+
+    return Number(
+      orgEntry?.points ??
+        orgEntry?.pointBalance ??
+        orgEntry?.currentPoints ??
+        0,
+    );
+  };
+
+  const activeOrgPoints = getDriverPointsForOrg(driver, activeOrgId);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -36,9 +57,15 @@ function CheckoutPage() {
         const driverData = await apiService.getDriverByUserId(userData.id);
         setDriver(driverData);
         console.log("Checkout driver data: ", driverData);
-        const orgId = driverData.organizationId;
+        const savedOrgId = localStorage.getItem("activeOrgId");
 
-        setActiveOrgId(orgId);
+        const resolvedOrgId =
+          savedOrgId ||
+          driverData?.driverOrgsAndPoints?.[0]?.orgId ||
+          driverData?.driverOrgsAndPoints?.[0]?.organizationId ||
+          null;
+
+        setActiveOrgId(resolvedOrgId);
         const addressList = await apiService.getDriverAddresses(
           driverData.driverId,
         );
@@ -66,7 +93,7 @@ function CheckoutPage() {
       alert("Your cart is empty.");
       return;
     }
-    if (totalPoints > driver.points) {
+    if (totalPoints > activeOrgPoints) {
       alert("You do not have enough points to complete this purchase.");
       return;
     }
@@ -175,10 +202,10 @@ function CheckoutPage() {
           </div>
           <div style={{ marginTop: "1rem" }}>
             <h2>Total: {totalPoints} Points</h2>
-            {driver && <p>Your Points: {driver.points}</p>}
+            {driver && <p>Your Points: {activeOrgPoints}</p>}
           </div>
 
-          {driver && totalPoints > driver.points && (
+          {driver && totalPoints > activeOrgPoints && (
             <p style={{ color: "red" }}>
               You do not have enough points to complete this purchase.
             </p>
@@ -289,7 +316,7 @@ function CheckoutPage() {
             <button
               className="submit"
               onClick={handleCheckout}
-              disabled={totalPoints > (driver?.points || 0)}
+              disabled={totalPoints > activeOrgPoints}
             >
               Confirm Purchase
             </button>
