@@ -1163,7 +1163,12 @@ const apiService = {
     }
   },
 
-  changeDriverPoints: async (driverId, pointChange, changeReason = "") => {
+  changeDriverPoints: async (
+    driverId,
+    orgId,
+    pointChange,
+    changeReason = "",
+  ) => {
     try {
       const token = apiService.getToken();
       if (!token) {
@@ -1177,6 +1182,7 @@ const apiService = {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          orgId: orgId,
           changeReason: changeReason,
           pointChange: pointChange,
         }),

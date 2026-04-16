@@ -99,7 +99,9 @@ function DriverDashboard() {
         //Set of acceptedOrgs
         const memberOrgIdSet = new Set(
           (driver?.driverOrgsAndPoints || [])
-            .map((entry) => String(entry.orgId))
+            .map((entry) =>
+              String(entry?.orgId ?? entry?.organizationId ?? entry?.id),
+            )
             .filter(Boolean),
         );
 
@@ -208,6 +210,31 @@ function DriverDashboard() {
     }
   };
 
+  const activeDriverOrgEntry = useMemo(() => {
+    if (!Array.isArray(driverData?.driverOrgsAndPoints) || !activeOrgId) {
+      return null;
+    }
+
+    return (
+      driverData.driverOrgsAndPoints.find(
+        (entry) =>
+          String(entry?.orgId ?? entry?.organizationId ?? entry?.id) ===
+          String(activeOrgId),
+      ) || null
+    );
+  }, [driverData, activeOrgId]);
+
+  const activeOrgPoints = useMemo(() => {
+    if (!activeDriverOrgEntry) return 0;
+
+    return Number(
+      activeDriverOrgEntry.points ??
+        activeDriverOrgEntry.pointBalance ??
+        activeDriverOrgEntry.currentPoints ??
+        0,
+    );
+  }, [activeDriverOrgEntry]);
+
   if (loading) {
     return (
       <div className="catalog-page">
@@ -265,7 +292,7 @@ function DriverDashboard() {
           )}
 
           <div className="catalog-points">
-            Points Balance: <strong>{user?.points ?? 0}</strong>
+            Points Balance: <strong>{activeOrgPoints}</strong>
           </div>
           <Link to="/DriverPointHistory">
             <button className="submit">View Point History</button>
@@ -410,14 +437,14 @@ function DriverDashboard() {
                       <strong
                         style={{
                           color:
-                            product.points > (user?.points ?? 0)
+                            product.points > activeOrgPoints
                               ? "#dc3545"
                               : "inherit",
                         }}
                       >
                         {product.points}
                       </strong>
-                      {product.points > (user?.points ?? 0) && (
+                      {product.points > activeOrgPoints && (
                         <div
                           style={{
                             fontSize: "0.75rem",
@@ -462,20 +489,31 @@ function DriverDashboard() {
                       >
                         Add to Wishlist
                       </button>
-                      <button
-                        className="linkish"
-                        type="button"
-                        disabled={
-                          product.points > (user?.points ?? 0) ||
-                          product.availability === "Unavailable" ||
-                          isInCart
-                        }
-                        onClick={() =>
-                          addToCart({ ...product, catalogItemId: product.id })
-                        }
-                      >
-                        {isInCart ? "In Cart" : "Add to Cart"}
-                      </button>
+                      {product.points <= activeOrgPoints &&
+                      product.availability !== "Unavailable" &&
+                      !isInCart ? (
+                        <button
+                          className="linkish"
+                          type="button"
+                          onClick={() =>
+                            addToCart({ ...product, catalogItemId: product.id })
+                          }
+                        >
+                          Add to Cart
+                        </button>
+                      ) : isInCart ? (
+                        <button className="linkish" type="button" disabled>
+                          In Cart
+                        </button>
+                      ) : product.availability === "Unavailable" ? (
+                        <button className="linkish" type="button" disabled>
+                          Unavailable
+                        </button>
+                      ) : (
+                        <button className="linkish" type="button" disabled>
+                          Not Enough Points
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}

@@ -81,10 +81,53 @@ function SponsorViewDrivers() {
     });
   };
 
+  const getDriverPointsForOrg = (driver, currentOrgId) => {
+    if (!Array.isArray(driver?.driverOrgsAndPoints) || !currentOrgId) return 0;
+
+    const orgEntry = driver.driverOrgsAndPoints.find(
+      (entry) =>
+        String(entry?.orgId ?? entry?.organizationId ?? entry?.id) ===
+        String(currentOrgId),
+    );
+
+    return Number(
+      orgEntry?.points ??
+        orgEntry?.pointBalance ??
+        orgEntry?.currentPoints ??
+        0,
+    );
+  };
+
+  const updateDriverPointsForOrg = (driver, currentOrgId, newPoints) => {
+    if (!Array.isArray(driver?.driverOrgsAndPoints)) return driver;
+
+    return {
+      ...driver,
+      driverOrgsAndPoints: driver.driverOrgsAndPoints.map((entry) => {
+        const entryOrgId = entry?.orgId ?? entry?.organizationId ?? entry?.id;
+
+        if (String(entryOrgId) !== String(currentOrgId)) {
+          return entry;
+        }
+
+        if ("points" in entry) {
+          return { ...entry, points: newPoints };
+        }
+        if ("pointBalance" in entry) {
+          return { ...entry, pointBalance: newPoints };
+        }
+        if ("currentPoints" in entry) {
+          return { ...entry, currentPoints: newPoints };
+        }
+
+        return { ...entry, points: newPoints };
+      }),
+    };
+  };
   const handleAdjustPoints = async (driver) => {
     const pointChangeStr = prompt(
       `Adjust points for ${driver.userData?.username || `Driver #${driver.driverId}`}\n\n` +
-        `Current Points: ${driver.points || 0}\n\n` +
+        `Current Points: ${getDriverPointsForOrg(driver, orgId)}\n\n` +
         `Enter point change (positive to add, negative to subtract):`,
     );
 
@@ -112,24 +155,35 @@ function SponsorViewDrivers() {
     setAdjustingDriver(driver.driverId);
 
     try {
+      if (!orgId) {
+        alert("No organization selected for this sponsor.");
+        return;
+      }
+
+      console.log("Driver orgs:", driver.driverOrgsAndPoints);
+      console.log("Using orgId:", orgId);
+
       const updatedDriver = await apiService.changeDriverPoints(
         driver.driverId,
+        orgId,
         pointChange,
         reason || "",
       );
 
       // Update the driver in the local state with new points
+      const updatedPoints = getDriverPointsForOrg(updatedDriver, orgId);
+
       setDrivers((prevDrivers) =>
         prevDrivers.map((d) =>
           d.driverId === driver.driverId
-            ? { ...d, points: updatedDriver.points }
+            ? updateDriverPointsForOrg(d, orgId, updatedPoints)
             : d,
         ),
       );
 
       alert(
         `Successfully ${pointChange > 0 ? "added" : "removed"} ${Math.abs(pointChange)} points!\n` +
-          `New balance: ${updatedDriver.points} points`,
+          `New balance: ${getDriverPointsForOrg(updatedDriver, orgId)} points`,
       );
     } catch (error) {
       console.error("Error adjusting points:", error);
@@ -264,9 +318,13 @@ function SponsorViewDrivers() {
       case "name-desc":
         return nameB.localeCompare(nameA);
       case "points-desc":
-        return (b.points || 0) - (a.points || 0);
+        return (
+          getDriverPointsForOrg(b, orgId) - getDriverPointsForOrg(a, orgId)
+        );
       case "points-asc":
-        return (a.points || 0) - (b.points || 0);
+        return (
+          getDriverPointsForOrg(a, orgId) - getDriverPointsForOrg(b, orgId)
+        );
       case "newest":
         return (
           new Date(b.userData?.createdAtUtc) -
@@ -378,6 +436,50 @@ function SponsorViewDrivers() {
                   transition: "background 0.3s, border-color 0.3s",
                 }}
               >
+                {viewingPointHistory === driver.driverId && (
+                  <div
+                    style={{
+                      background: "var(--surface-alt)",
+                      padding: "1.5rem",
+                      borderRadius: "10px",
+                      border: "1px solid var(--border)",
+                      marginTop: "0.75rem",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginBottom: "1rem",
+                      }}
+                    >
+                      <h3 style={{ margin: 0 }}>
+                        Point History — {driver.userData?.username}
+                      </h3>
+                      <button onClick={handleClosePointHistory}>Close</button>
+                    </div>
+
+                    {loadingHistory ? (
+                      <p>Loading...</p>
+                    ) : pointHistory.length === 0 ? (
+                      <p>No point history.</p>
+                    ) : (
+                      <div>
+                        {pointHistory.map((transaction, index) => {
+                          const positive = transaction.pointChange > 0;
+                          return (
+                            <div key={index}>
+                              {positive ? "+" : ""}
+                              {transaction.pointChange} pts —{" "}
+                              {transaction.reason}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
                 {editingDriver === driver.driverId ? (
                   // EDIT MODE
                   <div>
@@ -528,7 +630,8 @@ function SponsorViewDrivers() {
                           marginTop: "0.5rem",
                         }}
                       >
-                        <strong>Points:</strong> {driver.points || 0}
+                        <strong>Points:</strong>{" "}
+                        {getDriverPointsForOrg(driver, orgId)}
                       </div>
 
                       {driver.addresses?.filter((a) => a.primary).length >
@@ -688,184 +791,6 @@ function SponsorViewDrivers() {
           </div>
         </div>
       )}
-
-      {/* Point History Panel */}
-      {viewingPointHistory &&
-        (() => {
-          const driver = drivers.find(
-            (d) => d.driverId === viewingPointHistory,
-          );
-          if (!driver) return null;
-          return (
-            <div
-              style={{
-                background: "var(--surface-alt)",
-                padding: "2rem",
-                borderRadius: "10px",
-                border: "1px solid var(--border)",
-                marginTop: "1.5rem",
-                transition: "background 0.3s",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: "1.5rem",
-                }}
-              >
-                <div>
-                  <h2 style={{ margin: 0, color: "var(--text-muted)" }}>
-                    Point History — {driver.userData?.username}
-                  </h2>
-                  <div
-                    style={{
-                      fontSize: "1.4rem",
-                      fontWeight: 700,
-                      color: "#667eea",
-                      marginTop: "0.5rem",
-                    }}
-                  >
-                    Current Balance: {driver.points || 0} pts
-                  </div>
-                </div>
-                <button
-                  onClick={handleClosePointHistory}
-                  style={{
-                    padding: "0.5rem 1.1rem",
-                    background: "transparent",
-                    color: "var(--text-muted)",
-                    border: "1px solid var(--border)",
-                    borderRadius: "7px",
-                    cursor: "pointer",
-                    fontWeight: 600,
-                    fontSize: "0.875rem",
-                    transition: "all 0.15s",
-                  }}
-                >
-                  Close
-                </button>
-              </div>
-
-              {loadingHistory ? (
-                <p style={{ color: "var(--text-alt)" }}>
-                  Loading point history...
-                </p>
-              ) : pointHistory.length === 0 ? (
-                <div
-                  style={{
-                    background: "var(--bg)",
-                    padding: "2rem",
-                    borderRadius: "8px",
-                    textAlign: "center",
-                  }}
-                >
-                  <p style={{ margin: 0, color: "var(--text-alt)" }}>
-                    No point history yet.
-                  </p>
-                  <p
-                    style={{
-                      margin: "0.5rem 0 0 0",
-                      fontSize: "0.9rem",
-                      color: "var(--text-alt)",
-                    }}
-                  >
-                    Point changes will appear here when sponsors adjust this
-                    driver's points.
-                  </p>
-                </div>
-              ) : (
-                <div>
-                  <h3
-                    style={{ marginBottom: "1rem", color: "var(--text-muted)" }}
-                  >
-                    Transaction History ({pointHistory.length})
-                  </h3>
-                  <div style={{ display: "grid", gap: "0.75rem" }}>
-                    {pointHistory.map((transaction, index) => {
-                      const positive = transaction.pointChange > 0;
-                      return (
-                        <div
-                          key={index}
-                          style={{
-                            background: "var(--bg)",
-                            padding: "1rem 1.25rem",
-                            borderRadius: "8px",
-                            border: "1px solid var(--border)",
-                            borderLeft: `4px solid ${positive ? "#68d391" : "#fc8181"}`,
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            gap: "1rem",
-                            transition: "background 0.3s",
-                          }}
-                        >
-                          <div>
-                            <div
-                              style={{
-                                fontSize: "1.1rem",
-                                fontWeight: 700,
-                                color: positive ? "#276749" : "#c0392b",
-                                marginBottom: "0.25rem",
-                              }}
-                            >
-                              {positive ? "+" : ""}
-                              {transaction.pointChange} Points
-                            </div>
-                            {transaction.reason && (
-                              <div
-                                style={{
-                                  fontSize: "0.875rem",
-                                  color: "var(--text-alt)",
-                                  marginBottom: "0.2rem",
-                                }}
-                              >
-                                <strong style={{ color: "var(--text-muted)" }}>
-                                  Reason:
-                                </strong>{" "}
-                                {transaction.reason}
-                              </div>
-                            )}
-                            {transaction.sponsorId && (
-                              <div
-                                style={{
-                                  fontSize: "0.8rem",
-                                  color: "var(--text-alt)",
-                                }}
-                              >
-                                By Sponsor #{transaction.sponsorId}
-                              </div>
-                            )}
-                          </div>
-                          <div
-                            style={{
-                              textAlign: "right",
-                              color: "var(--text-alt)",
-                              fontSize: "0.85rem",
-                              flexShrink: 0,
-                            }}
-                          >
-                            {new Date(transaction.createdAtUtc).toLocaleString(
-                              "en-US",
-                              {
-                                month: "short",
-                                day: "numeric",
-                                year: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              },
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })()}
     </div>
   );
 }
