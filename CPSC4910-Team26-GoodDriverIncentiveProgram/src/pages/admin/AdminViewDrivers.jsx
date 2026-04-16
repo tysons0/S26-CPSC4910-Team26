@@ -29,6 +29,9 @@ function AdminViewDrivers() {
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [historyDriverId, setHistoryDriverId] = useState(null);
 
+  const [uploading, setUploading] = useState(false);
+  const [uploadResult, setUploadResult] = useState("");
+
   const { impersonate } = useImpersonation();
 
   useEffect(() => {
@@ -41,7 +44,7 @@ function AdminViewDrivers() {
         }
 
         const data = await apiService.getDrivers();
-        console.log("Drivers data:", data); // DEBUG
+        console.log("Drivers data:", data);
         setDrivers(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("Error fetching drivers:", err);
@@ -257,6 +260,68 @@ function AdminViewDrivers() {
     });
   };
 
+  const handleUploadDrivers = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploading(true);
+    setUploadResult("");
+
+    try {
+      await apiService.uploadUsers(file);
+      setUploadResult("Drivers uploaded successfully!");
+    } catch (error) {
+      setUploadResult("Upload failed: " + (error.message || "Unknown error"));
+    } finally {
+      setUploading(false);
+      e.target.value = ""; // reset file input
+    }
+  };
+
+  const getDriverOrgs = (driver) => {
+    return Array.isArray(driver?.driverOrgsAndPoints)
+      ? driver.driverOrgsAndPoints
+      : [];
+  };
+
+  const getDriverOrgDisplay = (driver) => {
+    const orgs = getDriverOrgs(driver);
+
+    if (orgs.length === 0) return "None";
+
+    return orgs
+      .map((org) => {
+        // adjust these names if your backend uses different property names
+        const orgId = org.organizationId ?? org.orgId ?? org.id;
+        const orgName = org.organizationName ?? org.name;
+
+        if (orgName) return orgName;
+        if (orgId) return `Org ${orgId}`;
+        return "Unknown Org";
+      })
+      .join(", ");
+  };
+
+  const getDriverTotalPoints = (driver) => {
+    const orgs = getDriverOrgs(driver);
+
+    if (orgs.length === 0) {
+      return driver.points || 0;
+    }
+
+    return orgs.reduce((sum, org) => {
+      const points = org.points ?? org.pointBalance ?? org.currentPoints ?? 0;
+      return sum + points;
+    }, 0);
+  };
+
+  const getFirstOrgSortValue = (driver) => {
+    const orgs = getDriverOrgs(driver);
+    if (orgs.length === 0) return 0;
+
+    return orgs[0]?.organizationId ?? orgs[0]?.orgId ?? orgs[0]?.id ?? 0;
+  };
+
   const sortedDrivers = [...drivers].sort((a, b) => {
     const nameA =
       `${a.userData?.firstName || ""} ${a.userData?.lastName || ""}`.trim() ||
@@ -273,8 +338,8 @@ function AdminViewDrivers() {
     const emailA = a.userData?.email || "";
     const emailB = b.userData?.email || "";
 
-    const orgA = a.organizationId || 0;
-    const orgB = b.organizationId || 0;
+    const orgA = getFirstOrgSortValue(a);
+    const orgB = getFirstOrgSortValue(b);
 
     const disabledA = a.userData?.disabled ? 1 : 0;
     const disabledB = b.userData?.disabled ? 1 : 0;
@@ -297,9 +362,9 @@ function AdminViewDrivers() {
       case "email-desc":
         return emailB.localeCompare(emailA);
       case "points-desc":
-        return (b.points || 0) - (a.points || 0);
+        return getDriverTotalPoints(b) - getDriverTotalPoints(a);
       case "points-asc":
-        return (a.points || 0) - (b.points || 0);
+        return getDriverTotalPoints(a) - getDriverTotalPoints(b);
       case "org-asc":
         return orgA - orgB;
       case "org-desc":
@@ -391,7 +456,60 @@ function AdminViewDrivers() {
           <option value="status-asc">Active First</option>
           <option value="status-desc">Disabled First</option>
         </select>
+
+        {/* Upload Drivers button */}
+        <input
+          id="upload-drivers-input"
+          type="file"
+          accept=".txt,.csv,.psv"
+          style={{ display: "none" }}
+          onChange={handleUploadDrivers}
+        />
+        <button
+          style={{
+            marginLeft: "auto",
+            padding: "0.6rem 1rem",
+            borderRadius: "8px",
+            border: "1px solid rgba(102,126,234,0.3)",
+            background: "rgba(102,126,234,0.12)",
+            color: "#667eea",
+            fontWeight: 600,
+            fontSize: "0.9rem",
+            cursor: uploading ? "not-allowed" : "pointer",
+            opacity: uploading ? 0.6 : 1,
+            transition: "all 0.15s",
+          }}
+          disabled={uploading}
+          onClick={() =>
+            document.getElementById("upload-drivers-input").click()
+          }
+          onMouseEnter={(e) => {
+            if (!uploading) {
+              e.currentTarget.style.background = "rgba(102,126,234,0.22)";
+              e.currentTarget.style.borderColor = "#667eea";
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "rgba(102,126,234,0.12)";
+            e.currentTarget.style.borderColor = "rgba(102,126,234,0.3)";
+          }}
+        >
+          {uploading ? "Uploading..." : "Upload Drivers"}
+        </button>
       </div>
+
+      {uploadResult && (
+        <p
+          style={{
+            color: uploadResult.startsWith("Upload failed")
+              ? "#fc8181"
+              : "#68d391",
+            marginBottom: "0.5rem",
+          }}
+        >
+          {uploadResult}
+        </p>
+      )}
 
       {drivers.length === 0 ? (
         <p style={{ color: "var(--text-alt)" }}>No drivers found.</p>
@@ -498,7 +616,7 @@ function AdminViewDrivers() {
                         fontSize: "0.875rem",
                       }}
                     >
-                      {driver.points || 0}
+                      {getDriverTotalPoints(driver)}
                     </td>
                     <td
                       style={{
@@ -507,9 +625,7 @@ function AdminViewDrivers() {
                         fontSize: "0.875rem",
                       }}
                     >
-                      {driver.organizationId
-                        ? `Org ${driver.organizationId}`
-                        : "None"}
+                      {getDriverOrgDisplay(driver)}
                     </td>
                     <td style={{ padding: "0.75rem" }}>
                       <span
@@ -835,13 +951,11 @@ function AdminViewDrivers() {
                                   },
                                   {
                                     label: "Points",
-                                    value: driver.points || 0,
+                                    value: getDriverTotalPoints(driver),
                                   },
                                   {
-                                    label: "Organization",
-                                    value: driver.organizationId
-                                      ? `Org ${driver.organizationId}`
-                                      : "None",
+                                    label: "Organization(s)",
+                                    value: getDriverOrgDisplay(driver),
                                   },
                                   {
                                     label: "Status",
@@ -902,7 +1016,8 @@ function AdminViewDrivers() {
                                   marginBottom: "1rem",
                                 }}
                               >
-                                Current Balance: {driver.points || 0} Points
+                                Current Balance: {getDriverTotalPoints(driver)}{" "}
+                                Points
                               </div>
 
                               {loadingHistory &&
