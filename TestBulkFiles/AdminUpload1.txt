@@ -1,9 +1,14 @@
 O|New Organization
-# This should create the org if it doesnt exist (No error if it doesnt)
+# This should create the org if it doesnt exist (No error if it doesnt exist)
 O|Existing Organization
-# This should create the org if it doesnt exist (No error if it doesnt)
+# This should create the org if it doesnt exist (No error if it doesnt exist)
 D|New Organization|Joe|Driver|me@email.com
+# This should create this driver under the new org (No error if user already exists)
 S|New Organization|Jill|Sponsor|jill@mail.com|100|New Driver
+# This should fail, the S at the beginning says this is a sponsor row but they try to add points
 D|Existing Organization|Tom|Smith|tom887@gmail.com
+# This should create this driver under the new org (No error if user already exists)
 O|NewOrganization2
+# This should create the org if it doesnt exist (No error if it doesnt exist)
 D|Existing Organization|New|Driver|some@email.com
+# This should create this driver under the new org (No error if user already exists)
