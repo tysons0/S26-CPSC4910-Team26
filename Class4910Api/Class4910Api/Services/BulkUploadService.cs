@@ -98,7 +98,8 @@ public class BulkUploadService : IBulkUploadService
 
                 try
                 {
-                    result.Successes.Add(await ProcessRowAsync(row, cancelToken));
+                    string resultMessage = await ProcessRowAsync(row, cancelToken);
+                    result.Successes.Add($"Line [{lineNumber}]: {resultMessage}");
                 }
                 catch (Exception ex)
                 {
