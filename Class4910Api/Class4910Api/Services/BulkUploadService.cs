@@ -54,6 +54,11 @@ public class BulkUploadService : IBulkUploadService
             string? rawLine;
             while ((rawLine = await reader.ReadLineAsync(cancelToken)) != null)
             {
+                if (rawLine.TrimStart().StartsWith('#'))
+                {
+                    continue;
+                }
+
                 cancelToken.ThrowIfCancellationRequested();
 
                 lineNumber++;
