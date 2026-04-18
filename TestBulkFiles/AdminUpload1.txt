@@ -1,0 +1,9 @@
+O|New Organization
+# This should create the org if it doesnt exist (No error if it doesnt)
+O|Existing Organization
+# This should create the org if it doesnt exist (No error if it doesnt)
+D|New Organization|Joe|Driver|me@email.com
+S|New Organization|Jill|Sponsor|jill@mail.com|100|New Driver
+D|Existing Organization|Tom|Smith|tom887@gmail.com
+O|NewOrganization2
+D|Existing Organization|New|Driver|some@email.com
