@@ -10,8 +10,6 @@ public class PipeDelimitRow
 
     public string? LastName { get; set; } = string.Empty;
 
-    public string? UserName { get; set; }
-
     public string? Email { get; set; }
 
     public int? Points { get; set; }
@@ -28,10 +26,14 @@ public class PipeDelimitRow
             OrganizationName = parts.ElementAtOrDefault(1),
             FirstName = parts.ElementAtOrDefault(2),
             LastName = parts.ElementAtOrDefault(3),
-            UserName = parts.ElementAtOrDefault(4),
-            Email = parts.ElementAtOrDefault(5),
-            Points = int.TryParse(parts.ElementAtOrDefault(6), out var p) ? p : null,
-            ReasonForPoints = parts.ElementAtOrDefault(7)
+            Email = parts.ElementAtOrDefault(4),
+            Points = int.TryParse(parts.ElementAtOrDefault(5), out var p) ? p : null,
+            ReasonForPoints = parts.ElementAtOrDefault(6)
         };
+    }
+
+    public override string ToString()
+    {
+        return $"Type: {Type}, Org: {OrganizationName}, Name: {FirstName} {LastName}, Email: {Email}, Points: {Points}, Reason: {ReasonForPoints}";
     }
 }

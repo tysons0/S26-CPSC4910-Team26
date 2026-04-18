@@ -4,5 +4,5 @@ namespace Class4910Api.Services.Interfaces;
 
 public interface IBulkUploadService
 {
-    Task<BulkUploadResult> ProcessFileAsync(IFormFile file, UserRole uploadingUserRole, CancellationToken cancellationToken);
+    Task<BulkUploadResult> ProcessFileAsync(IFormFile file, User uploadingUser, CancellationToken cancellationToken);
 }

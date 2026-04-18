@@ -11,13 +11,15 @@ public class BulkUploadService : IBulkUploadService
     private readonly IUserService _userService;
     private readonly IOrganizationService _organizationService;
     private readonly IDriverService _driverService;
+    private readonly ISponsorService _sponsorService;
     private readonly RequestData _blankRequestData;
 
     public BulkUploadService(ILogger<BulkUploadService> logger,
                              IAuthService authService,
                              IUserService userService,
                              IOrganizationService organizationService,
-                             IDriverService driverService)
+                             IDriverService driverService,
+                             ISponsorService sponsorService)
     {
         _logger = logger;
         _authService = authService;
@@ -29,9 +31,10 @@ public class BulkUploadService : IBulkUploadService
             ClientIP = System.Net.IPAddress.None,
             UserAgent = "BulkUpload"
         };
+        _sponsorService = sponsorService;
     }
 
-    public async Task<BulkUploadResult> ProcessFileAsync(IFormFile file, UserRole uploadingUserRole,
+    public async Task<BulkUploadResult> ProcessFileAsync(IFormFile file, User uploadingUser,
                                                          CancellationToken cancelToken)
     {
         BulkUploadResult result = new();
@@ -66,6 +69,14 @@ public class BulkUploadService : IBulkUploadService
                 try
                 {
                     row = PipeDelimitRow.ParseLine(rawLine);
+                    if (uploadingUser.Role == UserRole.Sponsor)
+                    {
+                        Sponsor sponsor = await _sponsorService.GetSponsorByUserId(uploadingUser.Id)
+                            ?? throw new InvalidOperationException("Uploading user is a sponsor but no sponsor record found.");
+                        Organization organization = await _organizationService.GetOrganizationById(sponsor.OrganizationId)
+                            ?? throw new InvalidOperationException("Sponsor's organization not found.");
+                        row.OrganizationName = organization.Name;
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -73,7 +84,7 @@ public class BulkUploadService : IBulkUploadService
                     continue;
                 }
 
-                var validationErrors = await ValidateRowAsync(row, uploadingUserRole);
+                List<string> validationErrors = await ValidateRowAsync(row, uploadingUser.Role);
 
                 if (validationErrors.Count > 0)
                 {
@@ -87,7 +98,7 @@ public class BulkUploadService : IBulkUploadService
 
                 try
                 {
-                    await ProcessRowAsync(row, cancelToken);
+                    result.Successes.Add(await ProcessRowAsync(row, cancelToken));
                 }
                 catch (Exception ex)
                 {
@@ -119,12 +130,8 @@ public class BulkUploadService : IBulkUploadService
         if (type != "O" && type != "D" && type != "S")
         {
             errors.Add($"Invalid Type '{row.Type}'. Must be 'O', 'D', or 'S'.");
+            _logger.LogWarning("Validation failed for row {Row}: {Errors}", row, errors);
             return errors;
-        }
-
-        if (row.UserName is null)
-        {
-            errors.Add("UserName is required for type 'D' and 'S'.");
         }
 
         if (row.Points.HasValue && string.IsNullOrWhiteSpace(row.ReasonForPoints))
@@ -170,6 +177,14 @@ public class BulkUploadService : IBulkUploadService
             return errors;
         }
 
+        if (type == "S")
+        {
+            if (row.Points is not null)
+            {
+                errors.Add("Points cannot be assigned to sponsor users.");
+            }
+        }
+
         if (string.IsNullOrWhiteSpace(row.FirstName))
         {
             errors.Add("FirstName is required for type 'D' and 'S'.");
@@ -180,54 +195,181 @@ public class BulkUploadService : IBulkUploadService
             errors.Add("LastName is required for type 'D' and 'S'.");
         }
 
-        if (string.IsNullOrWhiteSpace(row.Email))
+        if (string.IsNullOrWhiteSpace(row.Email) || !row.Email.Contains('@'))
         {
-            errors.Add("Email is required for type 'D' and 'S'.");
+            errors.Add("Email is required for type 'D' and 'S' and must be a valid email address.");
         }
 
+        if (type != "0" && row.OrganizationName is not null)
+        {
+            Organization? org = await _organizationService.GetOrganizationByName(row.OrganizationName);
+            if (org is null)
+            {
+                errors.Add($"Organization '{row.OrganizationName}' does not exist.");
+            }
+        }
+
+        _logger.LogInformation("Validation completed for row {Row} with {ErrorCount} errors", row, errors.Count);
         return errors;
     }
 
-    private async Task ProcessRowAsync(PipeDelimitRow row, CancellationToken cancelToken)
+    private async Task<string> ProcessRowAsync(PipeDelimitRow row, CancellationToken cancelToken)
     {
         string type = row.Type.Trim().ToUpperInvariant();
 
         switch (type)
         {
             case "O":
-                await ProcessOrganizationRowAsync(row, cancelToken);
-                break;
+                _logger.LogInformation("Processing organization row {Row}", row);
+                return await ProcessOrganizationRowAsync(row, cancelToken);
 
             case "S":
-                await ProcessSponsorRowAsync(row, cancelToken);
-                break;
+                _logger.LogInformation("Processing sponsor row {Row}", row);
+                return await ProcessSponsorRowAsync(row, cancelToken);
 
             case "D":
-                await ProcessDriverRowAsync(row, cancelToken);
-                break;
+                _logger.LogInformation("Processing driver row {Row}", row);
+                return await ProcessDriverRowAsync(row, cancelToken);
 
             default:
+                _logger.LogError("Unsupported row type '{RowType}' in row {Row}", row.Type, row);
                 throw new InvalidOperationException($"Unsupported row type '{row.Type}'.");
         }
     }
 
-    private async Task ProcessOrganizationRowAsync(PipeDelimitRow row, CancellationToken cancelToken)
+    private async Task<string> ProcessOrganizationRowAsync(PipeDelimitRow row, CancellationToken cancelToken)
     {
-    }
+        if (row.OrganizationName is null)
+            throw new InvalidOperationException("OrganizationName is required for organization rows.");
 
-    private async Task ProcessSponsorRowAsync(PipeDelimitRow row, CancellationToken cancelToken)
-    {
+        Organization? existingOrg = await _organizationService.GetOrganizationByName(row.OrganizationName);
 
-    }
-
-    private async Task ProcessDriverRowAsync(PipeDelimitRow row, CancellationToken cancelToken)
-    {
-        UserRequest driverRequest = new()
+        if (existingOrg is not null)
         {
-            UserName = row.UserName ?? "",
-            Password = "newPassword"
+            return $"Organization '{row.OrganizationName}' already exists. No action taken.";
+        }
+
+        OrganizationCreationRequest newOrg = new()
+        {
+            Name = row.OrganizationName,
+            Description = $"Created via bulk upload on {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC",
         };
 
-        
+        Organization org = await _organizationService.CreateOrganization(newOrg, 0)
+            ?? throw new InvalidOperationException($"Failed to create organization '{row.OrganizationName}'.");
+
+        return $"Created organization '{row.OrganizationName}'.";
+    }
+
+    private async Task<string> ProcessSponsorRowAsync(PipeDelimitRow row, CancellationToken cancelToken)
+    {
+        List<string> actions = [];
+        if (row.Email is null)
+            throw new InvalidOperationException("Email is required for sponsor rows.");
+        if (row.OrganizationName is null)
+            throw new InvalidOperationException("OrganizationName is required for sponsor rows.");
+
+        Organization organization = await _organizationService.GetOrganizationByName(row.OrganizationName)
+            ?? throw new InvalidOperationException($"Organization '{row.OrganizationName}' does not exist.");
+
+        User? user = await _userService.FindUserByEmail(row.Email);
+
+        if (user is null)
+        {
+            UserRequest sponsorRequest = new()
+            {
+                UserName = row.Email,
+                Password = "newPassword"
+            };
+
+            Sponsor? sponsor = await _authService.RegisterSponsorUser(sponsorRequest, organization.OrgId, 0, _blankRequestData)
+                ?? throw new($"Failed to create user for sponsor with email {row.Email}");
+            UserUpdateRequest updateRequest = new()
+            {
+                Email = row.Email,
+                FirstName = row.FirstName,
+                LastName = row.LastName,
+            };
+
+            await _userService.UpdateUser(sponsor.UserData.Id, updateRequest);
+            actions.Add($"Created new sposnor with email '{row.Email}' under Organization '{organization.Name}'");
+        }
+        else
+        {
+            UserUpdateRequest updateRequest = new()
+            {
+                Email = row.Email,
+                FirstName = row.FirstName,
+                LastName = row.LastName,
+            };
+
+            await _userService.UpdateUser(user.Id, updateRequest);
+            actions.Add($"Updated existing sponsor user with email '{row.Email}' under Organization '{organization.Name}'");
+        }
+
+        return string.Join("; ", actions);
+    }
+
+    private async Task<string> ProcessDriverRowAsync(PipeDelimitRow row, CancellationToken cancelToken)
+    {
+        List<string> actions = [];
+        if (row.Email is null)
+            throw new InvalidOperationException("Email is required for driver rows.");
+
+        User? user = await _userService.FindUserByEmail(row.Email);
+        Driver? driver;
+
+        if (user is null)
+        {
+            UserRequest driverRequest = new()
+            {
+                UserName = row.Email,
+                Password = "newPassword"
+            };
+
+            driver = await _authService.RegisterDriverUser(driverRequest, _blankRequestData)
+                ?? throw new($"Failed to create user for driver with email {row.Email}");
+            UserUpdateRequest updateRequest = new()
+            {
+                Email = row.Email,
+                FirstName = row.FirstName,
+                LastName = row.LastName,
+            };
+
+            await _userService.UpdateUser(driver.UserData.Id, updateRequest);
+            actions.Add($"Created new driver with email '{row.Email}'");
+        }
+        else
+        {
+            driver = await _driverService.GetDriverByUserId(user.Id)
+                ?? throw new InvalidOperationException($"User with email {row.Email} exists but is not a driver.");
+        }
+
+
+        if (row.OrganizationName is not null)
+        {
+            Organization org = await _organizationService.GetOrganizationByName(row.OrganizationName)
+                ?? throw new InvalidOperationException($"Organization '{row.OrganizationName}' does not exist.");
+
+            if (!driver.IsInOrg(org.OrgId))
+            {
+                await _driverService.AddDriverToOrg(driver.DriverId, org.OrgId);
+                actions.Add($"Added driver to organization '{org.Name}'");
+            }
+
+            if (row.Points.HasValue)
+            {
+                PointChangeRequest pointChangeRequest = new()
+                {
+                    OrgId = org.OrgId,
+                    PointChange = row.Points.Value,
+                    ChangeReason = row.ReasonForPoints ?? "Bulk upload points"
+                };
+                await _driverService.AddToDriverPointHistory(driver.DriverId, null, pointChangeRequest);
+                actions.Add($"Assigned [{row.Points.Value}] points to driver in organization '{org.Name}'");
+            }
+        }
+
+        return string.Join("; ", actions);
     }
 }
