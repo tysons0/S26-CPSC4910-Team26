@@ -19,16 +19,24 @@ public class PipeDelimitRow
     public static PipeDelimitRow ParseLine(string line)
     {
         string[] parts = line.Split('|');
+        string type = parts.ElementAtOrDefault(0) ?? "";
+        string? orgName = parts.ElementAtOrDefault(1);
+        string? firstName = parts.ElementAtOrDefault(2);
+        string? lastName = parts.ElementAtOrDefault(3);
+        string? email = parts.ElementAtOrDefault(4);
+        int? points = int.TryParse(parts.ElementAtOrDefault(5), out var p) ? p : null;
+        string? reason = parts.ElementAtOrDefault(6);
+
 
         return new PipeDelimitRow
         {
-            Type = parts.ElementAtOrDefault(0) ?? "",
-            OrganizationName = parts.ElementAtOrDefault(1),
-            FirstName = parts.ElementAtOrDefault(2),
-            LastName = parts.ElementAtOrDefault(3),
-            Email = parts.ElementAtOrDefault(4),
-            Points = int.TryParse(parts.ElementAtOrDefault(5), out var p) ? p : null,
-            ReasonForPoints = parts.ElementAtOrDefault(6)
+            Type = type.Trim(),
+            OrganizationName = orgName?.Trim(),
+            FirstName = firstName?.Trim(),
+            LastName = lastName?.Trim(),
+            Email = email?.Trim(),
+            Points = points,
+            ReasonForPoints = reason
         };
     }
 
