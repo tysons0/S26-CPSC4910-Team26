@@ -36,13 +36,15 @@ namespace Class4910Api.Services
                 Driver driver = await _driverService.GetDriverByDriverId(request.DriverId)
                     ?? throw new("Could not find driver");
 
-                string driverSql = @"SELECT Points FROM Drivers WHERE DriverId = @DriverId AND OrgId = @OrgId";
+                string driverSql = @"
+                    SELECT Points FROM OrgDriverMapping
+                    WHERE DriverId = @DriverId AND OrgId = @OrgId";
                 using var driverCmd = new MySqlCommand(driverSql, conn, (MySqlTransaction)transaction);
                 driverCmd.Parameters.AddWithValue("@DriverId", request.DriverId);
                 driverCmd.Parameters.AddWithValue("@OrgId", request.OrgId);
 
                 var driverPointsObj = await driverCmd.ExecuteScalarAsync();
-                if (driverPointsObj == null) throw new Exception("Driver not found");
+                if (driverPointsObj == null) throw new Exception("Driver not mappped to organization");
 
                 int driverPoints = Convert.ToInt32(driverPointsObj);
                 int totalPoints = 0;
@@ -66,10 +68,14 @@ namespace Class4910Api.Services
                     throw new Exception("Insufficient points.");
                 }
 
-                string updateDriverSql = @"UPDATE Drivers SET Points = Points - @Points WHERE DriverId = @DriverId";
+                string updateDriverSql = @"
+                    UPDATE OrgDriverMapping 
+                    SET Points = Points - @Points 
+                    WHERE DriverId = @DriverId AND OrgId = @OrgId";
                 using var updateDriverCmd = new MySqlCommand(updateDriverSql, conn, (MySqlTransaction)transaction);
                 updateDriverCmd.Parameters.AddWithValue("@Points", totalPoints);
                 updateDriverCmd.Parameters.AddWithValue("@DriverId", request.DriverId);
+                updateDriverCmd.Parameters.AddWithValue("@OrgId", request.OrgId);
 
                 await updateDriverCmd.ExecuteNonQueryAsync();
                 string orderSql = @"INSERT INTO Orders (DriverId, OrgId, TotalPointsSpent, OrderStatus, ShippingAddressId, CreatedAtUTC) 
@@ -120,9 +126,19 @@ namespace Class4910Api.Services
                     ChangeReason = $"Order #{orderId} placed"
                 };
 
-                bool addedToPointHistory = await _driverService.AddToDriverPointHistory(request.DriverId, null, pointChange);
-                if (addedToPointHistory == false)
-                    throw new Exception("Failed to add to driver point history.");
+                string pointHistorySql = @"
+                    INSERT INTO DriverPointHistory
+                    (DriverId, SponsorId, OrgId, Reason, PointDelta, CreatedAtUTC)
+                    VALUES
+                    (@DriverId, @SponsorId, @OrgId, @Reason, @PointDelta, UTC_TIMESTAMP());";
+                using var phCmd = new MySqlCommand(pointHistorySql, conn, (MySqlTransaction)transaction);
+                phCmd.Parameters.AddWithValue("@DriverId", request.DriverId);
+                phCmd.Parameters.AddWithValue("@SponsorId", DBNull.Value);
+                phCmd.Parameters.AddWithValue("@OrgId", request.OrgId);
+                phCmd.Parameters.AddWithValue("@Reason", $"Order #{orderId} placed");
+                phCmd.Parameters.AddWithValue("PointDelta", -totalPoints);
+
+                await phCmd.ExecuteNonQueryAsync();
 
                 await transaction.CommitAsync();
 
@@ -263,9 +279,10 @@ namespace Class4910Api.Services
 
             try
             {
-                string checkSql = @"SELECT DriverId, OrderStatus, TotalPointsSpent FROM Orders WHERE OrderId = @OrderId";
+                string checkSql = @"SELECT DriverId, OrgId, OrderStatus, TotalPointsSpent FROM Orders WHERE OrderId = @OrderId";
                 using var checkCmd = new MySqlCommand(checkSql, conn, (MySqlTransaction)transaction);
                 checkCmd.Parameters.AddWithValue("@OrderId", orderId);
+
                 using var reader = await checkCmd.ExecuteReaderAsync();
                 if (!reader.Read())
                 {
@@ -273,6 +290,7 @@ namespace Class4910Api.Services
                 }
 
                 int orderDriverId = reader.GetInt32(reader.GetOrdinal("DriverId"));
+                int orgId = reader.GetInt32(reader.GetOrdinal("OrgId"));
                 string orderStatus = reader.GetString(reader.GetOrdinal("OrderStatus"));
                 int pointsToRefund = reader.GetInt32(reader.GetOrdinal("TotalPointsSpent"));
 
@@ -303,10 +321,13 @@ namespace Class4910Api.Services
 
                 if (isCancelling)
                 {
-                    string refundSql = @"UPDATE Drivers SET Points = Points + @Points WHERE DriverId = @DriverId";
+                    string refundSql = @"
+                        UPDATE OrgDriverMapping SET Points = Points + @Points 
+                        WHERE DriverId = @DriverId AND OrgId = @OrgId";
                     using var refundCmd = new MySqlCommand(refundSql, conn, (MySqlTransaction)transaction);
                     refundCmd.Parameters.AddWithValue("@Points", pointsToRefund);
                     refundCmd.Parameters.AddWithValue("@DriverId", driverId);
+                    refundCmd.Parameters.AddWithValue("@OrgId", orgId);
 
                     await refundCmd.ExecuteNonQueryAsync();
 
