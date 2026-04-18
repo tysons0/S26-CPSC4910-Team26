@@ -51,7 +51,7 @@ public class FileController : ControllerBase
 
         BulkUploadResult result = await _bulkUploadService.ProcessFileAsync(request.File, user, cancellationToken);
 
-        _logger.LogInformation("Bulk upload result for user {User}: {Result}", user, result);
+        _logger.LogInformation("Bulk upload result for user {User}: {Result}", user.Username, result);
 
         return Ok(result);
     }
