@@ -264,7 +264,7 @@ public class BulkUploadService : IBulkUploadService
         Organization org = await _organizationService.CreateOrganization(newOrg, 0)
             ?? throw new InvalidOperationException($"Failed to create organization '{row.OrganizationName}'.");
 
-        return $"Created organization '{row.OrganizationName}'.";
+        return $"Created organization '{org.Name}'.";
     }
 
     private async Task<string> ProcessSponsorRowAsync(PipeDelimitRow row, CancellationToken cancelToken)
@@ -374,6 +374,11 @@ public class BulkUploadService : IBulkUploadService
                 await _driverService.AddToDriverPointHistory(driver.DriverId, null, pointChangeRequest);
                 actions.Add($"Assigned [{row.Points.Value}] points to driver in organization '{org.Name}'");
             }
+        }
+
+        if (actions.Count == 0)
+        {
+            actions.Add($"No changes made for driver with email '{row.Email}'.");
         }
 
         return string.Join("; ", actions);
