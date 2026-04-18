@@ -175,5 +175,28 @@ public class OrganizationController : ControllerBase
 
         return Ok();
     }
+
+    [Authorize (Roles = ADMIN)]
+    [HttpPost("add-driver/{driverId:int}")]
+    public async Task<ActionResult> AddDriverToOrganization(int driverId, [FromQuery] int orgId)
+    {
+        Driver? driver = await _driverService.GetDriverByDriverId(driverId);
+
+        if (driver is null)
+            return NotFound("Driver not found");
+        if (driver.IsInOrg(orgId))
+            return BadRequest("Driver is already part of the specified organization");
+
+        int contextUserId = _contextService.GetUserId(HttpContext);
+
+        OrgAccess orgAccess = await _authService.RetrieveUserOrgAccess(contextUserId, orgId);
+
+        if (orgAccess != OrgAccess.ReadWrite)
+            return Forbid();
+
+        await _driverService.AddDriverToOrg(driver.DriverId, orgId);
+
+        return Ok();
+    }
 }
 
