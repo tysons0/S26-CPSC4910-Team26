@@ -267,15 +267,13 @@ public static class Startup
             CREATE TABLE IF NOT EXISTS {DriversTable.Name} (
 	            {DriverIdField.SelectName} int AUTO_INCREMENT,
 	            {UserIdField.SelectName} int NOT NULL,
-	            {OrgIdField.SelectName} int NULL,
 
 	            {DriverNotifyPointsChangedField.SelectName} BOOLEAN DEFAULT 1 NOT NULL,
 	            {DriverNotifyOrdersAddedField.SelectName} BOOLEAN DEFAULT 1 NOT NULL,
 	            {DriverStatusField.SelectName} varchar(50) DEFAULT '' NOT NULL,
 
 	            CONSTRAINT Drivers_PK Primary Key ({DriverIdField.SelectName}),
-	            CONSTRAINT Drivers_Users_FK FOREIGN KEY ({UserIdField.SelectName}) REFERENCES Users({UserIdField.SelectName}),
-	            CONSTRAINT Drivers_Orgs_FK FOREIGN KEY ({OrgIdField.SelectName}) REFERENCES Orgs({OrgIdField.SelectName})
+	            CONSTRAINT Drivers_Users_FK FOREIGN KEY ({UserIdField.SelectName}) REFERENCES Users({UserIdField.SelectName})
             )
             ";
             command.ExecuteNonQuery();
@@ -321,6 +319,7 @@ public static class Startup
 	            {PointHistoryIdField.SelectName} int AUTO_INCREMENT,
 	            {DriverIdField.SelectName} int NOT NULL,
 	            {SponsorIdField.SelectName} int NULL,
+                {OrgIdField.SelectName} int NOT NULL,
 
 	            {PointHistoryReasonField.SelectName} TEXT NOT NULL,
 	            {PointHistoryDeltaField.SelectName} int NOT NULL,
@@ -328,7 +327,8 @@ public static class Startup
 	
 	            CONSTRAINT DriverPointHistory_PK Primary Key ({PointHistoryIdField.SelectName}),
 	            CONSTRAINT DriverPointHistory_Drivers_FK FOREIGN KEY ({DriverIdField.SelectName}) REFERENCES Drivers({DriverIdField.SelectName}),
-	            CONSTRAINT DriverPointHistory_Sponsors_FK FOREIGN KEY ({SponsorIdField.SelectName}) REFERENCES Sponsors({SponsorIdField.SelectName})
+	            CONSTRAINT DriverPointHistory_Sponsors_FK FOREIGN KEY ({SponsorIdField.SelectName}) REFERENCES Sponsors({SponsorIdField.SelectName}),
+                CONSTRAINT DriverPointHistory_Orgs_FK FOREIGN KEY ({OrgIdField.SelectName}) REFERENCES Orgs({OrgIdField.SelectName})
             )
             ";
             command.ExecuteNonQuery();
@@ -471,19 +471,6 @@ public static class Startup
             ";
             command.ExecuteNonQuery();
 
-            // TeamInformation Create
-            command.CommandText = $@"
-            CREATE TABLE IF NOT EXISTS {TeamInformationTable.Name} (
-	            {TeamInfoNumberField.SelectName} int NOT NULL,
-	            {TeamInfoVersionField.SelectName} varchar(100) NOT NULL,
-	            {TeamInfoReleaseDateField.SelectName} DATETIME(6) NOT NULL,
-
-	            {TeamInfoProductNameField.SelectName} varchar(100) NOT NULL,
-                {TeamInfoProductDescriptionField.SelectName} varchar(500) NOT NULL
-            )
-            ";
-            command.ExecuteNonQuery();
-
             // OrgDriverMappingTable Create
             command.CommandText = $@"
             CREATE TABLE IF NOT EXISTS {OrgDriverMappingTable.Name} (
@@ -492,7 +479,10 @@ public static class Startup
                 {MappingDriverPointsField.SelectName} int NOT NULL,
                 {MappingCreatedAtUtcField.SelectName} DATETIME(6) NOT NULL,
 
-                PRIMARY KEY ({MappingOrgIdField.SelectName}, {MappingDriverIdField.SelectName})
+                PRIMARY KEY ({MappingOrgIdField.SelectName}, {MappingDriverIdField.SelectName}),
+                CONSTRAINT OrgDriverMapping_Orgs_FK FOREIGN KEY ({MappingOrgIdField.SelectName}) REFERENCES Orgs({OrgIdField.SelectName}),
+                CONSTRAINT OrgDriverMapping_Drivers_FK FOREIGN KEY ({MappingDriverIdField.SelectName}) REFERENCES {DriversTable.Name}({DriverIdField.SelectName})
+
             )
             ";
             command.ExecuteNonQuery();
