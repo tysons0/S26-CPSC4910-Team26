@@ -74,14 +74,6 @@ public class BulkUploadService : IBulkUploadService
                 try
                 {
                     row = PipeDelimitRow.ParseLine(rawLine);
-                    if (uploadingUser.Role == UserRole.Sponsor)
-                    {
-                        Sponsor sponsor = await _sponsorService.GetSponsorByUserId(uploadingUser.Id)
-                            ?? throw new InvalidOperationException("Uploading user is a sponsor but no sponsor record found.");
-                        Organization organization = await _organizationService.GetOrganizationById(sponsor.OrganizationId)
-                            ?? throw new InvalidOperationException("Sponsor's organization not found.");
-                        row.OrganizationName = organization.Name;
-                    }
                 }
                 catch (Exception ex)
                 {
@@ -90,6 +82,16 @@ public class BulkUploadService : IBulkUploadService
                 }
 
                 List<string> validationErrors = await ValidateRowAsync(row, uploadingUser.Role);
+
+                if (uploadingUser.Role == UserRole.Sponsor)
+                {
+                    Sponsor sponsor = await _sponsorService.GetSponsorByUserId(uploadingUser.Id)
+                        ?? throw new InvalidOperationException("Uploading user is a sponsor but no sponsor record found.");
+                    Organization organization = await _organizationService.GetOrganizationById(sponsor.OrganizationId)
+                        ?? throw new InvalidOperationException("Sponsor's organization not found.");
+                    row.OrganizationName = organization.Name;
+                }
+
 
                 if (validationErrors.Count > 0)
                 {
