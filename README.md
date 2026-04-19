@@ -13,9 +13,10 @@ A full-stack web application designed to incentivize safe driving habits through
 ## Tech Stack
 
 ### Backend
-- **.NET 8** - REST API built with ASP.NET Core
+- **.NET 10** - REST API built with ASP.NET Core
 - **C#** - Primary backend language
 - **SQL Server** - Database management
+- **Xunit** - Testing Framework
 - **JWT Authentication** - Secure token-based authentication
 - **SendGrid** - Email service integration
 - **eBay API** - External marketplace integration
@@ -68,9 +69,10 @@ A full-stack web application designed to incentivize safe driving habits through
 ## Setup and Installation
 
 ### Prerequisites
-- .NET 8 SDK or later
+- .NET 10 SDK or later
 - Node.js (v16 or later) and npm
-- SQL Server (local or remote)
+- MySql Database
+- Docker (For testing)
 
 ### Backend Setup
 1. Navigate to the backend directory:
