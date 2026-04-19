@@ -208,15 +208,6 @@ public class BulkUploadService : IBulkUploadService
             errors.Add("Email is required for type 'D' and 'S' and must be a valid email address.");
         }
 
-        if (type != "0" && row.OrganizationName is not null)
-        {
-            Organization? org = await _organizationService.GetOrganizationByName(row.OrganizationName);
-            if (org is null)
-            {
-                errors.Add($"Organization '{row.OrganizationName}' does not exist.");
-            }
-        }
-
         _logger.LogInformation("Validation completed for row {Row} with {ErrorCount} errors", row, errors.Count);
         return errors;
     }
