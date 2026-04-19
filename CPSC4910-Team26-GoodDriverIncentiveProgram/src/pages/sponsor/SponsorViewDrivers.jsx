@@ -35,6 +35,9 @@ function SponsorViewDrivers() {
 
   const navigate = useNavigate();
 
+  const [uploading, setUploading] = useState(false);
+  const [uploadResult, setUploadResult] = useState("");
+
   useEffect(() => {
     const fetchDrivers = async () => {
       try {
@@ -302,6 +305,36 @@ function SponsorViewDrivers() {
     }
   };
 
+  const handleUploadDrivers = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploading(true);
+    setUploadResult("");
+
+    try {
+      const result = await apiService.uploadUsers(file);
+      console.log("Upload result:", result); // shows successes/errors/totalLines
+
+      const successCount = result?.successes?.length ?? 0;
+      const errors = result?.errors ?? [];
+
+      if (errors.length > 0) {
+        setUploadResult(
+          `Uploaded ${successCount} driver(s). Errors: ${errors.join(", ")}`,
+        );
+      } else {
+        setUploadResult(`Successfully uploaded ${successCount} driver(s)!`);
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      setUploadResult("Upload failed: " + (error.message || "Unknown error"));
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  };
+
   const sortedDrivers = [...drivers].sort((a, b) => {
     const nameA =
       `${a.userData?.firstName || ""} ${a.userData?.lastName || ""}`.trim() ||
@@ -422,6 +455,46 @@ function SponsorViewDrivers() {
               <option value="newest">Newest Member</option>
               <option value="oldest">Oldest Member</option>
             </select>
+
+            {/* Upload Drivers button */}
+            <input
+              id="upload-drivers-input"
+              type="file"
+              accept=".txt,.csv,.psv"
+              style={{ display: "none" }}
+              onChange={handleUploadDrivers}
+            />
+            <button
+              style={{
+                marginLeft: "auto",
+                padding: "0.6rem 1rem",
+                borderRadius: "8px",
+                border: "1px solid rgba(102,126,234,0.3)",
+                background: "rgba(102,126,234,0.12)",
+                color: "#667eea",
+                fontWeight: 600,
+                fontSize: "0.9rem",
+                cursor: uploading ? "not-allowed" : "pointer",
+                opacity: uploading ? 0.6 : 1,
+                transition: "all 0.15s",
+              }}
+              disabled={uploading}
+              onClick={() =>
+                document.getElementById("upload-drivers-input").click()
+              }
+              onMouseEnter={(e) => {
+                if (!uploading) {
+                  e.currentTarget.style.background = "rgba(102,126,234,0.22)";
+                  e.currentTarget.style.borderColor = "#667eea";
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "rgba(102,126,234,0.12)";
+                e.currentTarget.style.borderColor = "rgba(102,126,234,0.3)";
+              }}
+            >
+              {uploading ? "Uploading..." : "Upload Drivers"}
+            </button>
           </div>
 
           <div style={{ display: "grid", gap: "1rem" }}>

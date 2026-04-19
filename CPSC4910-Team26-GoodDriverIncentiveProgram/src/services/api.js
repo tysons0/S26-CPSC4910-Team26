@@ -1448,6 +1448,32 @@ const apiService = {
       throw error;
     }
   },
+
+  orgAddDriver: async (driverId, orgId) => {
+    try {
+      const token = await apiService.getToken();
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      const response = await fetch(
+        `${BASE_URL}/Organization/add-driver/${driverId}`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            driverId,
+            orgId,
+          }),
+        },
+      );
+      return await handleResponse(response);
+    } catch (error) {
+      console.error("Failed to add driver to organization", error);
+    }
+  },
 };
 
 export default apiService;
