@@ -90,13 +90,25 @@ function AdminDashboard() {
     setUploadResult("");
 
     try {
-      await apiService.uploadUsers(file);
-      setUploadResult("Users uploaded successfully!");
+      const result = await apiService.uploadUsers(file);
+      console.log("Upload result:", result);
+
+      const successCount = result?.successes?.length ?? 0;
+      const errors = result?.errors ?? [];
+
+      if (errors.length > 0) {
+        setUploadResult(
+          `Uploaded ${successCount} row(s). Errors: ${errors.join(", ")}`,
+        );
+      } else {
+        setUploadResult(`Successfully uploaded ${successCount} row(s)!`);
+      }
     } catch (error) {
+      console.error("Upload error:", error);
       setUploadResult("Upload failed: " + (error.message || "Unknown error"));
     } finally {
       setUploading(false);
-      e.target.value = ""; // reset file input
+      e.target.value = "";
     }
   };
 
@@ -198,7 +210,7 @@ function AdminDashboard() {
             <div className="stat-card">
               <div className="stat-label">Organizations</div>
               <div className="stat-value">{orgs.length}</div>
-              <Link to="/Organizations" className="stat-sub">
+              <Link to="/AdminViewOrganizations" className="stat-sub">
                 All Active →
               </Link>
             </div>
