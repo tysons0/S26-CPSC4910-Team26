@@ -23,6 +23,9 @@ function AdminDashboard() {
   const [uploading, setUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState("");
 
+  // Add state for the modal
+  const [uploadModal, setUploadModal] = useState(null); // holds the result object
+
   const handleChange = (e) => {
     const value = e.target.value;
     if (value) {
@@ -91,6 +94,7 @@ function AdminDashboard() {
 
     try {
       const result = await apiService.uploadUsers(file);
+      setUploadModal(result);
       console.log("Upload result:", result);
 
       const successCount = result?.successes?.length ?? 0;
@@ -301,20 +305,6 @@ function AdminDashboard() {
                 style={{ display: "none" }}
                 onChange={handleUploadUsers}
               />
-
-              {uploadResult && (
-                <p
-                  style={{
-                    marginTop: "0.75rem",
-                    fontSize: "0.85rem",
-                    color: uploadResult.startsWith("Upload failed")
-                      ? "#fc8181"
-                      : "#68d391",
-                  }}
-                >
-                  {uploadResult}
-                </p>
-              )}
             </div>
 
             {/* View Users + Activity */}
@@ -356,6 +346,183 @@ function AdminDashboard() {
           </div>
         </main>
       </div>
+      {uploadModal && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+          }}
+          onClick={() => setUploadModal(null)}
+        >
+          <div
+            style={{
+              background: "var(--surface-alt)",
+              border: "1px solid var(--border)",
+              borderRadius: "12px",
+              padding: "2rem",
+              width: "min(600px, 90vw)",
+              maxHeight: "80vh",
+              overflowY: "auto",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 style={{ marginTop: 0, color: "var(--text-muted)" }}>
+              Upload Results
+            </h2>
+
+            <div
+              style={{ display: "flex", gap: "1.5rem", marginBottom: "1.5rem" }}
+            >
+              <div>
+                <div
+                  style={{
+                    fontSize: "0.75rem",
+                    color: "var(--text-alt)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                  }}
+                >
+                  Total Lines
+                </div>
+                <div
+                  style={{
+                    fontSize: "1.5rem",
+                    fontWeight: 700,
+                    color: "var(--text-muted)",
+                  }}
+                >
+                  {uploadModal.totalLines}
+                </div>
+              </div>
+              <div>
+                <div
+                  style={{
+                    fontSize: "0.75rem",
+                    color: "var(--text-alt)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                  }}
+                >
+                  Succeeded
+                </div>
+                <div
+                  style={{
+                    fontSize: "1.5rem",
+                    fontWeight: 700,
+                    color: "#68d391",
+                  }}
+                >
+                  {uploadModal.successes?.length ?? 0}
+                </div>
+              </div>
+              <div>
+                <div
+                  style={{
+                    fontSize: "0.75rem",
+                    color: "var(--text-alt)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                  }}
+                >
+                  Errors
+                </div>
+                <div
+                  style={{
+                    fontSize: "1.5rem",
+                    fontWeight: 700,
+                    color: "#fc8181",
+                  }}
+                >
+                  {uploadModal.errors?.length ?? 0}
+                </div>
+              </div>
+            </div>
+
+            {uploadModal.successes?.length > 0 && (
+              <div style={{ marginBottom: "1rem" }}>
+                <h3 style={{ color: "#68d391", marginBottom: "0.5rem" }}>
+                  ✓ Successes
+                </h3>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "0.4rem",
+                  }}
+                >
+                  {uploadModal.successes.map((msg, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        background: "rgba(104,211,145,0.08)",
+                        border: "1px solid rgba(104,211,145,0.2)",
+                        borderRadius: "6px",
+                        padding: "0.5rem 0.75rem",
+                        fontSize: "0.85rem",
+                        color: "var(--text-muted)",
+                      }}
+                    >
+                      {msg}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {uploadModal.errors?.length > 0 && (
+              <div style={{ marginBottom: "1.5rem" }}>
+                <h3 style={{ color: "#fc8181", marginBottom: "0.5rem" }}>
+                  ✕ Errors
+                </h3>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "0.4rem",
+                  }}
+                >
+                  {uploadModal.errors.map((msg, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        background: "rgba(252,129,129,0.08)",
+                        border: "1px solid rgba(252,129,129,0.2)",
+                        borderRadius: "6px",
+                        padding: "0.5rem 0.75rem",
+                        fontSize: "0.85rem",
+                        color: "var(--text-muted)",
+                      }}
+                    >
+                      {msg}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <button
+              onClick={() => setUploadModal(null)}
+              style={{
+                padding: "0.6rem 1.5rem",
+                background: "rgba(102,126,234,0.12)",
+                color: "#667eea",
+                border: "1px solid rgba(102,126,234,0.3)",
+                borderRadius: "8px",
+                cursor: "pointer",
+                fontWeight: 600,
+                fontSize: "0.9rem",
+              }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

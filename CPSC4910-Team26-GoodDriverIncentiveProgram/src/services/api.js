@@ -1457,7 +1457,7 @@ const apiService = {
       }
 
       const response = await fetch(
-        `${BASE_URL}/Organization/add-driver/${driverId}`,
+        `${BASE_URL}/Organization/add-driver/${driverId}?orgId=${orgId}`,
         {
           method: "POST",
           headers: {
