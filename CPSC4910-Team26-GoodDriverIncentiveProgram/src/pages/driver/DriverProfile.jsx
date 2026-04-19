@@ -16,6 +16,7 @@ function DriverProfile() {
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [emailNotifs, setEmailNotifs] = useState(false);
+  const [orgs, setOrgs] = useState([]);
 
   //Address States
   const [addresses, setAddresses] = useState([]);
@@ -76,6 +77,9 @@ function DriverProfile() {
           });
 
           setAddresses(driverInfo.addresses || []);
+
+          const allOrgs = await apiService.getOrganizations().catch(() => []);
+          setOrgs(Array.isArray(allOrgs) ? allOrgs : []);
         }
       } catch (error) {
         console.error("Error fetching driver data", error);
@@ -325,60 +329,89 @@ function DriverProfile() {
         </div>
       )}
 
-      {/* NEW: Points Summary Card */}
+      {/* Points Summary Card */}
       <div className="profile-card" style={{ marginBottom: "2rem" }}>
         <h2 style={{ marginBottom: "1rem", fontSize: "1.25rem" }}>
           Points & Rewards
         </h2>
 
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            padding: "1rem",
-            backgroundColor: "#e7f3ff",
-            borderRadius: "8px",
-            border: "2px solid #667eea",
-          }}
-        >
-          <div>
+        {driverData?.driverOrgsAndPoints?.length > 0 ? (
+          <>
             <div
               style={{
-                fontSize: "0.9rem",
-                color: "#666",
-                marginBottom: "0.25rem",
+                display: "flex",
+                flexDirection: "column",
+                gap: "0.5rem",
+                marginBottom: "1rem",
               }}
             >
-              Current Balance
+              {driverData.driverOrgsAndPoints.map((entry) => {
+                const points =
+                  entry.points ??
+                  entry.pointBalance ??
+                  entry.currentPoints ??
+                  0;
+                const orgName =
+                  entry.organizationName ??
+                  entry.name ??
+                  orgs.find(
+                    (o) =>
+                      String(o.orgId) ===
+                      String(entry.orgId ?? entry.organizationId),
+                  )?.name ??
+                  `Org #${entry.orgId ?? entry.organizationId}`;
+                return (
+                  <div
+                    key={entry.orgId ?? entry.organizationId}
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      padding: "0.75rem 1rem",
+                      backgroundColor: "#e7f3ff",
+                      borderRadius: "8px",
+                      border: "1px solid #667eea",
+                    }}
+                  >
+                    <div style={{ fontSize: "0.9rem", color: "#666" }}>
+                      {orgName}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "1.1rem",
+                        fontWeight: "700",
+                        color: "#667eea",
+                      }}
+                    >
+                      {points} pts
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-            <div
-              style={{ fontSize: "2rem", fontWeight: "700", color: "#667eea" }}
-            >
-              {driverData?.points || 0} Points
-            </div>
-            {driverData?.organizationId && (
-              <div
-                style={{
-                  fontSize: "0.85rem",
-                  color: "#666",
-                  marginTop: "0.5rem",
-                }}
-              >
-                Organization ID: {driverData.organizationId}
-              </div>
-            )}
-          </div>
 
-          <Link to="/DriverPointHistory">
-            <button
-              className="btn btn-secondary"
-              style={{ whiteSpace: "nowrap" }}
-            >
-              View History
-            </button>
-          </Link>
-        </div>
+            <Link to="/DriverPointHistory">
+              <button
+                className="btn btn-secondary"
+                style={{ whiteSpace: "nowrap" }}
+              >
+                View Point History
+              </button>
+            </Link>
+          </>
+        ) : (
+          <div
+            style={{
+              padding: "1rem",
+              backgroundColor: "#e7f3ff",
+              borderRadius: "8px",
+              border: "1px solid #667eea",
+              color: "#666",
+            }}
+          >
+            Not a member of any organization yet.
+          </div>
+        )}
       </div>
 
       {/* Profile Information Card */}
@@ -868,8 +901,12 @@ function DriverProfile() {
                 gap: "0.35rem",
                 padding: "0.85rem 1rem",
                 borderRadius: "12px",
-                border: emailNotifs ? "1px solid var(--border)" : "2px solid #667eea",
-                backgroundColor: emailNotifs ? "var(--surface)" : "rgba(102, 126, 234, 0.12)",
+                border: emailNotifs
+                  ? "1px solid var(--border)"
+                  : "2px solid #667eea",
+                backgroundColor: emailNotifs
+                  ? "var(--surface)"
+                  : "rgba(102, 126, 234, 0.12)",
               }}
             >
               <input
@@ -892,8 +929,12 @@ function DriverProfile() {
                 gap: "0.35rem",
                 padding: "0.85rem 1rem",
                 borderRadius: "12px",
-                border: emailNotifs ? "2px solid #667eea" : "1px solid var(--border)",
-                backgroundColor: emailNotifs ? "rgba(102, 126, 234, 0.12)" : "var(--surface)",
+                border: emailNotifs
+                  ? "2px solid #667eea"
+                  : "1px solid var(--border)",
+                backgroundColor: emailNotifs
+                  ? "rgba(102, 126, 234, 0.12)"
+                  : "var(--surface)",
               }}
             >
               <input

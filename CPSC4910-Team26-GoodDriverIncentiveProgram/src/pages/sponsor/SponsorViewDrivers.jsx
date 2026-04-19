@@ -81,6 +81,7 @@ function SponsorViewDrivers() {
       username: driver.userData.username,
       role: "driver",
       targetPath: "/DriverDashboard",
+      returnPath: "/SponsorViewDrivers",
     });
   };
 

@@ -194,6 +194,17 @@ function AdminDashboard() {
               Manage users and organizations here.
             </div>
           </div>
+          <select
+            className="view-select pov-switch-select"
+            onChange={handlePovChange}
+            value=""
+          >
+            <option value="" disabled>
+              👁 Switch POV…
+            </option>
+            <option value="driver">🚗 View as Driver</option>
+            <option value="sponsor">🧑‍💼 View as Sponsor</option>
+          </select>
         </header>
         {/* Content */}
         <main className="admin-content">

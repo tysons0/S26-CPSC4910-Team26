@@ -447,6 +447,16 @@ function SponsorDashboard() {
               Manage your catalog and organization from here.
             </div>
           </div>
+          <select
+            className="view-select pov-switch-select"
+            onChange={handlePovChange}
+            value=""
+          >
+            <option value="" disabled>
+              👁 Switch POV…
+            </option>
+            <option value="driver">🚗 View as Driver</option>
+          </select>
         </header>
 
         <main className="sponsor-content">
