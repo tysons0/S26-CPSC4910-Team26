@@ -90,26 +90,28 @@ function AdminDashboard() {
     if (!file) return;
 
     setUploading(true);
-    setUploadResult("");
 
     try {
       const result = await apiService.uploadUsers(file);
       setUploadModal(result);
-      console.log("Upload result:", result);
 
-      const successCount = result?.successes?.length ?? 0;
-      const errors = result?.errors ?? [];
-
-      if (errors.length > 0) {
-        setUploadResult(
-          `Uploaded ${successCount} row(s). Errors: ${errors.join(", ")}`,
-        );
-      } else {
-        setUploadResult(`Successfully uploaded ${successCount} row(s)!`);
+      // Refresh counts if anything succeeded
+      if (result?.successes?.length > 0) {
+        const [newDrivers, newSponsors, newOrgs] = await Promise.all([
+          apiService.getDrivers().catch(() => []),
+          apiService.getSponsors().catch(() => []),
+          apiService.getOrganizations().catch(() => []),
+        ]);
+        setDrivers(Array.isArray(newDrivers) ? newDrivers : []);
+        setSponsors(Array.isArray(newSponsors) ? newSponsors : []);
+        setOrgs(Array.isArray(newOrgs) ? newOrgs : []);
       }
     } catch (error) {
-      console.error("Upload error:", error);
-      setUploadResult("Upload failed: " + (error.message || "Unknown error"));
+      setUploadModal({
+        successes: [],
+        errors: [error.message || "Unknown error"],
+        totalLines: 0,
+      });
     } finally {
       setUploading(false);
       e.target.value = "";
@@ -149,6 +151,25 @@ function AdminDashboard() {
           📊 Reports
         </Link>
 
+        {/* Upload Users */}
+        <input
+          id="admin-sidebar-upload-input"
+          type="file"
+          accept=".txt,.csv,.psv"
+          style={{ display: "none" }}
+          onChange={handleUploadUsers}
+        />
+        <button
+          className="nav-item"
+          onClick={() =>
+            document.getElementById("admin-sidebar-upload-input").click()
+          }
+          disabled={uploading}
+          style={{ opacity: uploading ? 0.6 : 1 }}
+        >
+          📤 {uploading ? "Uploading..." : "Upload Users"}
+        </button>
+
         <div className="sidebar-bottom">
           <div className="user-chip">
             <div className="avatar">
@@ -173,18 +194,6 @@ function AdminDashboard() {
               Manage users and organizations here.
             </div>
           </div>
-
-          <select
-            className="view-select pov-switch-select"
-            onChange={handlePovChange}
-            value=""
-          >
-            <option value="" disabled>
-              👁 Switch POV…
-            </option>
-            <option value="driver">🚗 View as Driver</option>
-            <option value="sponsor">🧑‍💼 View as Sponsor</option>
-          </select>
         </header>
         {/* Content */}
         <main className="admin-content">
