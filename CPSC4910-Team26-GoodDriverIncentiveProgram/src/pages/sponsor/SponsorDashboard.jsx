@@ -37,6 +37,7 @@ function SponsorDashboard() {
 
   const [uploading, setUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState("");
+  const [uploadModal, setUploadModal] = useState(null); // holds the result object
 
   const [povRole, setPovRole] = useState(null);
 
@@ -111,6 +112,14 @@ function SponsorDashboard() {
     apiService.logout();
     window.dispatchEvent(new Event("authChange"));
     navigate("/Login");
+  };
+
+  const handlePovChange = (e) => {
+    const role = e.target.value;
+    if (role) {
+      sessionStorage.setItem("sponsorPovRole", role);
+      navigate(role === "driver" ? "/DriverDashboard" : "/AdminDashboard");
+    }
   };
 
   const handleFormChange = (e) => {
@@ -320,25 +329,31 @@ function SponsorDashboard() {
     if (!file) return;
 
     setUploading(true);
-    setUploadResult("");
 
     try {
-      await apiService.uploadUsers(file);
-      setUploadResult("Users uploaded successfully!");
+      const result = await apiService.uploadUsers(file);
+      setUploadModal(result);
+
+      // Refresh counts if anything succeeded
+      if (result?.successes?.length > 0) {
+        const [newDrivers, newSponsors, newOrgs] = await Promise.all([
+          apiService.getDrivers().catch(() => []),
+          apiService.getSponsors().catch(() => []),
+          apiService.getOrganizations().catch(() => []),
+        ]);
+        setDrivers(Array.isArray(newDrivers) ? newDrivers : []);
+        setSponsors(Array.isArray(newSponsors) ? newSponsors : []);
+        setOrgs(Array.isArray(newOrgs) ? newOrgs : []);
+      }
     } catch (error) {
-      setUploadResult("Upload failed: " + (error.message || "Unknown error"));
+      setUploadModal({
+        successes: [],
+        errors: [error.message || "Unknown error"],
+        totalLines: 0,
+      });
     } finally {
       setUploading(false);
-      e.target.value = ""; // reset file input
-    }
-  };
-
-  const handlePovChange = (e) => {
-    const role = e.target.value;
-    if (role) {
-      sessionStorage.setItem("adminPovRole", role);
-      sessionStorage.setItem("povSource", "sponsor");
-      navigate("/DriverDashboard");
+      e.target.value = "";
     }
   };
 
@@ -388,6 +403,25 @@ function SponsorDashboard() {
           ➕ Register Sponsor
         </Link>
 
+        {/* Upload Users */}
+        <input
+          id="sponsor-sidebar-upload-input"
+          type="file"
+          accept=".txt,.csv,.psv"
+          style={{ display: "none" }}
+          onChange={handleUploadUsers}
+        />
+        <button
+          className="nav-item"
+          onClick={() =>
+            document.getElementById("sponsor-sidebar-upload-input").click()
+          }
+          disabled={uploading}
+          style={{ opacity: uploading ? 0.6 : 1 }}
+        >
+          📤 {uploading ? "Uploading..." : "Upload Users"}
+        </button>
+
         <div className="sidebar-bottom">
           <div className="user-chip">
             <div className="avatar">
@@ -413,7 +447,6 @@ function SponsorDashboard() {
               Manage your catalog and organization from here.
             </div>
           </div>
-
           <select
             className="view-select pov-switch-select"
             onChange={handlePovChange}
@@ -953,73 +986,267 @@ function SponsorDashboard() {
 
             <div className="section-card">
               <div className="section-title">Manage Organization</div>
-              <Link
-                to={`/SponsorOrderHistory/${sponsorOrgId}`}
-                className="action-row"
-              >
-                <div className="action-row-left">
-                  <div
-                    className="action-icon"
-                    style={{ background: "rgba(102,126,234,0.15)" }}
-                  >
-                    📝
-                  </div>{" "}
-                  View Order History
-                </div>
-                <span style={{ color: "var(--text-alt)" }}>›</span>
-              </Link>
-              <Link to="/SponsorApplications" className="action-row">
-                <div className="action-row-left">
-                  <div
-                    className="action-icon"
-                    style={{ background: "rgba(102,126,234,0.15)" }}
-                  >
-                    📋
-                  </div>{" "}
-                  View Applications
-                </div>
-                <span style={{ color: "var(--text-alt)" }}>›</span>
-              </Link>
-              <Link to="/SponsorViewDrivers" className="action-row">
-                <div className="action-row-left">
-                  <div
-                    className="action-icon"
-                    style={{ background: "rgba(72,187,120,0.15)" }}
-                  >
-                    🚗
-                  </div>{" "}
-                  View Drivers
-                </div>
-                <span style={{ color: "var(--text-alt)" }}>›</span>
-              </Link>
-              <Link to="/SponsorViewSponsors" className="action-row">
-                <div className="action-row-left">
-                  <div
-                    className="action-icon"
-                    style={{ background: "rgba(237,137,54,0.15)" }}
-                  >
-                    🏢
-                  </div>{" "}
-                  View Organization's Sponsors
-                </div>
-                <span style={{ color: "var(--text-alt)" }}>›</span>
-              </Link>
-              <Link to="/SponsorSignUp" className="action-row">
-                <div className="action-row-left">
-                  <div
-                    className="action-icon"
-                    style={{ background: "rgba(237,100,166,0.15)" }}
-                  >
-                    ➕
-                  </div>{" "}
-                  Register New Sponsor
-                </div>
-                <span style={{ color: "var(--text-alt)" }}>›</span>
-              </Link>
+              <div className="action-list">
+                {[
+                  {
+                    to: `/SponsorOrderHistory/${sponsorOrgId}`,
+                    icon: "📝",
+                    label: "View Order History",
+                    bg: "rgba(102,126,234,0.15)",
+                  },
+                  {
+                    to: "/SponsorApplications",
+                    icon: "📋",
+                    label: "View Applications",
+                    bg: "rgba(102,126,234,0.15)",
+                  },
+                  {
+                    to: "/SponsorViewDrivers",
+                    icon: "🚗",
+                    label: "View Drivers",
+                    bg: "rgba(72,187,120,0.15)",
+                  },
+                  {
+                    to: "/SponsorViewSponsors",
+                    icon: "🏢",
+                    label: "View Organization's Sponsors",
+                    bg: "rgba(237,137,54,0.15)",
+                  },
+                  {
+                    to: "/SponsorSignUp",
+                    icon: "➕",
+                    label: "Register New Sponsor",
+                    bg: "rgba(237,100,166,0.15)",
+                  },
+                  {
+                    icon: "📤",
+                    label: uploading ? "Uploading..." : "Upload Users",
+                    bg: "rgba(102,126,234,0.15)",
+                    isUpload: true,
+                  },
+                ].map(({ to, icon, label, bg, isUpload }) =>
+                  isUpload ? (
+                    <div
+                      key="upload"
+                      className="action-row"
+                      onClick={() =>
+                        document.getElementById("sponsor-upload-input").click()
+                      }
+                      style={{
+                        cursor: uploading ? "not-allowed" : "pointer",
+                        opacity: uploading ? 0.6 : 1,
+                      }}
+                    >
+                      <div className="action-row-left">
+                        <div className="action-icon" style={{ background: bg }}>
+                          {icon}
+                        </div>
+                        {label}
+                      </div>
+                      <span style={{ color: "var(--text-alt)" }}>›</span>
+                    </div>
+                  ) : (
+                    <Link key={to} to={to} className="action-row">
+                      <div className="action-row-left">
+                        <div className="action-icon" style={{ background: bg }}>
+                          {icon}
+                        </div>
+                        {label}
+                      </div>
+                      <span style={{ color: "var(--text-alt)" }}>›</span>
+                    </Link>
+                  ),
+                )}
+              </div>
+
+              <input
+                id="sponsor-upload-input"
+                type="file"
+                accept=".txt,.csv,.psv"
+                style={{ display: "none" }}
+                onChange={handleUploadUsers}
+              />
             </div>
           </div>
         </main>
       </div>
+      {uploadModal && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+          }}
+          onClick={() => setUploadModal(null)}
+        >
+          <div
+            style={{
+              background: "var(--surface-alt)",
+              border: "1px solid var(--border)",
+              borderRadius: "12px",
+              padding: "2rem",
+              width: "min(600px, 90vw)",
+              maxHeight: "80vh",
+              overflowY: "auto",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 style={{ marginTop: 0, color: "var(--text-muted)" }}>
+              Upload Results
+            </h2>
+
+            <div
+              style={{ display: "flex", gap: "1.5rem", marginBottom: "1.5rem" }}
+            >
+              <div>
+                <div
+                  style={{
+                    fontSize: "0.75rem",
+                    color: "var(--text-alt)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                  }}
+                >
+                  Total Lines
+                </div>
+                <div
+                  style={{
+                    fontSize: "1.5rem",
+                    fontWeight: 700,
+                    color: "var(--text-muted)",
+                  }}
+                >
+                  {uploadModal.totalLines}
+                </div>
+              </div>
+              <div>
+                <div
+                  style={{
+                    fontSize: "0.75rem",
+                    color: "var(--text-alt)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                  }}
+                >
+                  Succeeded
+                </div>
+                <div
+                  style={{
+                    fontSize: "1.5rem",
+                    fontWeight: 700,
+                    color: "#68d391",
+                  }}
+                >
+                  {uploadModal.successes?.length ?? 0}
+                </div>
+              </div>
+              <div>
+                <div
+                  style={{
+                    fontSize: "0.75rem",
+                    color: "var(--text-alt)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                  }}
+                >
+                  Errors
+                </div>
+                <div
+                  style={{
+                    fontSize: "1.5rem",
+                    fontWeight: 700,
+                    color: "#fc8181",
+                  }}
+                >
+                  {uploadModal.errors?.length ?? 0}
+                </div>
+              </div>
+            </div>
+
+            {uploadModal.successes?.length > 0 && (
+              <div style={{ marginBottom: "1rem" }}>
+                <h3 style={{ color: "#68d391", marginBottom: "0.5rem" }}>
+                  ✓ Successes
+                </h3>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "0.4rem",
+                  }}
+                >
+                  {uploadModal.successes.map((msg, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        background: "rgba(104,211,145,0.08)",
+                        border: "1px solid rgba(104,211,145,0.2)",
+                        borderRadius: "6px",
+                        padding: "0.5rem 0.75rem",
+                        fontSize: "0.85rem",
+                        color: "var(--text-muted)",
+                      }}
+                    >
+                      {msg}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {uploadModal.errors?.length > 0 && (
+              <div style={{ marginBottom: "1.5rem" }}>
+                <h3 style={{ color: "#fc8181", marginBottom: "0.5rem" }}>
+                  ✕ Errors
+                </h3>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "0.4rem",
+                  }}
+                >
+                  {uploadModal.errors.map((msg, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        background: "rgba(252,129,129,0.08)",
+                        border: "1px solid rgba(252,129,129,0.2)",
+                        borderRadius: "6px",
+                        padding: "0.5rem 0.75rem",
+                        fontSize: "0.85rem",
+                        color: "var(--text-muted)",
+                      }}
+                    >
+                      {msg}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <button
+              onClick={() => setUploadModal(null)}
+              style={{
+                padding: "0.6rem 1.5rem",
+                background: "rgba(102,126,234,0.12)",
+                color: "#667eea",
+                border: "1px solid rgba(102,126,234,0.3)",
+                borderRadius: "8px",
+                cursor: "pointer",
+                fontWeight: 600,
+                fontSize: "0.9rem",
+              }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

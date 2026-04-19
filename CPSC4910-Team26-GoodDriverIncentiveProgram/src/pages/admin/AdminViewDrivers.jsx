@@ -32,6 +32,9 @@ function AdminViewDrivers() {
   const [uploading, setUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState("");
 
+  const [orgs, setOrgs] = useState([]);
+  const [selectedOrgId, setSelectedOrgId] = useState({});
+
   const { impersonate } = useImpersonation();
 
   useEffect(() => {
@@ -46,6 +49,9 @@ function AdminViewDrivers() {
         const data = await apiService.getDrivers();
         console.log("Drivers data:", data);
         setDrivers(Array.isArray(data) ? data : []);
+
+        const orgData = await apiService.getOrganizations();
+        setOrgs(Array.isArray(orgData) ? orgData : []);
       } catch (err) {
         console.error("Error fetching drivers:", err);
         setError(err.message || "Failed to load drivers");
@@ -290,6 +296,44 @@ function AdminViewDrivers() {
     }
   };
 
+  const handleAddToOrg = async (driver) => {
+    const orgId = selectedOrgId[driver.driverId];
+    if (!orgId) return;
+
+    const org = orgs.find((o) => String(o.orgId) === String(orgId));
+    const confirmed = window.confirm(
+      `Add ${driver.userData?.username} to ${org?.name}?`,
+    );
+    if (!confirmed) return;
+
+    try {
+      await apiService.orgAddDriver(driver.driverId, orgId);
+      alert(`Driver added to ${org?.name} successfully.`);
+      // Refresh drivers to reflect updated driverOrgsAndPoints
+      const data = await apiService.getDrivers();
+      setDrivers(Array.isArray(data) ? data : []);
+    } catch (error) {
+      alert("Failed to add driver: " + (error.message || "Unknown error"));
+    }
+  };
+
+  const handleRemoveFromOrg = async (driver, orgId) => {
+    const org = orgs.find((o) => String(o.orgId) === String(orgId));
+    const confirmed = window.confirm(
+      `Remove ${driver.userData?.username} from ${org?.name}?`,
+    );
+    if (!confirmed) return;
+
+    try {
+      await apiService.leaveOrganization(driver.driverId, orgId);
+      alert(`Driver removed from ${org?.name} successfully.`);
+      const data = await apiService.getDrivers();
+      setDrivers(Array.isArray(data) ? data : []);
+    } catch (error) {
+      alert("Failed to remove driver: " + (error.message || "Unknown error"));
+    }
+  };
+
   const getDriverOrgs = (driver) => {
     return Array.isArray(driver?.driverOrgsAndPoints)
       ? driver.driverOrgsAndPoints
@@ -468,60 +512,7 @@ function AdminViewDrivers() {
           <option value="status-asc">Active First</option>
           <option value="status-desc">Disabled First</option>
         </select>
-
-        {/* Upload Drivers button */}
-        <input
-          id="upload-drivers-input"
-          type="file"
-          accept=".txt,.csv,.psv"
-          style={{ display: "none" }}
-          onChange={handleUploadDrivers}
-        />
-        <button
-          style={{
-            marginLeft: "auto",
-            padding: "0.6rem 1rem",
-            borderRadius: "8px",
-            border: "1px solid rgba(102,126,234,0.3)",
-            background: "rgba(102,126,234,0.12)",
-            color: "#667eea",
-            fontWeight: 600,
-            fontSize: "0.9rem",
-            cursor: uploading ? "not-allowed" : "pointer",
-            opacity: uploading ? 0.6 : 1,
-            transition: "all 0.15s",
-          }}
-          disabled={uploading}
-          onClick={() =>
-            document.getElementById("upload-drivers-input").click()
-          }
-          onMouseEnter={(e) => {
-            if (!uploading) {
-              e.currentTarget.style.background = "rgba(102,126,234,0.22)";
-              e.currentTarget.style.borderColor = "#667eea";
-            }
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = "rgba(102,126,234,0.12)";
-            e.currentTarget.style.borderColor = "rgba(102,126,234,0.3)";
-          }}
-        >
-          {uploading ? "Uploading..." : "Upload Drivers"}
-        </button>
       </div>
-
-      {uploadResult && (
-        <p
-          style={{
-            color: uploadResult.startsWith("Upload failed")
-              ? "#fc8181"
-              : "#68d391",
-            marginBottom: "0.5rem",
-          }}
-        >
-          {uploadResult}
-        </p>
-      )}
 
       {drivers.length === 0 ? (
         <p style={{ color: "var(--text-alt)" }}>No drivers found.</p>
@@ -714,6 +705,7 @@ function AdminViewDrivers() {
                         >
                           Edit
                         </button>
+
                         <button
                           onClick={() =>
                             driver.userData?.disabled
@@ -1010,6 +1002,152 @@ function AdminViewDrivers() {
                               >
                                 Edit Driver Info
                               </button>
+
+                              {/* Manage Organizations */}
+                              <h3
+                                style={{
+                                  marginBottom: "0.75rem",
+                                  color: "var(--text-muted)",
+                                  marginTop: "0.5rem",
+                                }}
+                              >
+                                Organizations
+                              </h3>
+
+                              {driver.driverOrgsAndPoints?.length > 0 ? (
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: "0.5rem",
+                                    marginBottom: "1rem",
+                                  }}
+                                >
+                                  {driver.driverOrgsAndPoints.map((entry) => {
+                                    const org = orgs.find(
+                                      (o) =>
+                                        String(o.orgId) === String(entry.orgId),
+                                    );
+                                    return (
+                                      <div
+                                        key={entry.orgId}
+                                        style={{
+                                          display: "flex",
+                                          justifyContent: "space-between",
+                                          alignItems: "center",
+                                          background: "var(--bg)",
+                                          border: "1px solid var(--border)",
+                                          borderRadius: "8px",
+                                          padding: "0.5rem 0.75rem",
+                                          fontSize: "0.9rem",
+                                        }}
+                                      >
+                                        <span
+                                          style={{
+                                            color: "var(--text-muted)",
+                                            fontWeight: 600,
+                                          }}
+                                        >
+                                          🏢{" "}
+                                          {org?.name || `Org #${entry.orgId}`}
+                                        </span>
+                                        <button
+                                          onClick={() =>
+                                            handleRemoveFromOrg(
+                                              driver,
+                                              entry.orgId,
+                                            )
+                                          }
+                                          style={{
+                                            padding: "0.3rem 0.75rem",
+                                            background:
+                                              "rgba(252,129,129,0.12)",
+                                            color: "#fc8181",
+                                            border:
+                                              "1px solid rgba(252,129,129,0.3)",
+                                            borderRadius: "6px",
+                                            cursor: "pointer",
+                                            fontSize: "0.8rem",
+                                            fontWeight: 600,
+                                          }}
+                                        >
+                                          Remove
+                                        </button>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              ) : (
+                                <p
+                                  style={{
+                                    color: "var(--text-alt)",
+                                    fontSize: "0.9rem",
+                                    marginBottom: "1rem",
+                                  }}
+                                >
+                                  Not a member of any organization.
+                                </p>
+                              )}
+
+                              <div
+                                style={{
+                                  display: "flex",
+                                  gap: "0.5rem",
+                                  alignItems: "center",
+                                  marginBottom: "1.5rem",
+                                }}
+                              >
+                                <select
+                                  className="view-select"
+                                  style={{ width: "auto", flex: 1 }}
+                                  value={selectedOrgId[driver.driverId] || ""}
+                                  onChange={(e) =>
+                                    setSelectedOrgId((prev) => ({
+                                      ...prev,
+                                      [driver.driverId]: e.target.value,
+                                    }))
+                                  }
+                                >
+                                  <option value="">
+                                    Select organization to add...
+                                  </option>
+                                  {orgs
+                                    .filter(
+                                      (o) =>
+                                        !driver.driverOrgsAndPoints?.some(
+                                          (entry) =>
+                                            String(entry.orgId) ===
+                                            String(o.orgId),
+                                        ),
+                                    )
+                                    .map((o) => (
+                                      <option key={o.orgId} value={o.orgId}>
+                                        {o.name}
+                                      </option>
+                                    ))}
+                                </select>
+                                <button
+                                  onClick={() => handleAddToOrg(driver)}
+                                  disabled={!selectedOrgId[driver.driverId]}
+                                  style={{
+                                    padding: "0.5rem 1rem",
+                                    background: "rgba(102,126,234,0.12)",
+                                    color: "#667eea",
+                                    border: "1px solid rgba(102,126,234,0.3)",
+                                    borderRadius: "7px",
+                                    cursor: selectedOrgId[driver.driverId]
+                                      ? "pointer"
+                                      : "not-allowed",
+                                    fontWeight: 600,
+                                    fontSize: "0.875rem",
+                                    opacity: selectedOrgId[driver.driverId]
+                                      ? 1
+                                      : 0.5,
+                                  }}
+                                >
+                                  Add to Org
+                                </button>
+                              </div>
 
                               {/* Point History */}
                               <h3

@@ -4,7 +4,13 @@ import apiService from "../services/api";
 export function useImpersonation() {
   const navigate = useNavigate();
 
-  const impersonate = async ({ userId, username, role, targetPath }) => {
+  const impersonate = async ({
+    userId,
+    username,
+    role,
+    targetPath,
+    returnPath,
+  }) => {
     try {
       // Save the real admin/sponsor session before overwriting it
       const realToken = apiService.getToken();
@@ -15,7 +21,8 @@ export function useImpersonation() {
       sessionStorage.setItem("impersonator_role", realUser.role || "admin");
       sessionStorage.setItem(
         "impersonator_return_path",
-        role === "driver" ? "/AdminViewDrivers" : "/AdminViewSponsors",
+        returnPath ||
+          (role === "driver" ? "/AdminViewDrivers" : "/AdminViewSponsors"),
       );
 
       // Call the login-as endpoint
