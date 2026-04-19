@@ -455,46 +455,6 @@ function SponsorViewDrivers() {
               <option value="newest">Newest Member</option>
               <option value="oldest">Oldest Member</option>
             </select>
-
-            {/* Upload Drivers button */}
-            <input
-              id="upload-drivers-input"
-              type="file"
-              accept=".txt,.csv,.psv"
-              style={{ display: "none" }}
-              onChange={handleUploadDrivers}
-            />
-            <button
-              style={{
-                marginLeft: "auto",
-                padding: "0.6rem 1rem",
-                borderRadius: "8px",
-                border: "1px solid rgba(102,126,234,0.3)",
-                background: "rgba(102,126,234,0.12)",
-                color: "#667eea",
-                fontWeight: 600,
-                fontSize: "0.9rem",
-                cursor: uploading ? "not-allowed" : "pointer",
-                opacity: uploading ? 0.6 : 1,
-                transition: "all 0.15s",
-              }}
-              disabled={uploading}
-              onClick={() =>
-                document.getElementById("upload-drivers-input").click()
-              }
-              onMouseEnter={(e) => {
-                if (!uploading) {
-                  e.currentTarget.style.background = "rgba(102,126,234,0.22)";
-                  e.currentTarget.style.borderColor = "#667eea";
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "rgba(102,126,234,0.12)";
-                e.currentTarget.style.borderColor = "rgba(102,126,234,0.3)";
-              }}
-            >
-              {uploading ? "Uploading..." : "Upload Drivers"}
-            </button>
           </div>
 
           <div style={{ display: "grid", gap: "1rem" }}>
