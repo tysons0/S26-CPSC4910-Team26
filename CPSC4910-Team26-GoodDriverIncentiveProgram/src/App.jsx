@@ -26,6 +26,7 @@ import SponsorViewSponsors from "./pages/sponsor/SponsorViewSponsors";
 import AdminViewDrivers from "./pages/admin/AdminViewDrivers";
 import AdminViewSponsors from "./pages/admin/AdminViewSponsors";
 import AdminViewAdmins from "./pages/admin/AdminViewAdmins";
+import AdminViewOrganizations from "./pages/admin/AdminViewOrganizations";
 import DriverPointHistory from "./pages/driver/DriverPointHistory";
 import EbayTestDashboard from "./pages/sponsor/EbayTestDashboard";
 import CartPage from "./pages/driver/CartPage";
@@ -92,6 +93,10 @@ function App() {
         <Route path="/AdminViewDrivers" element={<AdminViewDrivers />} />
         <Route path="/AdminViewSponsors" element={<AdminViewSponsors />} />
         <Route path="/AdminViewAdmins" element={<AdminViewAdmins />} />
+        <Route
+          path="/AdminViewOrganizations"
+          element={<AdminViewOrganizations />}
+        />
         <Route path="/AdminReport" element={<AdminReport />} />
       </Routes>
     </CartProvider>

@@ -268,13 +268,25 @@ function AdminViewDrivers() {
     setUploadResult("");
 
     try {
-      await apiService.uploadUsers(file);
-      setUploadResult("Drivers uploaded successfully!");
+      const result = await apiService.uploadUsers(file);
+      console.log("Upload result:", result); // shows successes/errors/totalLines
+
+      const successCount = result?.successes?.length ?? 0;
+      const errors = result?.errors ?? [];
+
+      if (errors.length > 0) {
+        setUploadResult(
+          `Uploaded ${successCount} driver(s). Errors: ${errors.join(", ")}`,
+        );
+      } else {
+        setUploadResult(`Successfully uploaded ${successCount} driver(s)!`);
+      }
     } catch (error) {
+      console.error("Upload error:", error);
       setUploadResult("Upload failed: " + (error.message || "Unknown error"));
     } finally {
       setUploading(false);
-      e.target.value = ""; // reset file input
+      e.target.value = "";
     }
   };
 
