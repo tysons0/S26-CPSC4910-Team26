@@ -1,0 +1,225 @@
+CREATE TABLE Users (
+  UserId INT AUTO_INCREMENT PRIMARY KEY,
+  UserName VARCHAR(200) NOT NULL UNIQUE,
+  Email VARCHAR(500),
+  HashedPassword TEXT NOT NULL,
+  CreatedAtUtc DATETIME NOT NULL,
+  FirstName VARCHAR(100),
+  LastName VARCHAR(100),
+  Phone VARCHAR(50),
+  Country VARCHAR(100),
+  TimeZone VARCHAR(100),
+  LastLoginUtc DATETIME,
+  Disabled BIT NOT NULL DEFAULT 0,
+  EmailNotificationsEnabled BIT DEFAULT 0
+);
+
+CREATE TABLE Admins (
+  AdminId INT AUTO_INCREMENT PRIMARY KEY,
+  UserId INT NOT NULL,
+  FOREIGN KEY (UserId) REFERENCES Users(UserId)
+);
+
+CREATE TABLE Orgs (
+  OrgId INT AUTO_INCREMENT PRIMARY KEY,
+  Name VARCHAR(100) NOT NULL UNIQUE,
+  PointWorth DECIMAL(4,2) NOT NULL DEFAULT 0.01,
+  CreatedAtUtc DATETIME NOT NULL,
+  Description VARCHAR(500)
+);
+
+CREATE TABLE Drivers (
+  DriverId INT AUTO_INCREMENT PRIMARY KEY,
+  UserId INT NOT NULL,
+  NotifyForPointsChanged TINYINT NOT NULL DEFAULT 1,
+  NotifyForOrdersAdded TINYINT NOT NULL DEFAULT 1,
+  DriverStatus VARCHAR(50) NOT NULL,
+  FOREIGN KEY (UserId) REFERENCES Users(UserId)
+);
+
+CREATE TABLE Sponsors (
+  SponsorId INT AUTO_INCREMENT PRIMARY KEY,
+  UserId INT NOT NULL,
+  OrgId INT NOT NULL,
+  FOREIGN KEY (UserId) REFERENCES Users(UserId),
+  FOREIGN KEY (OrgId) REFERENCES Orgs(OrgId)
+);
+
+CREATE TABLE DriverAddresses (
+  DriverAddressId INT AUTO_INCREMENT PRIMARY KEY,
+  DriverId INT NOT NULL,
+  City VARCHAR(50) NOT NULL,
+  ZipCode VARCHAR(20) NOT NULL,
+  State VARCHAR(20) NOT NULL,
+  AddressLine1 VARCHAR(100) NOT NULL,
+  AddressLine2 VARCHAR(100) NOT NULL,
+  `Primary` TINYINT NOT NULL DEFAULT 0,
+  Alias VARCHAR(100) NOT NULL,
+  FOREIGN KEY (DriverId) REFERENCES Drivers(DriverId)
+);
+
+CREATE TABLE DriverApplications (
+  ApplicationId INT AUTO_INCREMENT PRIMARY KEY,
+  SponsorId INT,
+  DriverId INT NOT NULL,
+  OrgId INT NOT NULL,
+  ApplicationStatus VARCHAR(50) NOT NULL DEFAULT 'Waiting',
+  DriverMessage VARCHAR(1000) NOT NULL,
+  ChangeReason VARCHAR(1000),
+  CreatedAtUtc DATETIME NOT NULL,
+  LastModifiedUtc DATETIME NOT NULL,
+  FOREIGN KEY (SponsorId) REFERENCES Sponsors(SponsorId),
+  FOREIGN KEY (DriverId) REFERENCES Drivers(DriverId),
+  FOREIGN KEY (OrgId) REFERENCES Orgs(OrgId)
+);
+
+CREATE TABLE DriverPointHistory (
+  PointHistoryId INT AUTO_INCREMENT PRIMARY KEY,
+  DriverId INT NOT NULL,
+  SponsorId INT,
+  Reason TEXT NOT NULL,
+  PointDelta INT NOT NULL,
+  CreatedAtUtc DATETIME NOT NULL,
+  OrgId INT NOT NULL,
+  FOREIGN KEY (DriverId) REFERENCES Drivers(DriverId),
+  FOREIGN KEY (SponsorId) REFERENCES Sponsors(SponsorId),
+  FOREIGN KEY (OrgId) REFERENCES Orgs(OrgId)
+);
+
+CREATE TABLE SponsorCatalogItems (
+  CatalogItemID INT AUTO_INCREMENT PRIMARY KEY,
+  OrgID INT NOT NULL,
+  EbayItemID VARCHAR(64) NOT NULL,
+  Points DECIMAL(10,2),
+  IsActive TINYINT NOT NULL DEFAULT 1,
+  CreatedAtUtc TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UpdatedAtUtc TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (OrgID) REFERENCES Orgs(OrgId)
+);
+
+CREATE TABLE EbayItems (
+  ID INT AUTO_INCREMENT PRIMARY KEY,
+  EbayItemID VARCHAR(64) NOT NULL UNIQUE,
+  Name VARCHAR(255) NOT NULL,
+  Description TEXT,
+  ImageURL TEXT,
+  ItemWebURL TEXT,
+  LastKnownPrice DECIMAL(10,2) NOT NULL,
+  Currency CHAR(3) NOT NULL,
+  ItemCondition VARCHAR(50),
+  CreatedAtUTC DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  LastUpdateUtc TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE DriverWishlist (
+  wishlistId INT AUTO_INCREMENT PRIMARY KEY,
+  driverId INT NOT NULL,
+  orgId INT NOT NULL,
+  catalogItemId INT NOT NULL,
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (driverId) REFERENCES Drivers(DriverId),
+  FOREIGN KEY (orgId) REFERENCES Orgs(OrgId),
+  FOREIGN KEY (catalogItemId) REFERENCES SponsorCatalogItems(CatalogItemID)
+);
+
+CREATE TABLE OrgDriverMapping (
+  OrgId INT NOT NULL,
+  DriverId INT NOT NULL,
+  Points INT NOT NULL,
+  CreatedAtUtc DATETIME NOT NULL,
+  PRIMARY KEY (OrgId, DriverId),
+  FOREIGN KEY (OrgId) REFERENCES Orgs(OrgId),
+  FOREIGN KEY (DriverId) REFERENCES Drivers(DriverId)
+);
+
+CREATE TABLE Notifications (
+  NotificationId INT AUTO_INCREMENT PRIMARY KEY,
+  UserId INT NOT NULL,
+  NotificationSeen TINYINT NOT NULL DEFAULT 0,
+  NotificationMessage TEXT,
+  NotificationType VARCHAR(50) NOT NULL,
+  CreatedAtUtc DATETIME NOT NULL,
+  FOREIGN KEY (UserId) REFERENCES Users(UserId)
+);
+
+CREATE TABLE PasswordChanges (
+  PasswordChangeId INT AUTO_INCREMENT PRIMARY KEY,
+  UserId INT NOT NULL,
+  ChangeDateUtc DATETIME NOT NULL,
+  FOREIGN KEY (UserId) REFERENCES Users(UserId)
+);
+
+CREATE TABLE PasswordResetTokens (
+  TokenHash CHAR(64) PRIMARY KEY,
+  Email VARCHAR(500) NOT NULL,
+  ExpiresAtUtc DATETIME NOT NULL,
+  CreatedAtUtc DATETIME NOT NULL,
+  UsedAtUtc DATETIME
+);
+
+CREATE TABLE Orders (
+  OrderId INT AUTO_INCREMENT PRIMARY KEY,
+  DriverId INT NOT NULL,
+  OrgId INT NOT NULL,
+  TotalPointsSpent DECIMAL(10,2) NOT NULL,
+  OrderStatus VARCHAR(50) NOT NULL DEFAULT 'Pending',
+  ShippingAddressId INT,
+  CreatedAtUTC DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UpdatedAtUTC TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (DriverId) REFERENCES Drivers(DriverId),
+  FOREIGN KEY (OrgId) REFERENCES Orgs(OrgId),
+  FOREIGN KEY (ShippingAddressId) REFERENCES DriverAddresses(DriverAddressId)
+);
+
+CREATE TABLE OrderItems (
+  OrderItemId INT AUTO_INCREMENT PRIMARY KEY,
+  OrderId INT NOT NULL,
+  CatalogItemId INT NOT NULL,
+  EbayItemID VARCHAR(64),
+  ItemName VARCHAR(255) NOT NULL,
+  ItemImageURL TEXT,
+  Quantity INT NOT NULL DEFAULT 1,
+  PointsAtPurchase DECIMAL(10,2) NOT NULL,
+  CreatedAtUTC DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (OrderId) REFERENCES Orders(OrderId),
+  FOREIGN KEY (CatalogItemId) REFERENCES SponsorCatalogItems(CatalogItemID)
+);
+
+CREATE TABLE LoginAttempts (
+  LoginAttemptId INT AUTO_INCREMENT PRIMARY KEY,
+  UserName VARCHAR(200) NOT NULL,
+  LoginDate DATETIME NOT NULL,
+  LoginStatus VARCHAR(50) NOT NULL,
+  LoginIP VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE ApiLogging (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  Timestamp VARCHAR(100),
+  Level VARCHAR(15),
+  Template TEXT,
+  Message TEXT,
+  Exception TEXT,
+  Properties TEXT,
+  _ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  SourceContext VARCHAR(255)
+);
+
+CREATE TABLE SqlLogging (
+  LogId INT AUTO_INCREMENT PRIMARY KEY,
+  LogMessage TEXT,
+  LogSource VARCHAR(100) NOT NULL,
+  LogType VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE TeamInformation (
+  TeamNumber INT DEFAULT 26,
+  Version VARCHAR(100) NOT NULL,
+  ReleaseDate DATETIME DEFAULT CURRENT_TIMESTAMP,
+  ProductName VARCHAR(100) NOT NULL DEFAULT 'Good Driver Incentive Program',
+  ProductDescription VARCHAR(500) NOT NULL DEFAULT 'This application is designed to help incentivize safe driving practices and reward good drivers through our program.'
+);
+
+CREATE TABLE TeamMembers (
+  MemberName VARCHAR(100) NOT NULL
+);
