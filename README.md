@@ -88,8 +88,8 @@ A full-stack web application designed to incentivize safe driving habits through
 3. Configure the database connection in `appsettings.Development.json`:
    ```json
    {
-     "ConnectionStrings": {
-       "DefaultConnection": "your_connection_string"
+     "DatabaseConnection": {
+       "Connection": "your_connection_string"
      }
    }
    ```
@@ -112,7 +112,7 @@ A full-stack web application designed to incentivize safe driving habits through
 
 3. Configure environment variables in `.env` (if needed):
    ```
-   VITE_API_URL=http://localhost:5000
+   VITE_API_URL=http://localhost:5202
    ```
 
 ## Running the Application
@@ -149,17 +149,17 @@ npm run build
 
 The backend provides REST API endpoints for:
 
-- **Authentication** - `POST /api/auth/login`, `POST /api/auth/register`
-- **Users** - `GET/POST/PUT/DELETE /api/users`
-- **Drivers** - `GET/POST/PUT /api/drivers`
-- **Orders** - `GET/POST /api/orders`
-- **Catalog** - `GET /api/catalog`
-- **Organizations** - `GET/POST /api/organizations`
-- **Notifications** - `GET /api/notifications`
-- **Reports** - `GET /api/reports`
-- **eBay Integration** - `GET /api/ebay/search`
+- **Authentication** - `POST /auth/login`, `POST /auth/register`
+- **Users** - `GET/POST/PUT/DELETE /users`
+- **Drivers** - `GET/POST/PUT /drivers`
+- **Orders** - `GET/POST /orders`
+- **Catalog** - `GET /catalog`
+- **Organizations** - `GET/POST /organizations`
+- **Notifications** - `GET /notifications`
+- **Reports** - `GET /reports`
+- **eBay Integration** - `GET /ebay/search`
 
-Full API documentation is available through Scalar at `http://localhost:5000/scaler` when running in development mode.
+Full API documentation is available through Scalar at `http://localhost:5202/scalar` when running in development mode.
 
 ## Deployment
 
@@ -170,12 +170,13 @@ The application is configured for deployment on AWS using Amplify:
 
 ## Database
 
-MySQL Server is used for persistent data storage. Key tables include:
+MySQL is used for persistent data storage. Key tables include:
 - Users
 - Drivers
+- Admins
+- Sponsors
 - Orders
 - Organizations
-- Notifications
 - Points History
 
 ## Testing
